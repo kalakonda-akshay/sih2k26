@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="NER-Vision AI">
+  <rect width="512" height="512" rx="96" fill="#0b1216"/>
+  <!-- Ridge line: the terrain that makes NER logistics hard -->
+  <path d="M64 352 L160 232 L224 296 L320 168 L448 352 Z" fill="none" stroke="#63acdb" stroke-width="18" stroke-linejoin="round" stroke-linecap="round" opacity="0.55"/>
+  <!-- Corridor threading the ridge, in the safe-band green -->
+  <path d="M96 400 C 176 392, 208 316, 272 300 S 388 268, 432 196" fill="none" stroke="#47c285" stroke-width="24" stroke-linecap="round"/>
+  <!-- Blocked chokepoint, in the critical band -->
+  <circle cx="272" cy="300" r="30" fill="#0b1216" stroke="#ee6154" stroke-width="18"/>
+</svg>
