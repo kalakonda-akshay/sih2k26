@@ -3,13 +3,12 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery } from "convex/react";
 import {
-  Camera,
-  CircleCheck,
-  Crosshair,
-  Loader2,
-  TriangleAlert,
-  X,
-} from "lucide-react";
+  enqueueReport,
+  isNetworkFailure,
+  isQueueAvailable,
+  newClientUuid,
+} from "@/lib/offline-queue";
+import { Camera, CircleCheck, Crosshair, Inbox, Loader2, TriangleAlert, X } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useFieldDraft, useLocationCapture } from "./use-field-draft";
@@ -39,6 +38,8 @@ type Submission =
   | { state: "idle" }
   | { state: "submitting"; step: string }
   | { state: "done"; id: string }
+  /** Saved on the device, NOT delivered. Kept separate from "done". */
+  | { state: "queued" }
   | { state: "error"; message: string };
 
 /**
@@ -97,6 +98,11 @@ export function IncidentReportForm() {
     event.preventDefault();
     if (!canSubmit || !currentUser) return;
 
+    // Minted before any network call so the queued copy and the direct
+    // submit share one identity.
+    const clientUuid = newClientUuid();
+    const deviceTs = Date.now();
+
     try {
       let imageStorageId: Id<"_storage"> | undefined;
 
@@ -133,11 +139,9 @@ export function IncidentReportForm() {
         district: draft.district.trim(),
         reportedBy: currentUser._id,
         imageStorageId,
-        // Idempotency key: a retried submit cannot create a second incident.
-        clientUuid:
-          typeof crypto !== "undefined" && "randomUUID" in crypto
-            ? crypto.randomUUID()
-            : `${Date.now()}-${Math.random()}`,
+        // Stable across every retry of THIS report, so a resend can never
+        // create a second incident.
+        clientUuid,
       });
 
       setSubmission({ state: "done", id: incidentId });
@@ -145,6 +149,49 @@ export function IncidentReportForm() {
       setPhoto(null);
       if (fileInput.current) fileInput.current.value = "";
     } catch (error) {
+      /*
+       * A lost connection must not lose the report. Queue it durably and say
+       * plainly that it is waiting — never that it was filed.
+       *
+       * A rejected report is a different thing entirely: that is a data
+       * problem the officer can fix now, so it surfaces as an error rather
+       * than being hidden in a queue that will retry it forever.
+       */
+      if (isNetworkFailure(error) && isQueueAvailable() && currentUser) {
+        try {
+          await enqueueReport({
+            clientUuid,
+            deviceTs,
+            queuedAt: Date.now(),
+            attempts: 1,
+            lastError:
+              error instanceof Error ? error.message : "Connection failed.",
+            payload: {
+              incidentType: draft.incidentType,
+              description: draft.description.trim(),
+              severity: draft.severity,
+              latitude: lat ?? 0,
+              longitude: lng ?? 0,
+              locationName: draft.locationName.trim(),
+              state: draft.state.trim() || "Assam",
+              district: draft.district.trim(),
+              reportedBy: currentUser._id,
+            },
+            photo: photo ?? undefined,
+            photoType: photo?.type,
+          });
+
+          setSubmission({ state: "queued" });
+          clearDraft();
+          setPhoto(null);
+          if (fileInput.current) fileInput.current.value = "";
+          return;
+        } catch {
+          // Queueing itself failed (private mode, quota). Fall through to the
+          // error state rather than claiming the report is safe.
+        }
+      }
+
       setSubmission({
         state: "error",
         message:
@@ -154,6 +201,26 @@ export function IncidentReportForm() {
       });
     }
   };
+
+  if (submission.state === "queued") {
+    return (
+      <section className="rounded-lg border border-[oklch(0.815_0.145_88)]/35 bg-[oklch(0.815_0.145_88)]/8 p-6 text-center">
+        <Inbox className="mx-auto size-8 text-[oklch(0.815_0.145_88)]" />
+        <h3 className="mt-3 text-base font-semibold">Saved — not yet sent</h3>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+          There is no connection right now, so the report is stored on this
+          device. It will be delivered automatically when you are back in
+          coverage. <strong>The command centre has not received it yet.</strong>
+        </p>
+        <Button
+          className="mt-4 h-11 w-full text-sm"
+          onClick={() => setSubmission({ state: "idle" })}
+        >
+          Report another
+        </Button>
+      </section>
+    );
+  }
 
   if (submission.state === "done") {
     return (

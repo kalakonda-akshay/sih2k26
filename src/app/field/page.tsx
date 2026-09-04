@@ -19,6 +19,7 @@ import { humanize, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { InstallApp } from "@/components/pwa/install-app";
+import { SyncStatus } from "@/components/field/sync-status";
 
 type Tab = "report" | "tasks" | "alerts";
 
@@ -77,7 +78,10 @@ export default function FieldPage() {
         so field staff on Android see a real button, iOS users get the manual
         Share instruction, and an already-installed app shows neither.
       */}
-      <div className="px-4 pt-4">
+      <div className="flex flex-col gap-3 px-4 pt-4">
+        {/* Anything waiting to send comes first — it is the most urgent
+            thing on the screen for an officer returning to coverage. */}
+        <SyncStatus />
         <InstallApp className="w-full justify-center" />
       </div>
 
