@@ -77,10 +77,27 @@ export function MapCanvas({
       className="h-full w-full"
       style={{ background: "oklch(0.135 0.011 245)" }}
     >
+      {/*
+        Esri "World Dark Gray Canvas", split into its base and label layers.
+
+        CARTO's dark_all basemap was used originally, but CARTO now requires
+        an API key and serves watermarked tiles without one — the request
+        still returns HTTP 200 with a valid PNG, so the failure is only
+        visible by looking at the image. Esri's dark canvas is free, needs no
+        key, and matches the command-centre palette.
+
+        Note the {z}/{y}/{x} order: Esri puts row before column, unlike the
+        {z}/{x}/{y} convention most tile servers use.
+      */}
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        subdomains="abcd"
+        url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        attribution='&copy; <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        maxZoom={16}
+      />
+      {/* Place names ship as a separate reference layer on this basemap. */}
+      <TileLayer
+        url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+        maxZoom={16}
       />
 
       <ZoomWatcher onZoom={setZoom} />
