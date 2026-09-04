@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import { ConvexClientProvider } from "@/components/providers/convex-client-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ServiceWorker } from "@/components/pwa/service-worker";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <body className="min-h-full bg-background text-foreground">
+        <ServiceWorker />
         <ConvexClientProvider>
           <TooltipProvider delay={200}>{children}</TooltipProvider>
         </ConvexClientProvider>

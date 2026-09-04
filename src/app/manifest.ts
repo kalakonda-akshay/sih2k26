@@ -10,10 +10,13 @@ import type { MetadataRoute } from "next";
  * screen is almost certainly field staff, and the command centre is a
  * desktop surface. It remains one tap away from the field footer.
  *
- * Note on scope: this manifest provides installability and standalone
- * display. It does NOT register a service worker, so there is no offline
- * shell caching — see the offline note in `use-field-draft.ts` for what is
- * and is not preserved without connectivity.
+ * Installability on Android Chrome needs all three of: HTTPS, raster icons
+ * at 192 and 512, and a registered service worker with a fetch handler. All
+ * three are now in place, so the browser offers a genuine "Install app".
+ *
+ * The maskable icon is separate because Android crops launcher icons to the
+ * device's shape; the maskable variant carries the safe-zone padding that
+ * crop needs.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -29,12 +32,15 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#0b1216",
     categories: ["government", "productivity", "utilities"],
     icons: [
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       {
-        src: "/icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-        purpose: "any",
+        src: "/icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
+      { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
     ],
   };
 }

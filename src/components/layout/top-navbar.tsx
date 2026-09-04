@@ -7,6 +7,7 @@ import { Bell, Menu, Search } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { NAV_ITEMS } from "./app-sidebar";
 import { DocumentsMenu } from "./documents-menu";
+import { InstallApp } from "@/components/pwa/install-app";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -101,6 +102,8 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
             {metrics ? `${metrics.networkHealth}%` : "—"}
           </span>
         </div>
+
+        <InstallApp variant="compact" className="mr-1 hidden sm:flex" />
 
         <DocumentsMenu />
 

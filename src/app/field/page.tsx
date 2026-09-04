@@ -18,6 +18,7 @@ import { INCIDENT_LABEL, SEVERITY_TONE, type Severity } from "@/lib/risk";
 import { humanize, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InstallApp } from "@/components/pwa/install-app";
 
 type Tab = "report" | "tasks" | "alerts";
 
@@ -70,6 +71,15 @@ export default function FieldPage() {
           </span>
         </div>
       </header>
+
+      {/*
+        Install control. Renders only when the browser can actually install —
+        so field staff on Android see a real button, iOS users get the manual
+        Share instruction, and an already-installed app shows neither.
+      */}
+      <div className="px-4 pt-4">
+        <InstallApp className="w-full justify-center" />
+      </div>
 
       <div className="grid grid-cols-2 gap-2 p-4 pb-0">
         <button
