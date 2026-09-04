@@ -99,7 +99,7 @@ export const NER_CENTER = { lat: 25.9, lng: 92.6 } as const;
 export const NER_DEFAULT_ZOOM = 7;
 
 /** Bumped whenever the seed payload changes, to allow a controlled re-seed. */
-export const SEED_VERSION = 3;
+export const SEED_VERSION = 4;
 export const SEED_KEY = "ner-vision-demo-seed";
 
 /* ------------------------------------------------------ terrain baseline */

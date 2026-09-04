@@ -49,7 +49,7 @@ const USERS: Array<{
   state?: string;
 }> = [
   {
-    name: "Dr. Anjali Bora",
+    name: "Kalakonda Akshay",
     email: "admin@nervision.gov.in",
     role: "admin",
     organization: "MDoNER — Regional Command",
@@ -58,7 +58,7 @@ const USERS: Array<{
     district: "Kamrup Metropolitan",
   },
   {
-    name: "Rakesh Deka",
+    name: "Dharshana S",
     email: "operator@nervision.gov.in",
     role: "logistics_operator",
     organization: "NE Logistics Corporation",
@@ -67,7 +67,7 @@ const USERS: Array<{
     district: "Kamrup Metropolitan",
   },
   {
-    name: "Tenzin Wangchuk",
+    name: "Chinmayi",
     email: "field.eastkameng@nervision.gov.in",
     role: "field_officer",
     organization: "Arunachal PWD — East Kameng",
@@ -76,7 +76,7 @@ const USERS: Array<{
     district: "East Kameng",
   },
   {
-    name: "Ibalari Nongrum",
+    name: "Deepshika",
     email: "field.ribhoi@nervision.gov.in",
     role: "field_officer",
     organization: "Meghalaya PWD — Ri-Bhoi",
@@ -85,7 +85,7 @@ const USERS: Array<{
     district: "Ri-Bhoi",
   },
   {
-    name: "Maj. Sanjay Thapa",
+    name: "Mohulram",
     email: "emergency@nervision.gov.in",
     role: "emergency_authority",
     organization: "State Disaster Management Authority",
@@ -94,7 +94,7 @@ const USERS: Array<{
     district: "Gangtok",
   },
   {
-    name: "Lalrinpuii Sailo",
+    name: "Jwala Shri",
     email: "operator.mizoram@nervision.gov.in",
     role: "logistics_operator",
     organization: "Mizoram State Transport",
@@ -216,6 +216,33 @@ export const seedDemoData = mutation({
 
     const now = Date.now();
 
+    /*
+     * Converge, do not accumulate.
+     *
+     * Users, roads and vehicles carry natural keys (email, road number,
+     * registration) and are matched and patched below. The tables here have
+     * no such key — they are append-only event data — so re-running the seed
+     * would insert a second copy of every incident, alert and consignment.
+     *
+     * The seedMeta guard prevents an accidental repeat click, but a bumped
+     * SEED_VERSION or `force: true` deliberately re-runs, and that path has
+     * to be safe too. Clearing these first makes the seed idempotent in the
+     * stronger sense: the same payload always yields the same database.
+     */
+    for (const table of [
+      "activityLog",
+      "weatherData",
+      "riskPredictions",
+      "deliveries",
+      "alerts",
+      "incidents",
+      "routes",
+    ] as const) {
+      for (const row of await ctx.db.query(table).collect()) {
+        await ctx.db.delete(row._id);
+      }
+    }
+
     /* ---------------------------------------------------------- users -- */
     const userIds: Record<string, Id<"users">> = {};
     for (const u of USERS) {
@@ -223,14 +250,20 @@ export const seedDemoData = mutation({
         .query("users")
         .withIndex("by_email", (q) => q.eq("email", u.email))
         .unique();
-      userIds[u.email] =
-        found?._id ??
-        (await ctx.db.insert("users", {
+      if (found) {
+        // Email is the natural key, so a returning user is matched by email
+        // and their profile is refreshed. Skipping the write instead would
+        // mean a corrected name or posting never reaches an existing row.
+        await ctx.db.patch(found._id, { ...u, updatedAt: now });
+        userIds[u.email] = found._id;
+      } else {
+        userIds[u.email] = await ctx.db.insert("users", {
           ...u,
           isActive: true,
           createdAt: now - 30 * 24 * HOUR,
           updatedAt: now,
-        }));
+        });
+      }
     }
 
     const adminId = userIds["admin@nervision.gov.in"];
