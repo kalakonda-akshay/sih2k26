@@ -237,6 +237,55 @@
   font-family: inherit;
 }
 
+/*
+ * Basemap treatment.
+ *
+ * Esri's dark canvas is intentionally flat so overlays dominate — which also
+ * makes it read as washed out on its own. A restrained contrast lift and a
+ * touch of desaturation give the terrain enough depth to be legible without
+ * ever competing with the risk colours drawn on top.
+ */
+.leaflet-tile-pane {
+  filter: contrast(1.14) brightness(0.94) saturate(0.85);
+}
+
+/*
+ * Blocked corridors flow toward the closure.
+ *
+ * Motion is reserved for exactly one condition — a road that is shut — so it
+ * carries meaning rather than decorating. Everything else on the map is
+ * static.
+ */
+.road-blocked {
+  animation: road-flow 1.1s linear infinite;
+}
+
+@keyframes road-flow {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .road-blocked {
+    animation: none;
+  }
+}
+
+/* Rounder, better-separated zoom controls. */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 4px 16px -6px rgb(0 0 0 / 0.6) !important;
+}
+
+.leaflet-control-zoom a:first-child {
+  border-radius: var(--radius) var(--radius) 0 0 !important;
+}
+
+.leaflet-control-zoom a:last-child {
+  border-radius: 0 0 var(--radius) var(--radius) !important;
+}
+
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background: var(--card);
