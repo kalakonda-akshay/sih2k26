@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Check, Download, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,33 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+const noopSubscribe = () => () => {};
+
+/** True once the app is running from the home screen rather than a tab. */
+function useStandalone(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia("(display-mode: standalone)");
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(display-mode: standalone)").matches,
+    // The server cannot know, and guessing would cause a hydration mismatch.
+    () => false,
+  );
+}
+
+/** iOS Safari has no programmatic install; it needs manual instructions. */
+function useIsIosSafari(): boolean {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () =>
+      /iphone|ipad|ipod/i.test(navigator.userAgent) &&
+      !/crios|fxios/i.test(navigator.userAgent),
+    () => false,
+  );
+}
+
 /**
  * "Install app" control.
  *
@@ -22,9 +49,10 @@ interface BeforeInstallPromptEvent extends Event {
  * appears when installing will actually work, rather than offering an action
  * that silently does nothing.
  *
- * iOS Safari never fires the event and has no programmatic install, so there
- * we show the manual Share → Add to Home Screen instruction instead of
- * pretending a button exists.
+ * Environment facts are read through `useSyncExternalStore` rather than set
+ * from an effect: they are external state React should subscribe to, and
+ * assigning them in an effect body causes a cascading re-render on every
+ * mount.
  */
 export function InstallApp({
   className,
@@ -38,29 +66,20 @@ export function InstallApp({
    */
   variant?: "full" | "compact";
 }) {
+  const standalone = useStandalone();
+  const isIos = useIsIosSafari();
+
   const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(false);
-  const [isIos, setIsIos] = useState(false);
+  const [justInstalled, setJustInstalled] = useState(false);
 
   useEffect(() => {
-    // Already running as an installed app — nothing to offer.
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setInstalled(true);
-      return;
-    }
-
-    setIsIos(
-      /iphone|ipad|ipod/i.test(navigator.userAgent) &&
-        !/crios|fxios/i.test(navigator.userAgent),
-    );
-
     const onPrompt = (event: Event) => {
       // Suppress Chrome's own banner so the app can place the control.
       event.preventDefault();
       setPrompt(event as BeforeInstallPromptEvent);
     };
     const onInstalled = () => {
-      setInstalled(true);
+      setJustInstalled(true);
       setPrompt(null);
     };
 
@@ -71,6 +90,8 @@ export function InstallApp({
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);
+
+  const installed = standalone || justInstalled;
 
   if (installed) {
     if (variant === "compact") return null;
@@ -94,7 +115,7 @@ export function InstallApp({
     return (
       <div
         className={cn(
-          "rounded-md border border-border bg-muted/30 px-2.5 py-2",
+          "rounded-md border border-border bg-muted/30 px-3 py-2.5",
           className,
         )}
       >
@@ -122,7 +143,7 @@ export function InstallApp({
       onClick={async () => {
         await prompt.prompt();
         const { outcome } = await prompt.userChoice;
-        if (outcome === "accepted") setInstalled(true);
+        if (outcome === "accepted") setJustInstalled(true);
         setPrompt(null);
       }}
     >
