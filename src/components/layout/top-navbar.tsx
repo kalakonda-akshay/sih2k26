@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -121,12 +122,19 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel className="flex items-center justify-between">
-              <span>Active alerts</span>
-              <span className="font-mono text-xs tabular text-muted-foreground">
-                {alertCount}
-              </span>
-            </DropdownMenuLabel>
+            {/*
+              Base UI renders DropdownMenuLabel as Menu.GroupLabel, which
+              throws unless it has a Menu.Group ancestor — unlike Radix, where
+              a bare label is valid. The wrapper is required, not cosmetic.
+            */}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="flex items-center justify-between">
+                <span>Active alerts</span>
+                <span className="font-mono text-xs tabular text-muted-foreground">
+                  {alertCount}
+                </span>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
 
             {alerts === undefined && (
@@ -195,15 +203,19 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" className="w-60">
-            <DropdownMenuLabel>
-              <span className="block text-sm">{currentUser?.name ?? "—"}</span>
-              <span className="block font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                {currentUser?.role?.replace(/_/g, " ") ?? "—"}
-              </span>
-              <span className="mt-1 block truncate text-[11px] text-muted-foreground">
-                {currentUser?.organization ?? ""}
-              </span>
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>
+                <span className="block text-sm">
+                  {currentUser?.name ?? "—"}
+                </span>
+                <span className="block font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {currentUser?.role?.replace(/_/g, " ") ?? "—"}
+                </span>
+                <span className="mt-1 block truncate text-[11px] text-muted-foreground">
+                  {currentUser?.organization ?? ""}
+                </span>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem render={<Link href="/settings" />}>
               Settings
