@@ -6,6 +6,7 @@ import {
   INCIDENT_INFLUENCE_KM,
   NER_LOCATIONS,
   RISK_ENGINE_VERSION,
+  RISK_THRESHOLDS,
   TERRAIN_INDEX,
 } from "./lib/constants";
 import { haversineKm, HOUR, logActivity, RISK_RANK } from "./lib/helpers";
@@ -18,6 +19,7 @@ import {
   calculateRoadConditionRisk,
   calculateWeatherRisk,
   calculateHistoricalRisk,
+  FACTOR_CAPS,
   type NearbyIncident,
   type RiskFactorInputs,
 } from "./lib/riskCalculations";
@@ -591,4 +593,28 @@ export const explainPrediction = query({
       engineVersion: RISK_ENGINE_VERSION,
     };
   },
+});
+
+/**
+ * The engine's actual configuration, read from the same constants the
+ * scoring uses.
+ *
+ * Exposed so the settings page shows what the engine really does rather than
+ * a hand-maintained description that can drift out of sync with the code.
+ */
+export const getEngineConfig = query({
+  args: {},
+  handler: async () => ({
+    version: RISK_ENGINE_VERSION,
+    factorCaps: FACTOR_CAPS,
+    capTotal: Object.values(FACTOR_CAPS).reduce((a, b) => a + b, 0),
+    bands: [
+      { level: "low", from: 0, to: RISK_THRESHOLDS.low },
+      { level: "moderate", from: RISK_THRESHOLDS.low + 1, to: RISK_THRESHOLDS.moderate },
+      { level: "high", from: RISK_THRESHOLDS.moderate + 1, to: RISK_THRESHOLDS.high },
+      { level: "critical", from: RISK_THRESHOLDS.high + 1, to: 100 },
+    ],
+    incidentInfluenceKm: INCIDENT_INFLUENCE_KM,
+    monitoredLocations: NER_LOCATIONS.length,
+  }),
 });
