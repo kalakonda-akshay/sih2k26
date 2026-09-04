@@ -85,76 +85,70 @@ export function AnswerBody({
       <div
         className={cn(
           "border-b border-border px-4 py-3",
-                  answer.intent === "unsupported" &&
-                    "bg-[oklch(0.815_0.145_88)]/8",
-                )}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-                    {answer.intent === "unsupported"
-                      ? "Not recognised"
-                      : answer.intent.replace(/_/g, " ")}
-                  </span>
-                  <span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                    {answer.confidence > 0
-                      ? `${answer.confidence}% match`
-                      : "no match"}
-                  </span>
-                </div>
-                <p className="mt-1.5 text-sm leading-relaxed">
-                  {answer.answer}
-                </p>
-              </div>
+          answer.intent === "unsupported" && "bg-[oklch(0.815_0.145_88)]/8",
+        )}
+      >
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+            {answer.intent === "unsupported"
+              ? "Not recognised"
+              : answer.intent.replace(/_/g, " ")}
+          </span>
+          <span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+            {answer.confidence > 0 ? `${answer.confidence}% match` : "no match"}
+          </span>
+        </div>
+        <p className="mt-1.5 text-sm leading-relaxed">{answer.answer}</p>
+      </div>
 
       {answer.observations.length > 0 && (
-                <Group
-                  icon={Eye}
-                  title="Observed"
-                  subtitle="Read directly from the database"
-                  tone="text-[oklch(0.735_0.155_158)]"
-                  items={answer.observations}
-                />
-              )}
+        <Group
+          icon={Eye}
+          title="Observed"
+          subtitle="Read directly from the database"
+          tone="text-[oklch(0.735_0.155_158)]"
+          items={answer.observations}
+        />
+      )}
 
       {answer.risks.length > 0 && (
-                <Group
-                  icon={TriangleAlert}
-                  title="Predicted"
-                  subtitle="Forecast — not a confirmed event"
-                  tone="text-[oklch(0.815_0.145_88)]"
-                  items={answer.risks}
-                />
-              )}
+        <Group
+          icon={TriangleAlert}
+          title="Predicted"
+          subtitle="Forecast — not a confirmed event"
+          tone="text-[oklch(0.815_0.145_88)]"
+          items={answer.risks}
+        />
+      )}
 
       {answer.recommendations.length > 0 && (
-                <Group
-                  icon={ListChecks}
-                  title="Recommended"
-                  subtitle="Proposed action, awaiting your approval"
-                  tone="text-[oklch(0.715_0.128_231)]"
-                  items={answer.recommendations}
-                />
-              )}
+        <Group
+          icon={ListChecks}
+          title="Recommended"
+          subtitle="Proposed action, awaiting your approval"
+          tone="text-[oklch(0.715_0.128_231)]"
+          items={answer.recommendations}
+        />
+      )}
 
       {answer.affectedEntities.length > 0 && (
-                <div className="border-t border-border px-4 py-3">
-                  <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-                    Referenced records
-                  </div>
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
-                    {answer.affectedEntities.map((entity, i) => (
-                      <span
-                        key={`${entity.kind}-${entity.label}-${i}`}
-                        className="rounded border border-border bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground"
-                        title={entity.detail}
-                      >
-                        {ENTITY_LABEL[entity.kind] ?? entity.kind}:{" "}
-                        {entity.label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+        <div className="border-t border-border px-4 py-3">
+          <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+            Referenced records
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {answer.affectedEntities.map((entity, i) => (
+              <span
+                key={`${entity.kind}-${entity.label}-${i}`}
+                className="rounded border border-border bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground"
+                title={entity.detail}
+              >
+                {ENTITY_LABEL[entity.kind] ?? entity.kind}: {entity.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="border-t border-border bg-background/40 px-4 py-2.5">
         <div className="flex items-start gap-1.5">

@@ -211,6 +211,26 @@
   }
 }
 
+/*
+ * Surface depth.
+ *
+ * Every panel was previously the same flat fill, which flattened the
+ * hierarchy — nothing read as more important than anything else. A single
+ * hairline highlight along the top edge catches the eye the way a physical
+ * bevel does, at a fraction of the visual weight of a shadow.
+ */
+.bg-card {
+  box-shadow: inset 0 1px 0 0 color-mix(in oklch, var(--foreground) 5%, transparent);
+}
+
+/* Keyboard focus must be visible on every interactive surface, not only
+   the ones that happen to be native controls. */
+:where(a, button, [role="button"], summary):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
 /* Scrollbars styled to match the surface rather than the OS. */
 * {
   scrollbar-width: thin;
