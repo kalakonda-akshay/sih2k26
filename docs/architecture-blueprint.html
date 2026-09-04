@@ -1,0 +1,1340 @@
+<title>NER-Vision AI Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+:root{
+  --ground:#EDEFEE;
+  --surface:#FFFFFF;
+  --surface-2:#F5F7F6;
+  --line:#D3D9D8;
+  --line-soft:#E3E7E6;
+  --ink:#0F181C;
+  --ink-2:#3B474F;
+  --ink-3:#6C7981;
+  --accent:#14567F;
+  --accent-2:#63529B;
+  --accent-wash:#E2EDF4;
+  --safe:#1F7A4C;
+  --moderate:#9C7716;
+  --high:#BC5B14;
+  --critical:#AC2E25;
+  --get:#14567F;
+  --post:#63529B;
+  --patch:#0F6E70;
+  --del:#A33C55;
+  --shadow:0 1px 2px rgba(15,24,28,.05), 0 8px 24px -16px rgba(15,24,28,.22);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0B1216;
+    --surface:#111B20;
+    --surface-2:#16222A;
+    --line:#26363E;
+    --line-soft:#1B2830;
+    --ink:#E3EAED;
+    --ink-2:#A6B4BB;
+    --ink-3:#78888F;
+    --accent:#63ACDB;
+    --accent-2:#A594DA;
+    --accent-wash:#123043;
+    --safe:#47C285;
+    --moderate:#DDB13B;
+    --high:#EF8C42;
+    --critical:#EE6154;
+    --get:#63ACDB;
+    --post:#A594DA;
+    --patch:#4FBAB6;
+    --del:#E27E96;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0B1216;
+  --surface:#111B20;
+  --surface-2:#16222A;
+  --line:#26363E;
+  --line-soft:#1B2830;
+  --ink:#E3EAED;
+  --ink-2:#A6B4BB;
+  --ink-3:#78888F;
+  --accent:#63ACDB;
+  --accent-2:#A594DA;
+  --accent-wash:#123043;
+  --safe:#47C285;
+  --moderate:#DDB13B;
+  --high:#EF8C42;
+  --critical:#EE6154;
+  --get:#63ACDB;
+  --post:#A594DA;
+  --patch:#4FBAB6;
+  --del:#E27E96;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:Archivo,-apple-system,"Segoe UI",sans-serif;text-wrap:balance;margin:0}
+code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace}
+
+/* ---------- shell ---------- */
+.shell{max-width:1240px;margin:0 auto;padding:0 28px 96px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:56px;align-items:start}
+@media(max-width:1000px){.shell{grid-template-columns:1fr;gap:0;padding:0 20px 72px}}
+
+/* ---------- masthead ---------- */
+.masthead{grid-column:1/-1;padding:56px 0 40px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:22px}
+.eyebrow b{color:var(--accent);font-weight:500}
+h1{font-size:clamp(38px,6.2vw,64px);font-weight:800;letter-spacing:-.028em;line-height:1.02}
+h1 .dim{color:var(--ink-3);font-weight:600}
+.tagline{font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-top:18px}
+.standfirst{max-width:64ch;margin-top:22px;font-size:18.5px;line-height:1.6;color:var(--ink-2)}
+.standfirst strong{color:var(--ink);font-weight:600}
+.gate-strip{margin-top:30px;display:inline-flex;align-items:center;gap:12px;padding:9px 16px;border:1px solid var(--line);border-radius:2px;background:var(--surface);font-size:13.5px;color:var(--ink-2)}
+.gate-strip .dot{width:7px;height:7px;border-radius:50%;background:var(--moderate);flex:none}
+
+/* ---------- toc rail ---------- */
+nav.toc{position:sticky;top:32px;padding-top:44px;font-size:13.5px}
+@media(max-width:1000px){nav.toc{position:static;padding:28px 0 8px;border-bottom:1px solid var(--line-soft);margin-bottom:8px}}
+nav.toc .lbl{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:14px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+@media(max-width:1000px){nav.toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px 20px}}
+nav.toc a{display:flex;gap:10px;text-decoration:none;color:var(--ink-2);padding:3px 0;border-radius:2px}
+nav.toc a:hover{color:var(--accent)}
+nav.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+nav.toc .n{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);flex:none;padding-top:1px}
+
+/* ---------- sections ---------- */
+main{min-width:0;padding-top:44px;display:flex;flex-direction:column;gap:64px}
+section{scroll-margin-top:24px}
+.sec-head{display:flex;gap:16px;align-items:baseline;padding-bottom:14px;border-bottom:2px solid var(--ink);margin-bottom:26px}
+.sec-head .n{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:500;color:var(--accent);letter-spacing:.06em;flex:none}
+.sec-head h2{font-size:clamp(25px,3.4vw,33px);font-weight:700;letter-spacing:-.02em;line-height:1.12}
+h3{font-size:19.5px;font-weight:700;letter-spacing:-.012em;margin:34px 0 12px}
+h4{font-size:15px;font-weight:600;letter-spacing:-.005em;margin:24px 0 8px;color:var(--ink)}
+p{margin:0 0 15px;max-width:70ch}
+main ul,main ol{max-width:70ch;margin:0 0 15px;padding-left:22px;display:flex;flex-direction:column;gap:7px}
+li::marker{color:var(--ink-3)}
+strong{font-weight:600}
+a{color:var(--accent)}
+.lead{font-size:17.5px;color:var(--ink-2);max-width:66ch}
+
+/* ---------- callout ---------- */
+.callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:2px;padding:20px 24px;margin:24px 0;box-shadow:var(--shadow)}
+.callout .k{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:9px}
+.callout p:last-child,.callout ul:last-child{margin-bottom:0}
+.callout.warn{border-left-color:var(--high)}
+.callout.warn .k{color:var(--high)}
+
+/* ---------- cards ---------- */
+.grid{display:grid;gap:14px;margin:22px 0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(175px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:18px 20px;box-shadow:var(--shadow)}
+.card h4{margin:0 0 8px;font-size:14.5px}
+.card p{font-size:14px;color:var(--ink-2);margin:0;max-width:none}
+.card .tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:7px}
+.card ul{font-size:13.5px;color:var(--ink-2);margin:8px 0 0;padding-left:18px;gap:4px;max-width:none}
+
+/* ---------- role cards ---------- */
+.role{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:2px;padding:18px 20px}
+.role:nth-child(2){border-top-color:var(--accent-2)}
+.role:nth-child(3){border-top-color:var(--patch)}
+.role:nth-child(4){border-top-color:var(--critical)}
+.role h4{margin:0 0 4px;font-size:15px}
+.role .who{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+.role p{font-size:13.5px;color:var(--ink-2);margin:0;max-width:none}
+
+/* ---------- risk chips ---------- */
+.ramp{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}
+.chip{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line);background:var(--surface);border-radius:2px;padding:7px 13px;font-size:13px}
+.chip .sw{width:11px;height:11px;border-radius:1px;flex:none}
+.chip .rng{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:20px 0;border:1px solid var(--line);border-radius:2px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:520px}
+th{text-align:left;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:500;padding:11px 16px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
+td{padding:10px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top;color:var(--ink-2)}
+tr:last-child td{border-bottom:none}
+td:first-child{color:var(--ink);font-weight:500}
+td.mono,th.mono{font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+
+/* ---------- api ---------- */
+.verb{font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;letter-spacing:.08em;padding:2px 6px;border-radius:2px;border:1px solid currentColor;white-space:nowrap}
+.v-get{color:var(--get)} .v-post{color:var(--post)} .v-patch{color:var(--patch)} .v-del{color:var(--del)} .v-ws{color:var(--ink-3)}
+
+/* ---------- pre ---------- */
+pre{background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:18px 20px;overflow-x:auto;font-size:12.6px;line-height:1.66;margin:18px 0;color:var(--ink-2)}
+pre b{color:var(--ink);font-weight:600}
+pre i{color:var(--ink-3);font-style:normal}
+pre em{color:var(--accent);font-style:normal}
+code{background:var(--surface-2);border:1px solid var(--line-soft);border-radius:2px;padding:1px 5px;font-size:.88em;color:var(--ink)}
+
+/* ---------- figures ---------- */
+figure{margin:30px 0;background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:24px;box-shadow:var(--shadow)}
+figure svg{display:block;width:100%;max-width:100%;height:auto;color:var(--ink-2)}
+figcaption{margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft);font-size:13px;color:var(--ink-3);max-width:78ch}
+figcaption b{color:var(--ink-2);font-weight:600}
+
+/* ---------- scope columns ---------- */
+.scope{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:22px 0}
+.scope>div{background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:20px 22px}
+.scope .hd{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.scope h4{margin:0;font-size:16px}
+.scope .cnt{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.scope .sub{font-size:13px;color:var(--ink-3);margin-bottom:14px}
+.scope ul{margin:0;padding-left:0;list-style:none;gap:9px;max-width:none}
+.scope li{font-size:13.6px;color:var(--ink-2);padding-left:20px;position:relative;line-height:1.5}
+.scope li::before{content:"";position:absolute;left:0;top:8px;width:9px;height:2px;background:var(--accent)}
+.scope div:nth-child(2) li::before{background:var(--ink-3)}
+.scope li b{color:var(--ink);font-weight:600}
+
+/* ---------- phases ---------- */
+.phase{display:grid;grid-template-columns:64px minmax(0,1fr);gap:20px;padding:20px 0;border-bottom:1px solid var(--line-soft)}
+.phase:last-child{border-bottom:none}
+.phase .idx{font-family:"IBM Plex Mono",monospace;font-size:26px;font-weight:600;color:var(--accent);line-height:1;padding-top:3px;font-variant-numeric:tabular-nums}
+.phase h4{margin:0 0 3px;font-size:16.5px}
+.phase .meta{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+.phase p{font-size:14px;color:var(--ink-2);margin:0 0 10px;max-width:68ch}
+.exit{display:flex;gap:9px;align-items:flex-start;font-size:13px;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:2px;padding:9px 13px;max-width:68ch}
+.exit .k{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--safe);flex:none;padding-top:3px}
+.exit span:last-child{color:var(--ink-2)}
+
+/* ---------- close ---------- */
+.close{grid-column:1/-1;margin-top:76px;padding-top:36px;border-top:2px solid var(--ink)}
+.qa{background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:20px 22px;margin-bottom:12px}
+.qa .q{font-family:Archivo,sans-serif;font-weight:700;font-size:16px;margin-bottom:6px}
+.qa p{font-size:14px;color:var(--ink-2);margin:0;max-width:70ch}
+.qa .rec{margin-top:9px;font-size:13.5px;color:var(--ink-2)}
+.qa .rec b{color:var(--accent);font-weight:600}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="shell">
+
+<header class="masthead">
+  <div class="eyebrow">
+    <span><b>SIH26002</b></span>
+    <span>MDoNER</span>
+    <span>Theme &middot; Smart Automation</span>
+    <span>Architecture v1.0</span>
+  </div>
+  <h1>NER-Vision AI <span class="dim">/ blueprint</span></h1>
+  <div class="tagline">Predict &middot; Navigate &middot; Deliver</div>
+  <p class="standfirst">A logistics platform for the North East is not a routing problem on a dense graph. It is a <strong>survivability problem on a sparse one</strong> &mdash; a handful of corridors, each with chokepoints whose failure disconnects whole districts. Everything below is designed around that single reframe.</p>
+  <div class="gate-strip"><span class="dot"></span><span>Architecture only &mdash; no application code written. Approval gate at the end of this document.</span></div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <div class="lbl">Contents</div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span><span>Refined vision</span></a></li>
+    <li><a href="#s2"><span class="n">02</span><span>System architecture</span></a></li>
+    <li><a href="#s3"><span class="n">03</span><span>Feature scope</span></a></li>
+    <li><a href="#s4"><span class="n">04</span><span>Database schema</span></a></li>
+    <li><a href="#s5"><span class="n">05</span><span>API surface</span></a></li>
+    <li><a href="#s6"><span class="n">06</span><span>AI / ML architecture</span></a></li>
+    <li><a href="#s7"><span class="n">07</span><span>GIS architecture</span></a></li>
+    <li><a href="#s8"><span class="n">08</span><span>Offline &amp; language</span></a></li>
+    <li><a href="#s9"><span class="n">09</span><span>The demo cascade</span></a></li>
+    <li><a href="#s10"><span class="n">10</span><span>Folder structure</span></a></li>
+    <li><a href="#s11"><span class="n">11</span><span>Development plan</span></a></li>
+    <li><a href="#s12"><span class="n">12</span><span>Stack calls &amp; risks</span></a></li>
+    <li><a href="#gate"><span class="n">&rarr;</span><span>Approval gate</span></a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ============ 01 ============ -->
+<section id="s1">
+  <div class="sec-head"><span class="n">01</span><h2>Refined product vision</h2></div>
+
+  <p class="lead">The problem statement asks for a logistics dashboard. The winning version of it is an <strong>accessibility graph of the North East that is always current</strong> &mdash; and every module is a different question asked of that one graph.</p>
+
+  <p>Urban logistics platforms optimise across thousands of redundant paths, so the interesting work is cost minimisation. NER inverts this. Between Guwahati and, say, Champhai there are effectively two viable corridors. When NH&#8209;306 fails at a single cutting, the alternative is not five percent longer &mdash; it is nine hours longer, or it does not exist. The scarce resource is not fuel. It is <strong>connectivity itself</strong>.</p>
+
+  <p>So the atomic unit of the system is the <strong>road segment</strong>, and the primary intelligence is <strong>segment survivability</strong>: will this piece of road still be passable in 24 and 72 hours, and if not, which districts fall off the network? A platform built on that unit answers the district-collector question that no commercial navigation app can: <em>&ldquo;If Sonapur closes tomorrow, which blocks lose their medicine route, and what is the fallback?&rdquo;</em></p>
+
+  <h3>Four continuous questions</h3>
+  <div class="grid g4">
+    <div class="card"><span class="tag">Predict</span><h4>Will it stay open?</h4><p>Calibrated 0&ndash;100 disruption probability per segment at 24&#8239;h and 72&#8239;h horizons, with a signed contribution for every input feature.</p></div>
+    <div class="card"><span class="tag">Navigate</span><h4>What is the best way?</h4><p>Routing over a graph whose edge costs are risk-adjusted travel times, producing Fastest, Safest and Emergency variants that genuinely differ.</p></div>
+    <div class="card"><span class="tag">Deliver</span><h4>Where is the load?</h4><p>Consignment-level tracking with ETA-at-risk detection and automatic replan the moment an edge on the active route degrades.</p></div>
+    <div class="card"><span class="tag">Prove</span><h4>Why did it say that?</h4><p>Every score, alert and reroute carries provenance and evidence. In a government system, auditability beats magic.</p></div>
+  </div>
+
+  <div class="callout">
+    <div class="k">The differentiating capability</div>
+    <p><strong>District reachability under predicted failure.</strong> Given the current risk surface, compute for every district whether a supply depot is still reachable, and the marginal cost of the best remaining path. Render it as a choropleth that goes amber and then red <em>before</em> the road actually fails. No commercial product does this, it is directly what MDoNER needs, and it is a single graph query on infrastructure we are already building for routing.</p>
+  </div>
+
+  <h3>Who it is for</h3>
+  <div class="grid g4">
+    <div class="role"><h4>Administrator</h4><div class="who">MDoNER &middot; State PWD</div><p>Region-wide picture, high-risk corridor register, user and role management, incident verification queue, policy-grade analytics and export.</p></div>
+    <div class="role"><h4>Logistics operator</h4><div class="who">Transporter &middot; FCI &middot; CMSS</div><p>Fleet and consignment registration, live tracking, disruption alerts on active routes, one-click acceptance of a recommended reroute.</p></div>
+    <div class="role"><h4>Field officer</h4><div class="who">Block officer &middot; BRO &middot; NGO</div><p>Offline-first geo-tagged incident capture with photographs, road accessibility updates, personal sync queue. Phone-shaped, low bandwidth.</p></div>
+    <div class="role"><h4>Emergency authority</h4><div class="who">SDMA &middot; NDRF &middot; DC office</div><p>Emergency mode, isolated-district list, accessible-corridor computation, priority allocation of medical and relief loads, escalation trail.</p></div>
+  </div>
+</section>
+
+<!-- ============ 02 ============ -->
+<section id="s2">
+  <div class="sec-head"><span class="n">02</span><h2>System architecture</h2></div>
+
+  <p class="lead">A modular monolith &mdash; one FastAPI process containing eight bounded service modules with separate schemas and no cross-module imports except through interfaces. Deployable as microservices later; buildable by six people in a hackathon window now.</p>
+
+  <figure>
+    <svg viewBox="0 0 1000 520" role="img" aria-label="Layered architecture: Next.js command centre and field PWA call a FastAPI gateway over REST and WebSocket; the gateway dispatches to eight service modules, which read and write PostgreSQL with PostGIS, Redis and MinIO; Redis pub/sub fans events back out to WebSocket topics; a feed adapter with live and replay modes supplies external data, and a scheduler drives risk recomputation.">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+        <marker id="ar-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#63529B"/>
+        </marker>
+      </defs>
+
+      <!-- clients -->
+      <g fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="100" y="30" width="260" height="56" rx="2"/>
+        <rect x="400" y="30" width="260" height="56" rx="2"/>
+      </g>
+      <text x="230" y="54" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">Command Centre &mdash; Next.js 14</text>
+      <text x="230" y="72" text-anchor="middle" font-size="11" fill="currentColor" opacity=".72">Admin &middot; Operator &middot; Emergency</text>
+      <text x="530" y="54" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">Field PWA &mdash; offline-first</text>
+      <text x="530" y="72" text-anchor="middle" font-size="11" fill="currentColor" opacity=".72">Service worker &middot; IndexedDB queue</text>
+
+      <!-- arrows clients -> gateway -->
+      <g stroke="currentColor" stroke-width="1.2" marker-end="url(#ar)">
+        <line x1="230" y1="86" x2="230" y2="138"/>
+        <line x1="530" y1="86" x2="530" y2="138"/>
+      </g>
+      <text x="238" y="110" font-size="10.5" fill="currentColor" opacity=".75">REST + WS</text>
+      <text x="538" y="110" font-size="10.5" fill="currentColor" opacity=".75">REST + Background Sync</text>
+
+      <!-- gateway -->
+      <rect x="100" y="140" width="560" height="56" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <text x="380" y="164" text-anchor="middle" font-size="13.5" font-weight="600" fill="currentColor">FastAPI gateway</text>
+      <text x="380" y="182" text-anchor="middle" font-size="11" fill="currentColor" opacity=".72">JWT &middot; RBAC &middot; rate limit &middot; WebSocket hub with topic subscriptions</text>
+
+      <line x1="380" y1="196" x2="380" y2="230" stroke="currentColor" stroke-width="1.2" marker-end="url(#ar)"/>
+      <text x="390" y="217" font-size="10.5" fill="currentColor" opacity=".75">dispatch</text>
+
+      <!-- services -->
+      <g fill="none" stroke="currentColor" stroke-width="1.1" opacity=".85">
+        <rect x="100" y="232" width="128" height="46" rx="2"/>
+        <rect x="244" y="232" width="128" height="46" rx="2"/>
+        <rect x="388" y="232" width="128" height="46" rx="2"/>
+        <rect x="532" y="232" width="128" height="46" rx="2"/>
+        <rect x="100" y="294" width="128" height="46" rx="2"/>
+        <rect x="244" y="294" width="128" height="46" rx="2"/>
+        <rect x="388" y="294" width="128" height="46" rx="2"/>
+        <rect x="532" y="294" width="128" height="46" rx="2"/>
+      </g>
+      <g font-size="11.5" text-anchor="middle" fill="currentColor" font-weight="500">
+        <text x="164" y="252">geo</text><text x="308" y="252">risk</text><text x="452" y="252">routing</text><text x="596" y="252">fleet</text>
+        <text x="164" y="314">incidents</text><text x="308" y="314">alerts</text><text x="452" y="314">analytics</text><text x="596" y="314">emergency</text>
+      </g>
+      <g font-size="9.5" text-anchor="middle" fill="currentColor" opacity=".6">
+        <text x="164" y="267">PostGIS layers</text><text x="308" y="267">score + SHAP</text><text x="452" y="267">pgRouting</text><text x="596" y="267">telemetry</text>
+        <text x="164" y="329">reports + media</text><text x="308" y="329">rules + dedupe</text><text x="452" y="329">matviews</text><text x="596" y="329">reachability</text>
+      </g>
+
+      <line x1="380" y1="340" x2="380" y2="384" stroke="currentColor" stroke-width="1.2" marker-end="url(#ar)"/>
+      <text x="390" y="368" font-size="10.5" fill="currentColor" opacity=".75">read &middot; write &middot; publish</text>
+
+      <!-- data -->
+      <g fill="none" stroke="currentColor" stroke-width="1.3">
+        <rect x="100" y="386" width="176" height="60" rx="2"/>
+        <rect x="292" y="386" width="176" height="60" rx="2"/>
+        <rect x="484" y="386" width="176" height="60" rx="2"/>
+      </g>
+      <g text-anchor="middle" fill="currentColor">
+        <text x="188" y="410" font-size="12" font-weight="600">PostgreSQL 16</text>
+        <text x="188" y="427" font-size="10" opacity=".7">PostGIS &middot; pgRouting</text>
+        <text x="188" y="440" font-size="10" opacity=".7">TimescaleDB (telemetry)</text>
+        <text x="380" y="410" font-size="12" font-weight="600">Redis 7</text>
+        <text x="380" y="427" font-size="10" opacity=".7">cache &middot; pub/sub spine</text>
+        <text x="380" y="440" font-size="10" opacity=".7">WS presence</text>
+        <text x="572" y="410" font-size="12" font-weight="600">MinIO</text>
+        <text x="572" y="427" font-size="10" opacity=".7">incident photographs</text>
+        <text x="572" y="440" font-size="10" opacity=".7">S3-compatible</text>
+      </g>
+
+      <!-- event fan-out return path -->
+      <path d="M380 446 L380 478 L58 478 L58 168 L94 168" fill="none" stroke="#63529B" stroke-width="1.3" stroke-dasharray="5 4" marker-end="url(#ar-a)"/>
+      <text transform="rotate(-90 58 330)" x="58" y="330" text-anchor="middle" font-size="10.5" fill="#63529B" font-weight="500">event fan-out to WS topics</text>
+
+      <!-- external column -->
+      <text x="740" y="20" font-size="10" fill="currentColor" opacity=".6" letter-spacing="1.4">EXTERNAL SOURCES</text>
+      <g fill="none" stroke="currentColor" stroke-width="1" opacity=".7">
+        <rect x="740" y="28" width="230" height="30" rx="2"/>
+        <rect x="740" y="64" width="230" height="30" rx="2"/>
+        <rect x="740" y="100" width="230" height="30" rx="2"/>
+        <rect x="740" y="136" width="230" height="30" rx="2"/>
+      </g>
+      <g font-size="11" fill="currentColor" text-anchor="middle">
+        <text x="855" y="47">IMD &middot; OpenWeather &mdash; rainfall</text>
+        <text x="855" y="83">Bhuvan &middot; GSI &mdash; susceptibility</text>
+        <text x="855" y="119">OSM Geofabrik &mdash; road network</text>
+        <text x="855" y="155">CWC &middot; SRTM &mdash; flood, terrain</text>
+      </g>
+      <line x1="855" y1="166" x2="855" y2="226" stroke="currentColor" stroke-width="1.2" marker-end="url(#ar)"/>
+
+      <rect x="740" y="228" width="230" height="56" rx="2" fill="none" stroke="#63529B" stroke-width="1.6"/>
+      <text x="855" y="250" text-anchor="middle" font-size="12.5" font-weight="600" fill="#63529B">Feed adapter</text>
+      <text x="855" y="268" text-anchor="middle" font-size="10.5" fill="#63529B" opacity=".85">DATA_MODE = live | replay | hybrid</text>
+      <line x1="736" y1="256" x2="670" y2="256" stroke="#63529B" stroke-width="1.3" marker-end="url(#ar-a)"/>
+
+      <rect x="740" y="294" width="230" height="46" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/>
+      <text x="855" y="313" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Scheduler + workers</text>
+      <text x="855" y="329" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">risk recompute 15&#8239;min &middot; sim tick 3&#8239;s</text>
+      <line x1="736" y1="317" x2="670" y2="317" stroke="currentColor" stroke-width="1.2" marker-end="url(#ar)"/>
+    </svg>
+    <figcaption><b>The two load-bearing decisions are on the right and on the left.</b> The <b>feed adapter</b> gives every external source a live implementation and a recorded-fixture implementation behind one interface, so the demo is deterministic and the code is still production-shaped. The <b>violet return path</b> is the event spine: services publish domain events to Redis, the gateway fans them to subscribed WebSocket topics, and that single path is what makes one incident POST visibly ripple across every open screen.</figcaption>
+  </figure>
+
+  <h3>Three architectural commitments</h3>
+
+  <h4>1 &middot; Risk is precomputed on segments, never per request</h4>
+  <p>A scheduled job scores every segment every fifteen minutes (and on demand when an incident lands), writing to <code>segment_risk_current</code> with the feature vector and contributions attached. Routing, the map, analytics and alerts all read that cached surface. This keeps route planning under 300&#8239;ms, makes every score reproducible after the fact, and means the ML model is never on the critical path of a user request.</p>
+
+  <h4>2 &middot; Everything interesting is an event</h4>
+  <p>Domain events &mdash; <code>incident.verified</code>, <code>risk.band_changed</code>, <code>segment.blocked</code>, <code>route.invalidated</code>, <code>vehicle.entered_high_risk</code>, <code>consignment.eta_slipped</code> &mdash; are published to Redis. Alerts, WebSocket fan-out, analytics counters and the audit log are all subscribers. Adding a new reaction later means adding a subscriber, not editing the incident handler.</p>
+
+  <h4>3 &middot; The demo runs on a scenario clock</h4>
+  <p>A <code>ScenarioRunner</code> replays a YAML timeline against the feed adapter in <code>replay</code> mode &mdash; rainfall rises, forecasts update, the simulator ticks, the incident is injected. Judges get a control bar with play, pause, reset and jump-to-step. Rehearsable fifty times, identical every time, no network dependency in the room.</p>
+
+  <h3>Real-time transport</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Topic pattern</th><th>Payload</th><th>Subscribers</th><th class="num">Cadence</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">map.risk.{state}</td><td>Segment id, new band, score delta</td><td>Map view</td><td class="num">on change</td></tr>
+      <tr><td class="mono">fleet.positions.{operator}</td><td>Vehicle id, point, speed, progress</td><td>Tracking, map</td><td class="num">3&#8239;s</td></tr>
+      <tr><td class="mono">alerts.{role}.{district}</td><td>Full alert object, both languages</td><td>Alert centre, toasts</td><td class="num">on create</td></tr>
+      <tr><td class="mono">incidents.live</td><td>Incident feature, GeoJSON</td><td>Map, verification queue</td><td class="num">on create</td></tr>
+      <tr><td class="mono">kpi.dashboard</td><td>Delta patch of the KPI block</td><td>Command dashboard</td><td class="num">5&#8239;s throttled</td></tr>
+      <tr><td class="mono">emergency.state</td><td>Mode, affected districts, corridors</td><td>All clients</td><td class="num">on change</td></tr>
+    </tbody>
+  </table></div>
+  <p>Redis pub/sub is the backplane, so multiple API replicas behind a load balancer stay consistent. The client uses a single multiplexed socket with exponential-backoff reconnect and a <code>since</code> cursor for catch-up after a drop.</p>
+</section>
+
+<!-- ============ 03 ============ -->
+<section id="s3">
+  <div class="sec-head"><span class="n">03</span><h2>Feature scope</h2></div>
+
+  <p class="lead">Twelve pages across eight modules is a lot of surface. The split below protects the five screens that decide the demo and explicitly defers the rest.</p>
+
+  <div class="scope">
+    <div>
+      <div class="hd"><h4>MVP</h4><span class="cnt">must ship &middot; demo-critical</span></div>
+      <div class="sub">Everything the ten-step cascade touches. Nothing here is optional.</div>
+      <ul>
+        <li><b>Auth &amp; RBAC</b> &mdash; JWT access/refresh, four roles, route guards, seeded demo accounts</li>
+        <li><b>Live GIS map</b> &mdash; eight states, districts, ~1,200 real road segments, hazard zones, chokepoints, incidents, vehicles; six filter dimensions</li>
+        <li><b>Risk engine</b> &mdash; calibrated GBT, 24&#8239;h/72&#8239;h horizons, SHAP contributions, hazard-type classifier, confidence with reason</li>
+        <li><b>Explainability panel</b> &mdash; per-segment waterfall of feature contributions, feature freshness, model version</li>
+        <li><b>Routing</b> &mdash; Fastest / Safest / Emergency over pgRouting, side-by-side comparison, automatic replan on blockage</li>
+        <li><b>Fleet</b> &mdash; vehicle and consignment CRUD, GPS simulator, live tracking, delivery progress, ETA-at-risk</li>
+        <li><b>Incident reporting</b> &mdash; typed form, photo, geo-tag, severity, accessibility status; verification queue for admin</li>
+        <li><b>Offline PWA</b> &mdash; service worker, IndexedDB queue, Background Sync, idempotent batch upload, pending-sync UI</li>
+        <li><b>Alert centre</b> &mdash; seven rule types, four severities, dedupe, acknowledge/resolve, live toasts</li>
+        <li><b>Command dashboard</b> &mdash; KPI block, connectivity choropleth, risk distribution, incident trend, bottleneck table</li>
+        <li><b>Emergency mode</b> &mdash; region-wide activation, isolated-district computation, accessible corridors, priority allocation</li>
+        <li><b>i18n</b> &mdash; English and Hindi across UI and alert bodies</li>
+        <li><b>Scenario runner</b> &mdash; the judge-facing demo control bar</li>
+      </ul>
+    </div>
+    <div>
+      <div class="hd"><h4>Advanced</h4><span class="cnt">roadmap &middot; build if time</span></div>
+      <div class="sub">Real roadmap items, presented as the scale story. Do not start any of these before MVP is green.</div>
+      <ul>
+        <li><b>Multi-modal corridors</b> &mdash; Brahmaputra IWT ferry legs, rail terminals, helipad drop points. Strongly NER-specific; the single best differentiator if time allows</li>
+        <li><b>SMS &amp; IVR fallback</b> &mdash; report an incident by SMS codeword where there is no data connection at all</li>
+        <li><b>SAR flood extent</b> &mdash; Sentinel&#8209;1 derived inundation polygons, refreshed per pass</li>
+        <li><b>Reporter trust scoring</b> &mdash; weight field reports by corroboration and historical accuracy</li>
+        <li><b>Cold-chain telemetry</b> &mdash; reefer temperature excursions on vaccine consignments</li>
+        <li><b>What-if digital twin</b> &mdash; close any segment on the map and see regional impact before it happens</li>
+        <li><b>Model retraining pipeline</b> &mdash; scheduled retrain, drift monitoring, champion/challenger promotion</li>
+        <li><b>Federated data exchange</b> &mdash; read/write bridges to NHAI, BRO and NDRF systems</li>
+        <li><b>Regional languages</b> &mdash; Assamese, Manipuri, Khasi, Mizo via the existing namespace structure</li>
+        <li><b>Carbon &amp; cost accounting</b> &mdash; per-consignment emissions and cost of the risk-avoidance detour</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <div class="k">Scope warning</div>
+    <p>User Management and Settings are page eleven and twelve of twelve. Build them as honest, functional, unglamorous CRUD in the last phase. Every hour spent styling a settings page is an hour not spent on the map, and no SIH panel has ever been won on a settings page.</p>
+  </div>
+</section>
+
+<!-- ============ 04 ============ -->
+<section id="s4">
+  <div class="sec-head"><span class="n">04</span><h2>Database schema</h2></div>
+
+  <p class="lead">PostgreSQL 16 with PostGIS 3.4 and pgRouting. Storage CRS is EPSG:4326; metric operations use the <code>geography</code> type or project to EPSG:32646 (UTM 46N), which covers the whole region. Five logical groups, migrated with Alembic.</p>
+
+  <h3>Group A &mdash; Geospatial reference</h3>
+  <pre><b>states</b>            id · code · name · <em>geom MULTIPOLYGON(4326)</em> · area_km2
+<b>districts</b>         id · state_id&rarr;states · code · name · <em>geom MULTIPOLYGON</em>
+                  · <em>hq_point POINT</em> · population · area_km2 · is_isolated bool
+
+<b>road_nodes</b>        id · <em>geom POINT(4326)</em> · is_junction · elevation_m
+<b>road_segments</b>     id · osm_way_id · name · ref                       <i>-- "NH-306"</i>
+                  · road_class ENUM(NH,SH,MDR,ODR,VR,TRACK)
+                  · <em>geom LINESTRING(4326)</em> · length_m · source_node · target_node
+                  · surface · lanes · max_gvw_t · free_flow_kmph
+                  · district_id&rarr;districts · terrain_class ENUM(PLAIN,HILL,HIGH_HILL)
+                  · mean_slope_deg · max_slope_deg · elev_gain_m · hand_m
+                  · drainage_condition · pavement_age_yrs · last_maint_date
+                  · status ENUM(OPEN,PARTIAL,BLOCKED) · status_since
+  <i>indexes: GIST(geom) · btree(district_id) · btree(status) · btree(road_class)</i>
+
+<b>chokepoints</b>       id · segment_id&rarr;road_segments · <em>geom POINT</em>
+                  · type ENUM(BRIDGE,CULVERT,TUNNEL,CUTTING,FORD,CAUSEWAY)
+                  · name · capacity_t · condition_score 0-100 · criticality 1-5
+                  · last_inspection · notes
+
+<b>hazard_zones</b>      id · type ENUM(LANDSLIDE,FLOOD,EROSION,SEISMIC,SNOW)
+                  · susceptibility 1-5 · <em>geom MULTIPOLYGON</em>
+                  · source · issued_at · valid_from · valid_to
+  <i>indexes: GIST(geom) · btree(type, valid_to)</i>
+
+<b>supply_depots</b>     id · name · type ENUM(MEDICAL,FOOD,FUEL,RELIEF,AGRI,CONSTRUCTION)
+                  · district_id · <em>geom POINT</em> · capacity_t · contact · is_active</pre>
+
+  <h3>Group B &mdash; Identity</h3>
+  <pre><b>users</b>             id · email UNIQUE · phone · password_hash · full_name
+                  · role ENUM(ADMIN,OPERATOR,FIELD_OFFICER,EMERGENCY)
+                  · organisation · district_id&rarr;districts · locale ENUM(en,hi)
+                  · is_active · last_login_at · created_at
+<b>refresh_tokens</b>    id · user_id · token_hash · expires_at · revoked_at · device_label
+<b>audit_log</b>         id · actor_id · action · entity_type · entity_id
+                  · before JSONB · after JSONB · ip · user_agent · ts
+  <i>index: btree(entity_type, entity_id, ts DESC) · BRIN(ts)</i></pre>
+
+  <h3>Group C &mdash; Fleet &amp; movement</h3>
+  <pre><b>vehicles</b>          id · reg_no UNIQUE · operator_id&rarr;users
+                  · type ENUM(TRUCK,TANKER,REEFER,PICKUP,AMBULANCE,BOAT)
+                  · capacity_t · gvw_t · has_reefer · driver_name · driver_phone
+                  · status ENUM(IDLE,EN_ROUTE,HALTED,MAINTENANCE) · is_emergency_eligible
+
+<b>consignments</b>      id · vehicle_id&rarr;vehicles · cargo_type ENUM(MEDICINE,FOOD,AGRI,
+                    CONSTRUCTION,FUEL,RELIEF) · weight_t
+                  · origin_depot_id · dest_district_id · dest_point
+                  · priority ENUM(ROUTINE,HIGH,CRITICAL,LIFELINE)
+                  · active_route_id&rarr;routes · status ENUM(PLANNED,DISPATCHED,
+                    IN_TRANSIT,DELAYED,REROUTED,DELIVERED,ABORTED)
+                  · dispatched_at · eta · eta_confidence · delivered_at
+
+<b>vehicle_positions</b> vehicle_id · ts · <em>geom POINT</em> · speed_kmph · heading
+                  · segment_id · route_progress_pct · source ENUM(GPS,SIM)
+  <i>hypertable on ts, 7-day chunks · index (vehicle_id, ts DESC) · GIST(geom)</i>
+
+<b>routes</b>            id · consignment_id · variant ENUM(FASTEST,SAFEST,EMERGENCY)
+                  · <em>geom LINESTRING</em> · segment_ids int[] · distance_m · duration_s
+                  · risk_score · max_segment_risk · disruption_count
+                  · min_accessibility · generated_at · model_version
+                  · is_active · superseded_by&rarr;routes · supersede_reason</pre>
+
+  <h3>Group D &mdash; Field intelligence</h3>
+  <pre><b>incidents</b>         id · client_uuid UNIQUE          <i>-- offline idempotency key</i>
+                  · reporter_id&rarr;users · type ENUM(LANDSLIDE,FLOOD,ROAD_DAMAGE,
+                    BRIDGE_DAMAGE,CONGESTION,ACCIDENT,SNOW,OTHER)
+                  · severity ENUM(LOW,MEDIUM,HIGH,CRITICAL) · description
+                  · <em>geom POINT(4326)</em> · gps_accuracy_m · segment_id&rarr;road_segments
+                  · accessibility ENUM(OPEN,PARTIAL,BLOCKED)
+                  · status ENUM(REPORTED,VERIFIED,REJECTED,RESOLVED)
+                  · device_ts · reported_at · verified_by · verified_at · resolved_at
+  <i>indexes: GIST(geom) · btree(status, reported_at DESC) · btree(segment_id)</i>
+
+<b>incident_media</b>    id · incident_id · storage_key · mime · bytes · sha256
+                  · <em>exif_geom POINT</em> · captured_at · uploaded_at
+
+<b>alerts</b>            id · type ENUM(ROAD_BLOCKED,SEVERE_WEATHER,LANDSLIDE_RISK,
+                    VEHICLE_DELAY,VEHICLE_IN_RISK_ZONE,SUPPLY_DISRUPTION,
+                    DISTRICT_ISOLATED) · severity ENUM(LOW,MEDIUM,HIGH,CRITICAL)
+                  · title_en · title_hi · body_en · body_hi · recommended_action_en/hi
+                  · <em>geom GEOMETRY</em> · district_id · segment_id
+                  · entity_type · entity_id · evidence JSONB   <i>-- ids that justify it</i>
+                  · dedupe_key UNIQUE-ish · status ENUM(OPEN,ACKNOWLEDGED,RESOLVED)
+                  · acknowledged_by · acknowledged_at · created_at · expires_at
+<b>alert_targets</b>     alert_id · role · user_id · district_id · delivered_at · read_at
+
+<b>sync_receipts</b>     client_uuid · user_id · received_at
+                  · resolution ENUM(CREATED,DUPLICATE,REJECTED) · entity_id</pre>
+
+  <h3>Group E &mdash; Risk &amp; model</h3>
+  <pre><b>weather_observations</b> id · ts · grid_cell_id · <em>geom POINT</em> · rain_1h · rain_6h
+                  · rain_24h · rain_72h · api_14d · temp_c · wind_kmph
+                  · warning_level ENUM(NONE,YELLOW,ORANGE,RED) · source
+<b>weather_forecasts</b>    id · issued_at · valid_at · horizon_h · grid_cell_id
+                  · rain_mm · confidence · warning_level · source
+
+<b>segment_risk_current</b> segment_id PK&rarr;road_segments · horizon_h
+                  · risk_score 0-100 · risk_band ENUM(SAFE,MODERATE,HIGH,CRITICAL)
+                  · primary_hazard · hazard_probs JSONB · confidence ENUM(LOW,MED,HIGH)
+                  · confidence_reason · features JSONB · contributions JSONB
+                  · base_ml_score · live_adjustment · override_applied
+                  · model_version&rarr;model_registry · computed_at · valid_until
+<b>segment_risk_history</b> same shape, append-only, partitioned monthly on computed_at
+
+<b>disruption_events</b>    id · segment_id · cause · severity · started_at · ended_at
+                  · duration_h · source ENUM(FIELD,NEWS,PWD_RECORD,SYNTHETIC)
+                  · verified          <i>-- this is the ML label table</i>
+
+<b>model_registry</b>       id · name · version · algorithm · trained_at
+                  · feature_list text[] · metrics JSONB · artifact_path
+                  · training_rows · is_active · notes</pre>
+
+  <h3>Materialised views</h3>
+  <div class="tw"><table>
+    <thead><tr><th>View</th><th>Purpose</th><th>Refresh trigger</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">mv_routing_edges</td><td>pgRouting edge table with three dynamic cost columns derived from current risk</td><td>After every risk recompute; concurrently</td></tr>
+      <tr><td class="mono">mv_district_connectivity</td><td>Per district: reachable depots, best path cost, isolation flag</td><td>After <code>mv_routing_edges</code></td></tr>
+      <tr><td class="mono">mv_dashboard_kpi</td><td>The nine headline counters in one row</td><td>Every 30&#8239;s and on event</td></tr>
+      <tr><td class="mono">mv_bottlenecks</td><td>Chokepoints ranked by betweenness &times; risk &times; criticality</td><td>Every 15&#8239;min</td></tr>
+    </tbody>
+  </table></div>
+  <p><code>mv_bottlenecks</code> is worth calling out to judges: ranking chokepoints by <em>graph betweenness centrality</em> weighted by current risk identifies the structurally critical points in the network &mdash; the bridges whose loss disconnects the most origin&ndash;destination pairs. That is an infrastructure-planning output, not a dashboard widget.</p>
+</section>
+
+<!-- ============ 05 ============ -->
+<section id="s5">
+  <div class="sec-head"><span class="n">05</span><h2>API surface</h2></div>
+
+  <p class="lead">Versioned at <code>/api/v1</code>. Spatial reads return GeoJSON <code>FeatureCollection</code>; everything else returns <code>{ data, meta }</code>. Errors are RFC&nbsp;7807 <code>application/problem+json</code>. Lists use cursor pagination. The OpenAPI schema generates the frontend TypeScript client, so types can never drift.</p>
+
+  <h3>Authentication &amp; users</h3>
+  <div class="tw"><table>
+    <thead><tr><th style="width:64px"></th><th>Path</th><th>Notes</th><th>Roles</th></tr></thead>
+    <tbody>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/auth/login</td><td>Returns access (15&#8239;m) + refresh (7&#8239;d, httpOnly cookie)</td><td>public</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/auth/refresh</td><td>Rotating refresh tokens, reuse detection</td><td>public</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/auth/logout</td><td>Revokes the presented refresh token</td><td>any</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/auth/me</td><td>Profile, role, permissions, assigned district</td><td>any</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/users</td><td>Filter by role, district, status</td><td>admin</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/users</td><td>Provision with a temporary password</td><td>admin</td></tr>
+      <tr><td><span class="verb v-patch">PATCH</span></td><td class="mono">/users/{id}</td><td>Profile, role, district, activation</td><td>admin</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Geospatial</h3>
+  <div class="tw"><table>
+    <thead><tr><th style="width:64px"></th><th>Path</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/geo/states</td><td>Eight NER states with simplified geometry</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/geo/districts</td><td><code>?state=&amp;include=connectivity</code> &mdash; choropleth payload</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/geo/segments</td><td><code>?bbox=&amp;status=&amp;risk_min=&amp;road_class=</code></td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/geo/segments/{id}</td><td>Full attributes, chokepoints, current risk, incident history</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/geo/hazard-zones</td><td><code>?type=&amp;min_susceptibility=</code></td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/geo/chokepoints</td><td><code>?criticality_min=&amp;bbox=</code></td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/geo/depots</td><td>Supply depots by type and district</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/geo/tiles/{layer}/{z}/{x}/{y}.mvt</td><td>Vector tiles via <code>ST_AsMVT</code>; ETag cached in Redis</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Risk intelligence</h3>
+  <div class="tw"><table>
+    <thead><tr><th style="width:64px"></th><th>Path</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/risk/segments/{id}</td><td><code>?horizon=24|72</code> &mdash; score, band, hazard, confidence</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/risk/segments/{id}/explain</td><td><strong>The showcase endpoint.</strong> Ranked SHAP contributions, per-layer deltas, feature freshness, model version</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/risk/districts/{id}</td><td>Aggregate district risk and isolation probability</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/risk/heatmap</td><td><code>?bbox=&amp;horizon=</code> &mdash; binned surface for rendering</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/risk/simulate</td><td>What-if: inject rainfall or a hypothetical incident, score synchronously, discard</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/risk/model</td><td>Active model card: metrics, features, training window</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/risk/recompute</td><td>Force a scoring pass &mdash; admin, and the scenario runner</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Routing</h3>
+  <div class="tw"><table>
+    <thead><tr><th style="width:64px"></th><th>Path</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/routes/plan</td><td>Body: origin, destination, vehicle_type, gvw_t, cargo_priority, variants[]. Returns all requested variants with full metrics</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/routes/{id}</td><td>Geometry, segment breakdown, per-segment risk</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/routes/{id}/recalculate</td><td>Replan from the vehicle's current position</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/routes/{id}/alternatives</td><td>K-shortest risk-aware alternatives, labelled A/B/C</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/routes/compare</td><td>Diff two variants: time cost, risk saved, segments differing</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Fleet</h3>
+  <div class="tw"><table>
+    <thead><tr><th style="width:64px"></th><th>Path</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/vehicles</td><td><code>?status=&amp;type=&amp;district=&amp;near=lon,lat,radius</code></td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/vehicles</td><td>Register: reg no, type, capacity, driver</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/vehicles/{id}/track</td><td>Position history over a time window</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/vehicles/{id}/position</td><td>Telemetry ingest &mdash; real device or simulator, same endpoint</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/fleet/live</td><td>Snapshot for initial map paint; deltas arrive over WS</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/consignments</td><td>Create; plans a route and dispatches</td></tr>
+      <tr><td><span class="verb v-patch">PATCH</span></td><td class="mono">/consignments/{id}/reroute</td><td>Accept a proposed alternative; supersedes the active route</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Incidents</h3>
+  <div class="tw"><table>
+    <thead><tr><th style="width:64px"></th><th>Path</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/incidents</td><td><code>?bbox=&amp;type=&amp;status=&amp;since=</code></td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/incidents</td><td>Multipart. Snaps to nearest segment within 150&#8239;m, publishes <code>incident.created</code></td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/incidents/sync</td><td><strong>Offline batch.</strong> Array of queued reports; idempotent on <code>client_uuid</code>; returns per-item resolution</td></tr>
+      <tr><td><span class="verb v-patch">PATCH</span></td><td class="mono">/incidents/{id}/verify</td><td>Admin verification &mdash; the trigger for the hard risk override</td></tr>
+      <tr><td><span class="verb v-patch">PATCH</span></td><td class="mono">/incidents/{id}/resolve</td><td>Clears the override, returns the segment to model scoring</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Alerts, analytics, emergency, demo</h3>
+  <div class="tw"><table>
+    <thead><tr><th style="width:64px"></th><th>Path</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/alerts</td><td><code>?severity=&amp;status=&amp;district=</code>, newest first</td></tr>
+      <tr><td><span class="verb v-patch">PATCH</span></td><td class="mono">/alerts/{id}/acknowledge</td><td>Records who and when; feeds the audit trail</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/alerts/rules</td><td>Threshold configuration &mdash; admin</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/analytics/kpis</td><td>The nine headline counters</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/analytics/connectivity</td><td>Per-district connectivity status and trend</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/analytics/bottlenecks</td><td>Ranked chokepoints with betweenness scores</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/analytics/incident-trends</td><td><code>?bucket=day|week&amp;group_by=type|district</code></td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/analytics/export.csv</td><td>Any analytics query as CSV &mdash; officials ask for this</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/emergency/activate</td><td>Body: districts, hazard, declared_by. Flips system-wide mode</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/emergency/reachability</td><td>Which depots can still reach which districts, and at what cost</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/emergency/allocate</td><td>Given a need vector, assign vehicles to districts by priority</td></tr>
+      <tr><td><span class="verb v-get">GET</span></td><td class="mono">/emergency/corridors</td><td>Guaranteed-accessible lifeline corridors</td></tr>
+      <tr><td><span class="verb v-post">POST</span></td><td class="mono">/demo/scenario/{name}/{action}</td><td><code>start | pause | reset | step</code> &mdash; the judge control bar</td></tr>
+      <tr><td><span class="verb v-ws">WS</span></td><td class="mono">/ws?token=</td><td>Multiplexed socket; <code>subscribe</code> / <code>unsubscribe</code> frames per topic</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ 06 ============ -->
+<section id="s6">
+  <div class="sec-head"><span class="n">06</span><h2>AI / ML architecture</h2></div>
+
+  <p class="lead">The instruction was explicit: no fake AI labels. So the risk engine is three named layers, each of which emits its own delta into the explain payload. A judge can point at any number on screen and be told exactly where it came from.</p>
+
+  <figure>
+    <svg viewBox="0 0 940 430" role="img" aria-label="Three-layer risk engine: a calibrated gradient boosted tree produces a base probability from twenty-eight features; a bounded live-signal adjustment adds field reports and meteorological warnings; a deterministic safety envelope applies hard overrides. Each layer emits a delta into a shared explain payload alongside the final score.">
+      <defs>
+        <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+        <marker id="ar2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#63529B"/>
+        </marker>
+      </defs>
+
+      <!-- feature groups -->
+      <text x="12" y="18" font-size="10" fill="currentColor" opacity=".6" letter-spacing="1.4">FEATURE GROUPS</text>
+      <g fill="none" stroke="currentColor" stroke-width="1" opacity=".65">
+        <rect x="12" y="28" width="176" height="28" rx="2"/>
+        <rect x="12" y="62" width="176" height="28" rx="2"/>
+        <rect x="12" y="96" width="176" height="28" rx="2"/>
+        <rect x="12" y="130" width="176" height="28" rx="2"/>
+        <rect x="12" y="164" width="176" height="28" rx="2"/>
+      </g>
+      <g font-size="10.5" fill="currentColor">
+        <text x="24" y="46">Hydro-met &mdash; 8 features</text>
+        <text x="24" y="80">Terrain &amp; slope &mdash; 7</text>
+        <text x="24" y="114">Susceptibility raster &mdash; 4</text>
+        <text x="24" y="148">Asset condition &mdash; 5</text>
+        <text x="24" y="182">History &amp; live signal &mdash; 4</text>
+      </g>
+      <path d="M188 110 L228 110" stroke="currentColor" stroke-width="1.2" marker-end="url(#ar2)"/>
+
+      <!-- layer 1 -->
+      <rect x="232" y="28" width="330" height="164" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <text x="248" y="50" font-size="10" fill="currentColor" opacity=".6" letter-spacing="1.3">LAYER 1</text>
+      <text x="248" y="73" font-size="14" font-weight="600" fill="currentColor">Calibrated gradient boosting</text>
+      <g font-size="11" fill="currentColor" opacity=".8">
+        <text x="248" y="96">HistGradientBoostingClassifier, isotonic-calibrated</text>
+        <text x="248" y="114">Binary: disruption within horizon H &isin; {24&#8239;h, 72&#8239;h}</text>
+        <text x="248" y="132">Multiclass sibling: which failure mode</text>
+        <text x="248" y="150">TreeSHAP contributions computed with the score</text>
+      </g>
+      <text x="248" y="177" font-size="12" font-weight="600" fill="currentColor">&rarr; base score 0&ndash;100 + per-feature contributions</text>
+
+      <line x1="397" y1="192" x2="397" y2="222" stroke="currentColor" stroke-width="1.2" marker-end="url(#ar2)"/>
+
+      <!-- layer 2 -->
+      <rect x="232" y="224" width="330" height="86" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <text x="248" y="246" font-size="10" fill="currentColor" opacity=".6" letter-spacing="1.3">LAYER 2</text>
+      <text x="248" y="268" font-size="14" font-weight="600" fill="currentColor">Bounded live-signal adjustment</text>
+      <text x="248" y="290" font-size="11" fill="currentColor" opacity=".8">Unverified field reports &middot; IMD warning level &middot; traffic ratio</text>
+      <text x="248" y="304" font-size="11" font-weight="600" fill="currentColor">clamped to &plusmn;20 points &mdash; a rumour cannot dominate the model</text>
+
+      <line x1="397" y1="310" x2="397" y2="340" stroke="currentColor" stroke-width="1.2" marker-end="url(#ar2)"/>
+
+      <!-- layer 3 -->
+      <rect x="232" y="342" width="330" height="76" rx="2" fill="none" stroke="#AC2E25" stroke-width="1.8"/>
+      <text x="248" y="364" font-size="10" fill="#AC2E25" opacity=".85" letter-spacing="1.3">LAYER 3 &middot; SAFETY ENVELOPE</text>
+      <text x="248" y="386" font-size="14" font-weight="600" fill="#AC2E25">Deterministic hard overrides</text>
+      <text x="248" y="406" font-size="11" fill="#AC2E25" opacity=".9">Verified block &rArr; 100. IMD Red &rArr; floor 75. Bridge fail &rArr; exclude edge.</text>
+
+      <!-- explain rail -->
+      <path d="M566 110 L640 110 L640 200" stroke="#63529B" stroke-width="1.3" fill="none" stroke-dasharray="4 4"/>
+      <path d="M566 267 L640 267 L640 240" stroke="#63529B" stroke-width="1.3" fill="none" stroke-dasharray="4 4"/>
+      <path d="M566 380 L662 380 L662 260" stroke="#63529B" stroke-width="1.3" fill="none" stroke-dasharray="4 4"/>
+      <line x1="640" y1="228" x2="700" y2="228" stroke="#63529B" stroke-width="1.3" marker-end="url(#ar2a)"/>
+
+      <rect x="704" y="150" width="224" height="156" rx="2" fill="none" stroke="#63529B" stroke-width="1.6"/>
+      <text x="720" y="172" font-size="10" fill="#63529B" opacity=".85" letter-spacing="1.3">OUTPUT</text>
+      <text x="720" y="194" font-size="13.5" font-weight="600" fill="#63529B">Explain payload</text>
+      <g font-size="11" fill="#63529B" opacity=".9">
+        <text x="720" y="216">risk_score &middot; risk_band</text>
+        <text x="720" y="234">primary_hazard + probabilities</text>
+        <text x="720" y="252">confidence + its reason</text>
+        <text x="720" y="270">ranked feature contributions</text>
+        <text x="720" y="288">per-layer delta &middot; model_version</text>
+      </g>
+
+      <rect x="704" y="330" width="224" height="60" rx="2" fill="none" stroke="currentColor" stroke-width="1.2"/>
+      <text x="720" y="352" font-size="11.5" font-weight="600" fill="currentColor">Written to segment_risk_current</text>
+      <text x="720" y="372" font-size="10.5" fill="currentColor" opacity=".75">+ appended to segment_risk_history</text>
+    </svg>
+    <figcaption><b>Every layer is auditable and every layer is bounded.</b> The model cannot be overruled by an unverified rumour (layer 2 is clamped), and the model cannot overrule physical reality (layer 3 is deterministic). The violet rail is what turns this from a black box into a government-defensible instrument: the contribution of each layer travels with the score and renders directly as the explainability panel.</figcaption>
+  </figure>
+
+  <h3>Model A &mdash; segment disruption risk</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Property</th><th>Choice</th><th>Why this and not the obvious alternative</th></tr></thead>
+    <tbody>
+      <tr><td>Task</td><td>Binary classification, P(disruption &le; H)</td><td>Regression on &ldquo;risk&rdquo; has no ground truth. A closure either happened or it did not.</td></tr>
+      <tr><td>Algorithm</td><td><code>HistGradientBoostingClassifier</code></td><td>Handles missing features natively (feeds do fail), trains in seconds, and TreeSHAP is exact on it. Stays inside the specified scikit-learn stack.</td></tr>
+      <tr><td>Calibration</td><td>Isotonic regression, held-out fold</td><td>Raw GBT scores are not probabilities. Without this, &ldquo;87/100&rdquo; means nothing and the claim is indefensible.</td></tr>
+      <tr><td>Primary metric</td><td>PR-AUC and Brier score</td><td>Disruptions are ~2&ndash;4&#8239;% of segment-days. ROC-AUC flatters imbalanced problems; quoting PR-AUC signals you know that.</td></tr>
+      <tr><td>Operating metric</td><td>Recall at top 10&#8239;% of segments</td><td>The real question is &ldquo;if a control room can watch 60 segments today, how many of tomorrow's failures are in that 60?&rdquo;</td></tr>
+      <tr><td>Explainability</td><td>TreeSHAP, cached with the score</td><td>Computed once per scoring pass, not per request. The API just reads it.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>The feature that will impress</h4>
+  <p><strong>Antecedent Precipitation Index</strong> &mdash; a 14-day exponentially weighted sum of prior rainfall, <code>API&#8348; = k&middot;API&#8348;&#8331;&#8321; + P&#8348;</code> with k&nbsp;&asymp;&nbsp;0.9. Rainfall-triggered landslides are governed by soil saturation, not by today's rain alone; a 40&#8239;mm day after a dry fortnight is far less dangerous than 40&#8239;mm on already-saturated slopes. It is three lines of pandas, it is genuine slope-stability science, and it is the difference between a model that has read the literature and a model that has read a tutorial.</p>
+
+  <h3>Models B and C</h3>
+  <div class="grid g2">
+    <div class="card"><span class="tag">Model B</span><h4>Hazard-type classifier</h4><p>Multinomial GBT over the same feature vector, conditioned on at-risk segments. Outputs a probability distribution over landslide, flooding, washout, bridge failure and snow blockage &mdash; which is what populates &ldquo;Predicted Issue: Possible Landslide&rdquo; rather than a hard-coded string.</p></div>
+    <div class="card"><span class="tag">Model C</span><h4>Segment travel-time regressor</h4><p>Gradient boosting on observed traversal times given road class, gradient, surface, rainfall, hour of day and vehicle type. Feeds the routing edge weights and powers ETA-at-risk detection &mdash; the alert that fires when a consignment's predicted arrival slips past its promise.</p></div>
+  </div>
+
+  <h3>Training data &mdash; and being honest about it</h3>
+  <p>There is no public per-segment closure dataset for the North East. Pretending otherwise is the fastest way to lose credibility with a technical judge. The defensible approach, which should be stated openly in the presentation:</p>
+  <ol>
+    <li><strong>Real inputs.</strong> Terrain, slope and elevation are derived from actual SRTM/Cartosat DEM. The road network is real OSM geometry. Susceptibility comes from published Bhuvan/GSI landslide zonation. Historical rainfall is real IMD gridded data. None of this is invented.</li>
+    <li><strong>Seeded real labels.</strong> A few hundred genuine closure events compiled from NDMA and state SDMA bulletins, BRO advisories and news archives for the 2019&ndash;2024 monsoons.</li>
+    <li><strong>Physically-grounded augmentation.</strong> Additional labels generated by a documented hazard function over real rainfall and real terrain &mdash; not by a random number generator. The generator is committed to the repository and shown on request.</li>
+    <li><strong>A model card that says all of this,</strong> served at <code>GET /risk/model</code> and linked from the UI.</li>
+  </ol>
+  <div class="callout">
+    <div class="k">Judge-proofing</div>
+    <p>&ldquo;How did you train this?&rdquo; is the single most likely hard question you will face. Rehearse a 30-second answer that names real inputs, admits the label augmentation, explains the physical basis of the generator, and points at the model card. Volunteering the limitation reads as rigour; being caught hiding it reads as fabrication.</p>
+  </div>
+
+  <h3>Risk bands</h3>
+  <div class="ramp">
+    <span class="chip"><span class="sw" style="background:var(--safe)"></span>Safe <span class="rng">0&ndash;24</span></span>
+    <span class="chip"><span class="sw" style="background:var(--moderate)"></span>Moderate <span class="rng">25&ndash;49</span></span>
+    <span class="chip"><span class="sw" style="background:var(--high)"></span>High <span class="rng">50&ndash;74</span></span>
+    <span class="chip"><span class="sw" style="background:var(--critical)"></span>Critical <span class="rng">75&ndash;100</span></span>
+  </div>
+  <p>Confidence is reported separately from score, as Low / Medium / High <em>with its reason</em> &mdash; derived from feature freshness (how many inputs are stale beyond six hours), calibration bin width at that probability, and prediction spread across the ensemble. &ldquo;High risk, low confidence, because rainfall telemetry for this grid cell is nine hours old&rdquo; is an operationally useful sentence that almost no competing prototype will produce.</p>
+</section>
+
+<!-- ============ 07 ============ -->
+<section id="s7">
+  <div class="sec-head"><span class="n">07</span><h2>GIS architecture</h2></div>
+
+  <p class="lead">The map is the product. It must render a few thousand risk-coloured segments smoothly, work without a network connection in the field app, and look like a command centre rather than a hobby project.</p>
+
+  <h3>Data acquisition and preprocessing</h3>
+  <p>A one-time pipeline in <code>data/pipeline/</code>, checkpointed at every stage so a failure does not cost the whole run:</p>
+  <ol>
+    <li><strong>Extract</strong> &mdash; Geofabrik Northeast India OSM extract; filter with <code>osmium</code> to <code>motorway | trunk | primary | secondary | tertiary</code> plus district-connector roads. Expect 15&ndash;25&#8239;k ways before simplification.</li>
+    <li><strong>Load and node</strong> &mdash; <code>osm2pgsql</code> into PostGIS, then <code>pgr_createTopology</code> to build <code>road_nodes</code> and populate source/target on every segment.</li>
+    <li><strong>Simplify</strong> &mdash; <code>ST_SimplifyPreserveTopology</code> at rendering tolerance for the tile layer; keep full geometry for routing. Target roughly 1,200 segments in the demo working set.</li>
+    <li><strong>Terrain enrich</strong> &mdash; sample SRTM 30&#8239;m DEM with <code>rasterio</code> zonal statistics along each segment: mean and max slope, elevation gain, HAND (height above nearest drainage). This is the step that takes the longest &mdash; start it on day one.</li>
+    <li><strong>Hazard join</strong> &mdash; spatial join against Bhuvan landslide susceptibility and CWC flood hazard polygons; write class and index onto each segment.</li>
+    <li><strong>Chokepoint extraction</strong> &mdash; OSM <code>bridge=yes</code>, <code>tunnel=yes</code>, <code>ford=yes</code> tags plus manual annotation of the corridors that actually matter for the demo.</li>
+    <li><strong>Seed</strong> &mdash; districts from GADM/Survey of India, depots from real facility locations, vehicles and users generated.</li>
+  </ol>
+
+  <h3>Routing engine</h3>
+  <p>pgRouting over <code>mv_routing_edges</code>, a materialised view that carries three cost columns recomputed on every risk pass. The variants are genuinely different objectives, not the same path relabelled:</p>
+  <pre><i>-- FASTEST: pure predicted travel time</i>
+cost_fastest  = length_m / speed_effective(road_class, surface, gradient, rain)
+
+<i>-- SAFEST: time penalised by risk, with chokepoints weighted by criticality</i>
+cost_safest   = cost_fastest &times; (1 + <em>&alpha;</em> &times; risk_score / 100)
+              + <em>&beta;</em> &times; &Sigma; chokepoint_criticality
+                                          <i>-- &alpha; = 1.8, &beta; = 120s per criticality point</i>
+
+<i>-- EMERGENCY: safest, plus hard feasibility constraints</i>
+cost_emergency = cost_safest
+   WHERE risk_score &lt; 75                       <i>-- never route relief into a critical segment</i>
+     AND status = 'OPEN'
+     AND max_gvw_t &ge; vehicle.gvw_t             <i>-- the bridge must actually take the load</i>
+     AND min_chokepoint_capacity &ge; vehicle.gvw_t</pre>
+  <p>Blocked segments are excluded from the view entirely, so <code>pgr_bdAstar</code> simply cannot return them &mdash; automatic rerouting is a consequence of the data model rather than a special case in application code. That is the cleanest possible answer to &ldquo;how does it recalculate?&rdquo; Alternatives come from <code>pgr_ksp</code> (K-shortest paths) with a similarity filter so the three options presented are meaningfully distinct rather than three variants of the same road.</p>
+
+  <h3>Rendering</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Layer</th><th>Source</th><th>Encoding</th></tr></thead>
+    <tbody>
+      <tr><td>Basemap</td><td>Self-hosted PMTiles, NER extract</td><td>Muted dark terrain style; no external tile dependency</td></tr>
+      <tr><td>Hillshade</td><td>DEM-derived raster tiles</td><td>Makes the terrain argument visible &mdash; judges see the mountains</td></tr>
+      <tr><td>District boundaries</td><td>MVT from PostGIS</td><td>Hairline stroke; fill only in choropleth mode</td></tr>
+      <tr><td>Road segments</td><td>MVT, joined to current risk</td><td>Four-stop risk colour ramp, width by road class</td></tr>
+      <tr><td>Hazard zones</td><td>MVT</td><td>Diagonal-hatch fill pattern &mdash; distinguishable from risk colour</td></tr>
+      <tr><td>Chokepoints</td><td>GeoJSON</td><td>Diamond symbols sized by criticality</td></tr>
+      <tr><td>Incidents</td><td>GeoJSON over WS</td><td>Typed icons, clustered below zoom 8, pulse on arrival</td></tr>
+      <tr><td>Vehicles</td><td>WS position stream</td><td>Heading-rotated markers, position interpolated between ticks</td></tr>
+      <tr><td>Active routes</td><td>GeoJSON</td><td>Animated dash offset in the direction of travel</td></tr>
+    </tbody>
+  </table></div>
+  <p>Telemetry arrives every three seconds but markers are interpolated client-side with <code>requestAnimationFrame</code>, so vehicles glide rather than teleport. It costs about forty lines and it is the difference between a map that looks live and a map that looks like a slideshow.</p>
+
+  <div class="callout">
+    <div class="k">Recommended change from the brief</div>
+    <p>Use <strong>MapLibre GL JS with PMTiles</strong> rather than Leaflet. Three reasons, in order of importance: it renders several thousand styled line features on the GPU where Leaflet's SVG layer stalls; a single PMTiles file gives the field PWA a genuinely offline basemap, which the offline requirement otherwise cannot fully satisfy; and terrain extrusion turns the region's topography into something a judge can see rather than infer. It is open source with no token and no billing. If the team has never touched MapLibre, Leaflet with a canvas renderer is an acceptable fallback &mdash; but decide this in phase&nbsp;1, not phase&nbsp;6.</p>
+  </div>
+</section>
+
+<!-- ============ 08 ============ -->
+<section id="s8">
+  <div class="sec-head"><span class="n">08</span><h2>Offline behaviour &amp; language</h2></div>
+
+  <p class="lead">The field officer is the user with the worst connectivity and the most valuable data. Offline is not a feature flag on that interface &mdash; it is the default assumption.</p>
+
+  <h3>The write path when there is no network</h3>
+  <ol>
+    <li>The form writes to IndexedDB (Dexie, store <code>pendingIncidents</code>) with a <code>client_uuid</code> from <code>crypto.randomUUID()</code> and a <code>device_ts</code>. The photograph is compressed client-side to WebP under 1&#8239;MB and stored as a Blob in <code>mediaBlobs</code>.</li>
+    <li>The UI updates optimistically: the incident appears on the officer's local map with a <em>Pending sync</em> chip. No spinner, no error &mdash; from the officer's point of view the report is filed.</li>
+    <li>A Background Sync registration (<code>sync-incidents</code>) is queued. If Background Sync is unavailable, an <code>online</code> event listener plus a 60-second poll covers the gap.</li>
+    <li>On reconnection the service worker drains the queue to <code>POST /incidents/sync</code> as a single batch, in <code>device_ts</code> order.</li>
+    <li>The server deduplicates on <code>client_uuid</code> against <code>sync_receipts</code> and returns a per-item resolution &mdash; created, duplicate or rejected. Replays are therefore free, which matters because flaky links produce them constantly.</li>
+    <li>The client reconciles: purge the accepted, mark the rejected with a readable reason, retry the failed with exponential backoff.</li>
+  </ol>
+  <p>Conflict resolution is trivially safe here because incidents are append-only observations, not mutable records. The server timestamp is authoritative for ordering; <code>device_ts</code> is preserved so a report filed at 06:10 and synced at 14:30 still reads as a 06:10 observation.</p>
+
+  <h3>What is cached for offline reading</h3>
+  <div class="grid g3">
+    <div class="card"><span class="tag">Precached</span><h4>App shell</h4><p>Routes, components, icons and both translation bundles, versioned by build hash.</p></div>
+    <div class="card"><span class="tag">On assignment</span><h4>District map slice</h4><p>PMTiles subset plus segment geometry for the officer's assigned district, in Cache Storage. Roughly 8&ndash;20&#8239;MB.</p></div>
+    <div class="card"><span class="tag">Last known</span><h4>Risk snapshot</h4><p>Latest risk bands with an explicit &ldquo;as of HH:MM&rdquo; stamp, so stale data is never mistaken for live data.</p></div>
+  </div>
+
+  <h3>Multilingual</h3>
+  <p><code>next-intl</code> with locale-prefixed routes (<code>/en</code>, <code>/hi</code>), messages split into per-module namespaces so a new language is a directory of JSON files and one entry in the locale registry &mdash; no code changes. Two details that matter beyond the UI strings:</p>
+  <ul>
+    <li><strong>Alerts are bilingual at rest.</strong> The <code>alerts</code> table stores <code>title_en/title_hi</code> and <code>body_en/body_hi</code>, generated from templates at creation time. An alert delivered to a Hindi-locale user is Hindi in the notification, in the export and in the audit record &mdash; not translated client-side at display time.</li>
+    <li><strong>Number, date and unit formatting</strong> go through <code>Intl</code> with the active locale, including the Indian digit grouping convention.</li>
+  </ul>
+  <p>Assamese, Manipuri, Khasi and Mizo are structurally supported from day one and listed in Settings as &ldquo;coming soon&rdquo; &mdash; which is honest, and demonstrates that the architecture anticipated them.</p>
+</section>
+
+<!-- ============ 09 ============ -->
+<section id="s9">
+  <div class="sec-head"><span class="n">09</span><h2>The demo cascade</h2></div>
+
+  <p class="lead">The ten-step scenario in the brief is not a demo script bolted on at the end. It is a specification for the event spine, and it should be treated as a build target from phase&nbsp;5 onward.</p>
+
+  <figure>
+    <svg viewBox="0 0 980 400" role="img" aria-label="Five-stage cascade: a field officer's incident report is fused to a road segment, triggers a risk rescore with a hard override to blocked, refreshes the routing view and invalidates affected routes, then fans out alerts over WebSocket topics, updating the map, fleet view, alert centre and dashboard simultaneously.">
+      <defs>
+        <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+        </marker>
+      </defs>
+
+      <g fill="none" stroke="currentColor" stroke-width="1.4">
+        <rect x="8" y="46" width="170" height="104" rx="2"/>
+        <rect x="203" y="46" width="170" height="104" rx="2"/>
+        <rect x="398" y="46" width="170" height="104" rx="2"/>
+        <rect x="593" y="46" width="170" height="104" rx="2"/>
+      </g>
+      <rect x="788" y="46" width="170" height="104" rx="2" fill="none" stroke="#63529B" stroke-width="1.8"/>
+
+      <g font-size="10" opacity=".6" fill="currentColor" letter-spacing="1.3">
+        <text x="22" y="30">STAGE 1</text><text x="217" y="30">STAGE 2</text>
+        <text x="412" y="30">STAGE 3</text><text x="607" y="30">STAGE 4</text>
+      </g>
+      <text x="802" y="30" font-size="10" opacity=".75" fill="#63529B" letter-spacing="1.3">STAGE 5</text>
+
+      <g font-size="13.5" font-weight="600" fill="currentColor">
+        <text x="22" y="72">Report</text><text x="217" y="72">Fuse</text>
+        <text x="412" y="72">Rescore</text><text x="607" y="72">Reroute</text>
+      </g>
+      <text x="802" y="72" font-size="13.5" font-weight="600" fill="#63529B">Notify</text>
+
+      <g font-size="10.5" fill="currentColor" opacity=".82">
+        <text x="22" y="94">POST /incidents</text>
+        <text x="22" y="110">landslide &middot; critical</text>
+        <text x="22" y="126">geo-tag &middot; photo</text>
+        <text x="22" y="142">queued if offline</text>
+
+        <text x="217" y="94">snap to segment</text>
+        <text x="217" y="110">within 150&#8239;m</text>
+        <text x="217" y="126">admin verifies</text>
+        <text x="217" y="142">publish incident.verified</text>
+
+        <text x="412" y="94">recompute segment</text>
+        <text x="412" y="110">+ 2-hop neighbours</text>
+        <text x="412" y="126">override &rArr; risk 100</text>
+        <text x="412" y="142">status &rArr; BLOCKED</text>
+
+        <text x="607" y="94">refresh mv_routing_edges</text>
+        <text x="607" y="110">edge disappears</text>
+        <text x="607" y="126">find routes crossing it</text>
+        <text x="607" y="142">replan each from position</text>
+      </g>
+      <g font-size="10.5" fill="#63529B" opacity=".9">
+        <text x="802" y="94">alert rules evaluate</text>
+        <text x="802" y="110">dedupe &middot; assign severity</text>
+        <text x="802" y="126">fan out to WS topics</text>
+        <text x="802" y="142">every open client updates</text>
+      </g>
+
+      <g stroke="currentColor" stroke-width="1.4" marker-end="url(#ar3)">
+        <line x1="178" y1="98" x2="199" y2="98"/>
+        <line x1="373" y1="98" x2="394" y2="98"/>
+        <line x1="568" y1="98" x2="589" y2="98"/>
+        <line x1="763" y1="98" x2="784" y2="98"/>
+      </g>
+
+      <!-- fan out -->
+      <path d="M873 150 L873 196" stroke="#63529B" stroke-width="1.4" fill="none"/>
+      <path d="M118 196 L873 196" stroke="#63529B" stroke-width="1.4" fill="none"/>
+      <g stroke="#63529B" stroke-width="1.4" marker-end="url(#ar3)" opacity=".9">
+        <line x1="118" y1="196" x2="118" y2="234"/>
+        <line x1="370" y1="196" x2="370" y2="234"/>
+        <line x1="622" y1="196" x2="622" y2="234"/>
+        <line x1="873" y1="196" x2="873" y2="234"/>
+      </g>
+
+      <g fill="none" stroke="currentColor" stroke-width="1.2" opacity=".8">
+        <rect x="26" y="236" width="184" height="76" rx="2"/>
+        <rect x="278" y="236" width="184" height="76" rx="2"/>
+        <rect x="530" y="236" width="184" height="76" rx="2"/>
+        <rect x="781" y="236" width="184" height="76" rx="2"/>
+      </g>
+      <g font-size="12" font-weight="600" fill="currentColor">
+        <text x="40" y="260">Live map</text><text x="292" y="260">Vehicle tracking</text>
+        <text x="544" y="260">Alert centre</text><text x="795" y="260">Command dashboard</text>
+      </g>
+      <g font-size="10.5" fill="currentColor" opacity=".75">
+        <text x="40" y="278">segment turns red</text><text x="292" y="278">2 trucks flagged</text>
+        <text x="544" y="278">3 alerts, 1 critical</text><text x="795" y="278">blocked roads 4 &rarr; 5</text>
+        <text x="40" y="294">incident pin drops</text><text x="292" y="294">new route drawn</text>
+        <text x="544" y="294">action recommended</text><text x="795" y="294">district goes amber</text>
+      </g>
+
+      <text x="490" y="348" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">One POST. No page refresh anywhere. Target: under 400&#8239;ms from verify to last screen updated.</text>
+      <text x="490" y="372" text-anchor="middle" font-size="11" fill="currentColor" opacity=".7">Open all four surfaces on the projector at once &mdash; the simultaneity is the demonstration.</text>
+    </svg>
+    <figcaption><b>The stage-3 override is the hinge.</b> Because a verified block deterministically forces the segment to <code>BLOCKED</code>, and because the routing view excludes blocked segments, the reroute in stage&nbsp;4 falls out of the data model rather than from special-case code. Build the spine in this order and the ten steps in the brief are emergent behaviour, not a scripted animation.</figcaption>
+  </figure>
+
+  <h3>The scenario file</h3>
+  <p>A YAML timeline replayed by the runner against a virtual clock, so a 72-hour meteorological build-up compresses into a four-minute demonstration:</p>
+  <pre><b>scenario:</b> ri_bhoi_landslide
+<b>clock:</b> { start: "2026-06-18T02:00+05:30", speed: 1080 }   <i># 18h per minute</i>
+<b>steps:</b>
+  - at: T+0h    <b>inject:</b> rainfall   { grid: RI-BHOI-*, rain_24h: 45 }
+  - at: T+6h    <b>inject:</b> rainfall   { grid: RI-BHOI-*, rain_24h: 118, warning: ORANGE }
+  - at: T+6h    <b>expect:</b> risk_band  { segment: NH6-KH-014, band: HIGH }
+  - at: T+9h    <b>inject:</b> forecast   { horizon: 24, rain_mm: 160, warning: RED }
+  - at: T+9h    <b>expect:</b> alert      { type: LANDSLIDE_RISK, severity: HIGH }
+  - at: T+11h   <b>inject:</b> incident   { by: officer_kh_02, type: LANDSLIDE,
+                                     severity: CRITICAL, at: [91.88, 25.74] }
+  - at: T+11h   <b>expect:</b> segment    { id: NH6-KH-014, status: BLOCKED }
+  - at: T+11h   <b>expect:</b> reroute    { consignments: [MED-2291, FOOD-1180] }
+  - at: T+12h   <b>expect:</b> district   { id: RI-BHOI, connectivity: DEGRADED }</pre>
+  <p>The <code>expect</code> assertions are not decoration &mdash; they run in CI as an end-to-end integration test. If a refactor breaks the cascade, the build fails rather than the demonstration.</p>
+</section>
+
+<!-- ============ 10 ============ -->
+<section id="s10">
+  <div class="sec-head"><span class="n">10</span><h2>Folder structure</h2></div>
+
+  <p class="lead">A pnpm workspace with the Python API alongside. One repository, one <code>docker compose up</code>, no submodules.</p>
+
+  <pre>ner-vision-ai/
+├─ <b>apps/</b>
+│  ├─ <b>web/</b>                          <i># Next.js 14 App Router</i>
+│  │  ├─ app/
+│  │  │  ├─ [locale]/
+│  │  │  │  ├─ (marketing)/page.tsx              <i># landing</i>
+│  │  │  │  ├─ (auth)/login/page.tsx
+│  │  │  │  └─ (app)/
+│  │  │  │     ├─ layout.tsx                     <i># shell: sidebar, alert bell, WS provider</i>
+│  │  │  │     ├─ dashboard/page.tsx
+│  │  │  │     ├─ map/page.tsx
+│  │  │  │     ├─ routes/page.tsx
+│  │  │  │     ├─ fleet/[[...id]]/page.tsx
+│  │  │  │     ├─ incidents/page.tsx
+│  │  │  │     ├─ alerts/page.tsx
+│  │  │  │     ├─ analytics/page.tsx
+│  │  │  │     ├─ emergency/page.tsx
+│  │  │  │     ├─ users/page.tsx
+│  │  │  │     └─ settings/page.tsx
+│  │  │  └─ [locale]/field/                      <i># PWA route group, own layout</i>
+│  │  │     ├─ report/page.tsx
+│  │  │     ├─ queue/page.tsx
+│  │  │     └─ manifest.ts
+│  │  ├─ components/
+│  │  │  ├─ map/          <i>MapCanvas · LayerControl · RiskLegend · SegmentPopup ·</i>
+│  │  │  │                <i>VehicleMarker · IncidentPin · RouteOverlay · Choropleth</i>
+│  │  │  ├─ risk/         <i>RiskGauge · ContributionWaterfall · ConfidenceBadge ·</i>
+│  │  │  │                <i>HazardBreakdown · ModelCard</i>
+│  │  │  ├─ routing/      <i>RoutePlanner · VariantCompare · RouteMetrics · SegmentStrip</i>
+│  │  │  ├─ fleet/        <i>VehicleTable · ConsignmentCard · ProgressRail · EtaBadge</i>
+│  │  │  ├─ alerts/       <i>AlertFeed · AlertCard · SeverityChip · NotificationBell</i>
+│  │  │  ├─ charts/       <i>KpiTile · TrendChart · DistributionBar · Sparkline</i>
+│  │  │  ├─ field/        <i>ReportForm · PhotoCapture · GpsBadge · SyncStatusChip</i>
+│  │  │  └─ ui/           <i>shadcn primitives</i>
+│  │  ├─ lib/
+│  │  │  ├─ api/          <i>generated client from OpenAPI + typed hooks</i>
+│  │  │  ├─ ws/           <i>socket manager, topic registry, reconnect</i>
+│  │  │  ├─ offline/      <i>dexie schema · syncQueue · backgroundSync</i>
+│  │  │  ├─ map/          <i>style spec · risk ramp · interpolation</i>
+│  │  │  └─ i18n/
+│  │  ├─ messages/        <i>en.json · hi.json (namespaced per module)</i>
+│  │  └─ public/tiles/    <i>ner-basemap.pmtiles</i>
+│  │
+│  └─ <b>api/</b>                          <i># FastAPI</i>
+│     ├─ app/
+│     │  ├─ main.py · deps.py · config.py · events.py
+│     │  ├─ core/         <i>security · jwt · rbac · pagination · problems · logging</i>
+│     │  ├─ db/           <i>session · base · models/ · migrations/ (alembic)</i>
+│     │  ├─ modules/
+│     │  │  ├─ auth/      <i>router · service · schemas</i>
+│     │  │  ├─ geo/       <i>router · service · repositories · mvt.py</i>
+│     │  │  ├─ risk/      <i>router · engine.py · features.py · overrides.py · explain.py</i>
+│     │  │  ├─ routing/   <i>router · pgrouting.py · variants.py · replan.py</i>
+│     │  │  ├─ fleet/     <i>router · service · telemetry.py · simulator.py</i>
+│     │  │  ├─ incidents/ <i>router · service · sync.py · media.py · snapping.py</i>
+│     │  │  ├─ alerts/    <i>router · rules.py · dedupe.py · dispatcher.py</i>
+│     │  │  ├─ analytics/ <i>router · queries.py</i>
+│     │  │  └─ emergency/ <i>router · reachability.py · allocation.py</i>
+│     │  ├─ feeds/        <i>base.py · weather/ · hazard/ · traffic/ · fixtures/</i>
+│     │  ├─ realtime/     <i>ws_manager · topics · redis_bus</i>
+│     │  ├─ scheduler/    <i>jobs.py — risk_recompute · sim_tick · feed_poll · matview_refresh</i>
+│     │  └─ demo/         <i>scenario_runner.py · scenarios/*.yaml</i>
+│     └─ tests/           <i>unit · integration · e2e_cascade.py</i>
+│
+├─ <b>packages/</b>
+│  ├─ shared-types/       <i># TS types generated from OpenAPI — CI fails on drift</i>
+│  └─ config/             <i># eslint · tsconfig · tailwind preset · design tokens</i>
+│
+├─ <b>ml/</b>
+│  ├─ notebooks/          <i>01_explore · 02_features · 03_train · 04_calibrate · 05_shap</i>
+│  ├─ pipelines/          <i>build_features.py · train.py · evaluate.py · export.py</i>
+│  ├─ labels/             <i>seed_events.csv · augment.py · README (the honesty doc)</i>
+│  └─ artifacts/          <i>disruption_v1.joblib · hazard_v1.joblib · model_card.json</i>
+│
+├─ <b>data/</b>
+│  ├─ pipeline/           <i>01_extract · 02_load · 03_topology · 04_terrain · 05_hazard · 06_seed</i>
+│  ├─ raw/                <i>osm · dem · hazard rasters  (gitignored, script-fetched)</i>
+│  └─ fixtures/           <i>recorded feed responses for replay mode</i>
+│
+├─ <b>infra/</b>
+│  ├─ docker-compose.yml · docker-compose.prod.yml
+│  ├─ Dockerfile.web · Dockerfile.api · Dockerfile.worker
+│  ├─ postgres/init.sql   <i>extensions: postgis · pgrouting · timescaledb</i>
+│  └─ nginx/
+│
+└─ <b>docs/</b>            <i>architecture.md · api.md · demo-script.md · model-card.md</i></pre>
+</section>
+
+<!-- ============ 11 ============ -->
+<section id="s11">
+  <div class="sec-head"><span class="n">11</span><h2>Development plan</h2></div>
+
+  <p class="lead">Eight phases, ordered by dependency rather than by the module numbering in the brief. Each has an exit criterion that is demonstrable &mdash; if you cannot show it, the phase is not finished and you do not start the next one.</p>
+
+  <div class="callout">
+    <div class="k">The ordering principle</div>
+    <p>Build the <strong>data spine</strong> before any feature: segments in the database, risk on the segments, events on the wire. Six of the eight modules are readers of that spine. Every day spent building a feature before the spine exists is a day of rework, and rework is what kills hackathon teams in the final week.</p>
+  </div>
+
+  <div class="phase">
+    <div class="idx">00</div>
+    <div>
+      <h4>Foundation</h4>
+      <div class="meta">~2 days &middot; whole team &middot; no external dependencies</div>
+      <p>Monorepo, <code>docker compose</code> with Postgres&#8239;+&#8239;PostGIS&#8239;+&#8239;pgRouting&#8239;+&#8239;Redis&#8239;+&#8239;MinIO, Alembic baseline, FastAPI skeleton with health check and OpenAPI, Next.js shell with the design tokens and dark theme, JWT auth end to end, four seeded demo accounts, role-guarded routes, CI running lint, typecheck and tests.</p>
+      <div class="exit"><span class="k">Done when</span><span>Four accounts log in, land on role-appropriate empty shells, and the OpenAPI-generated TypeScript client compiles.</span></div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="idx">01</div>
+    <div>
+      <h4>Geospatial core</h4>
+      <div class="meta">~4 days &middot; GIS + backend &middot; longest lead time &mdash; start in parallel with phase 00</div>
+      <p>Run the full data pipeline: OSM extract, topology, DEM terrain enrichment, hazard joins, districts, depots, chokepoints. Build the MVT tile endpoint and the map canvas with layer control, filters and popups. Set up PMTiles basemap hosting.</p>
+      <div class="exit"><span class="k">Done when</span><span>The real NER road network renders at 60&#8239;fps with terrain relief, and clicking any segment shows its true attributes from the database.</span></div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="idx">02</div>
+    <div>
+      <h4>Risk engine</h4>
+      <div class="meta">~4 days &middot; ML + backend &middot; depends on 01</div>
+      <p>Feature assembly from weather and terrain, label set compilation and documented augmentation, train and calibrate both classifiers, TreeSHAP export, the three-layer scoring service, the scheduled recompute job, and the explain endpoint. Frontend: risk colouring on the map plus the contribution waterfall panel.</p>
+      <div class="exit"><span class="k">Done when</span><span>Every segment carries a score, the map is coloured by it, and clicking one opens a ranked explanation of why &mdash; with the model card reachable in two clicks.</span></div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="idx">03</div>
+    <div>
+      <h4>Routing</h4>
+      <div class="meta">~3 days &middot; backend + frontend &middot; depends on 02</div>
+      <p><code>mv_routing_edges</code> with the three cost formulations, <code>pgr_bdAstar</code> and <code>pgr_ksp</code> wiring, the plan and compare endpoints, and the route planner UI with side-by-side variant metrics.</p>
+      <div class="exit"><span class="k">Done when</span><span>One origin&ndash;destination pair returns three visibly different paths, and the safest genuinely avoids the highest-risk corridor at a quantified time cost.</span></div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="idx">04</div>
+    <div>
+      <h4>Fleet, telemetry and the real-time spine</h4>
+      <div class="meta">~3 days &middot; backend + frontend &middot; depends on 03</div>
+      <p>Vehicle and consignment models, the GPS simulator walking vehicles along assigned route geometry at realistic speeds, the telemetry ingest endpoint, Redis pub/sub, the WebSocket hub with topic subscriptions, and the client socket manager with interpolated marker movement.</p>
+      <div class="exit"><span class="k">Done when</span><span>Twelve vehicles move smoothly across the map in two browsers simultaneously, with progress and ETA updating live.</span></div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="idx">05</div>
+    <div>
+      <h4>Incidents, offline and alerts &mdash; the cascade</h4>
+      <div class="meta">~5 days &middot; whole team &middot; the highest-value phase</div>
+      <p>Incident capture with media and segment snapping, the verification queue, the hard-override path, the PWA service worker, IndexedDB queue and idempotent batch sync, the alert rule engine with dedupe and severity assignment, the alert centre and toast notifications, and route invalidation with automatic replan. Then wire the scenario runner and write the <code>e2e_cascade</code> test.</p>
+      <div class="exit"><span class="k">Done when</span><span>Airplane mode &rarr; file a report &rarr; reconnect &rarr; four surfaces update without a refresh, and the cascade test passes in CI.</span></div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="idx">06</div>
+    <div>
+      <h4>Command centre, analytics and emergency mode</h4>
+      <div class="meta">~4 days &middot; frontend + backend &middot; depends on 05</div>
+      <p>KPI materialised views and tiles, connectivity choropleth, risk distribution, incident trends, the bottleneck table with betweenness ranking, CSV export. Emergency mode: activation flow, isolated-district computation, accessible corridors, priority allocation, and the visual mode shift across the whole shell.</p>
+      <div class="exit"><span class="k">Done when</span><span>Emergency activation visibly changes the entire application within two seconds and produces a defensible allocation table.</span></div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="idx">07</div>
+    <div>
+      <h4>Completion, polish and rehearsal</h4>
+      <div class="meta">~4 days &middot; whole team &middot; protect this time</div>
+      <p>User management and settings, Hindi translation completion, landing page, accessibility and keyboard pass, empty and error states, mobile responsiveness, load smoothing, production compose file, deployment, and the demo script. Rehearse the full run at least ten times, including a rehearsal with the network cable pulled.</p>
+      <div class="exit"><span class="k">Done when</span><span>The complete demonstration runs twice in a row without a stumble, on the venue laptop, with no internet connection.</span></div>
+    </div>
+  </div>
+
+  <h3>Parallel team split</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Owner</th><th>Scope</th><th>Critical path</th></tr></thead>
+    <tbody>
+      <tr><td>Backend lead</td><td>Auth, gateway, module scaffolding, WebSocket hub, event spine</td><td>Phases 00, 04</td></tr>
+      <tr><td>GIS engineer</td><td>Data pipeline, PostGIS schema, tiles, pgRouting, reachability</td><td>Phases 01, 03 &mdash; <strong>start day one</strong></td></tr>
+      <tr><td>ML engineer</td><td>Features, labels, training, calibration, SHAP, scoring service, model card</td><td>Phase 02</td></tr>
+      <tr><td>Frontend &mdash; map</td><td>MapLibre canvas, layers, risk rendering, vehicles, route overlays</td><td>Phases 01, 04</td></tr>
+      <tr><td>Frontend &mdash; app</td><td>Dashboard, analytics, alerts, field PWA, offline sync, i18n</td><td>Phases 05, 06</td></tr>
+      <tr><td>Integration &amp; demo</td><td>Feed adapters, fixtures, simulator, scenario runner, Docker, deploy, script</td><td>Phases 05, 07</td></tr>
+    </tbody>
+  </table></div>
+  <p>The GIS engineer is on the critical path from hour one. The terrain enrichment step alone can take a full day of compute and debugging, and every subsequent phase depends on its output. If only one thing starts on day one, it is the data pipeline.</p>
+</section>
+
+<!-- ============ 12 ============ -->
+<section id="s12">
+  <div class="sec-head"><span class="n">12</span><h2>Stack calls &amp; risk register</h2></div>
+
+  <h3>Where this deviates from the brief, and why</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Area</th><th>Brief</th><th>Recommendation</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td>Map renderer</td><td>Leaflet or Mapbox</td><td><strong>MapLibre GL + PMTiles</strong></td><td>GPU rendering for thousands of segments, offline basemap in a single file, terrain extrusion, no token or billing</td></tr>
+      <tr><td>Service topology</td><td>Implied microservices</td><td><strong>Modular monolith</strong></td><td>One deploy unit, no network hops between modules, still cleanly separable. Correct scope for the timeline</td></tr>
+      <tr><td>Cache &amp; messaging</td><td>Not specified</td><td><strong>Add Redis 7</strong></td><td>Required for multi-replica WebSocket fan-out, tile caching and the event spine. Non-optional</td></tr>
+      <tr><td>Background jobs</td><td>Not specified</td><td><strong>APScheduler + arq</strong></td><td>Celery's broker and beat overhead is not repaid at this scale; arq is asyncio-native and matches FastAPI</td></tr>
+      <tr><td>ML explainability</td><td>Not specified</td><td><strong>SHAP, mandatory</strong></td><td>The single strongest answer to &ldquo;is this real AI?&rdquo; Non-negotiable given the brief's explicit warning</td></tr>
+      <tr><td>Telemetry storage</td><td>PostgreSQL</td><td><strong>+ TimescaleDB extension</strong></td><td>One extension, automatic partitioning of position history, dramatically faster track queries</td></tr>
+      <tr><td>PWA tooling</td><td>Service workers</td><td><strong>Serwist</strong></td><td>Workbox's maintained successor with first-class Next.js App Router support</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Risk register</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Risk</th><th class="num">Impact</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td>DEM terrain enrichment takes far longer than estimated</td><td class="num">High</td><td>Start day one. Ship a coarse slope proxy from OSM tags as a fallback so phase&nbsp;2 is never blocked.</td></tr>
+      <tr><td>Team has not used pgRouting before</td><td class="num">High</td><td>Time-box to two days. Fallback is NetworkX over an in-memory graph loaded from the same edge table &mdash; same query surface, slower but sufficient at this scale.</td></tr>
+      <tr><td>Venue network is unusable during the demo</td><td class="num">Critical</td><td><code>DATA_MODE=replay</code> plus self-hosted PMTiles means zero external calls. Rehearse offline at least once.</td></tr>
+      <tr><td>WebSocket drops mid-presentation</td><td class="num">Medium</td><td>Backoff reconnect with a <code>since</code> cursor for catch-up, plus a visible connection indicator so a drop reads as handled rather than broken.</td></tr>
+      <tr><td>Judges challenge the training data</td><td class="num">Medium</td><td>Volunteer the limitation first. Model card is served by the API and linked in the UI. See section&nbsp;06.</td></tr>
+      <tr><td>Twelve pages, five days left, none finished</td><td class="num">High</td><td>Phase gates with demonstrable exit criteria. Users and Settings are deliberately last and deliberately plain.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ gate ============ -->
+<section id="gate">
+  <div class="sec-head"><span class="n">&rarr;</span><h2>Approval gate</h2></div>
+  <p class="lead">Five decisions are yours, not mine. Answer these and I will start building from phase&nbsp;00 &mdash; complete, integrated, production-quality code, one module at a time, in the order above.</p>
+
+  <div class="qa">
+    <div class="q">1 &middot; MapLibre or Leaflet?</div>
+    <p>This is the one call that is expensive to reverse, because the entire map component tree depends on it.</p>
+    <div class="rec"><b>Recommended:</b> MapLibre GL &mdash; unless nobody on the team has used it, in which case Leaflet with a canvas renderer is honest and safe.</div>
+  </div>
+
+  <div class="qa">
+    <div class="q">2 &middot; How much time do you actually have?</div>
+    <p>The plan totals roughly 29 working days at one owner per stream. Tell me your real deadline and team size and I will compress the phases, most likely by narrowing the geographic scope to three states instead of eight for the road network while keeping all eight rendered at district level.</p>
+  </div>
+
+  <div class="qa">
+    <div class="q">3 &middot; Do you want the multi-modal river and rail extension?</div>
+    <p>It is the strongest NER-specific differentiator on the advanced list &mdash; Brahmaputra ferry legs are genuinely how supplies move &mdash; but it adds a node type, an edge type and a schedule model to the routing engine.</p>
+    <div class="rec"><b>Recommended:</b> defer to a stretch phase, but design the schema for it now so the slide can honestly say &ldquo;the graph already supports it&rdquo;.</div>
+  </div>
+
+  <div class="qa">
+    <div class="q">4 &middot; Real data feeds, or replay only?</div>
+    <p>Live IMD or OpenWeather integration is roughly half a day and gives you a real answer to &ldquo;is this live?&rdquo;. Replay-only is safer in the room. The adapter supports both, so this is a question about where to spend half a day.</p>
+    <div class="rec"><b>Recommended:</b> build both, demo in <code>hybrid</code> &mdash; live weather, replayed scenario events.</div>
+  </div>
+
+  <div class="qa">
+    <div class="q">5 &middot; Any changes to the architecture above?</div>
+    <p>Corrections, additions, or anything you want cut. Once you approve, I start with phase&nbsp;00 &mdash; monorepo, Docker compose, database with PostGIS, migrations, JWT authentication, and the application shell &mdash; and I will show you every file as it is created.</p>
+  </div>
+</section>
+
+</main>
+</div>

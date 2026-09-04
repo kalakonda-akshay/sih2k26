@@ -1,0 +1,723 @@
+<title>NER-Vision AI Technical Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+/* Palette inherited from the product's own command-centre theme, so the
+   report reads as part of NER-Vision rather than a separate document. */
+:root {
+  --ground: #EEF1F1;
+  --surface: #FFFFFF;
+  --surface-2: #F5F7F7;
+  --line: #D2D9D9;
+  --line-soft: #E3E8E8;
+  --ink: #0E1519;
+  --ink-2: #3A464D;
+  --ink-3: #6B7880;
+  --accent: #14567F;
+  --accent-soft: #E2EDF4;
+  --safe: #1F7A4C;
+  --moderate: #9C7716;
+  --high: #BC5B14;
+  --critical: #AC2E25;
+  --shadow: 0 1px 2px rgba(14,21,25,.05), 0 8px 24px -18px rgba(14,21,25,.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0B1216;
+    --surface: #111C21;
+    --surface-2: #16222A;
+    --line: #26363E;
+    --line-soft: #1B2830;
+    --ink: #E3EAED;
+    --ink-2: #A6B4BB;
+    --ink-3: #78888F;
+    --accent: #63ACDB;
+    --accent-soft: #12303F;
+    --safe: #47C285;
+    --moderate: #DDB13B;
+    --high: #EF8C42;
+    --critical: #EE6154;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0B1216;
+  --surface: #111C21;
+  --surface-2: #16222A;
+  --line: #26363E;
+  --line-soft: #1B2830;
+  --ink: #E3EAED;
+  --ink-2: #A6B4BB;
+  --ink-3: #78888F;
+  --accent: #63ACDB;
+  --accent-soft: #12303F;
+  --safe: #47C285;
+  --moderate: #DDB13B;
+  --high: #EF8C42;
+  --critical: #EE6154;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -18px rgba(0,0,0,.8);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:Archivo,-apple-system,"Segoe UI",sans-serif;text-wrap:balance;margin:0}
+code,pre,.mono{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace}
+.tab{font-variant-numeric:tabular-nums}
+
+.shell{max-width:1220px;margin:0 auto;padding:0 26px 96px;display:grid;grid-template-columns:194px minmax(0,1fr);gap:52px;align-items:start}
+@media(max-width:1000px){.shell{grid-template-columns:1fr;gap:0;padding:0 18px 72px}}
+
+.masthead{grid-column:1/-1;padding:52px 0 34px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:20px}
+.eyebrow b{color:var(--accent);font-weight:500}
+h1{font-size:clamp(34px,5.6vw,56px);font-weight:800;letter-spacing:-.028em;line-height:1.03}
+h1 .dim{color:var(--ink-3);font-weight:600}
+.standfirst{max-width:64ch;margin-top:18px;font-size:18px;line-height:1.6;color:var(--ink-2)}
+.standfirst strong{color:var(--ink);font-weight:600}
+.links{margin-top:24px;display:flex;flex-wrap:wrap;gap:10px}
+.link{display:inline-flex;align-items:center;gap:9px;padding:9px 15px;border:1px solid var(--line);border-radius:2px;background:var(--surface);font-size:13.5px;color:var(--ink);text-decoration:none}
+.link:hover{border-color:var(--accent)}
+.link .k{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+
+nav.toc{position:sticky;top:28px;padding-top:40px;font-size:13.5px}
+@media(max-width:1000px){nav.toc{position:static;padding:24px 0 6px;border-bottom:1px solid var(--line-soft);margin-bottom:6px}}
+nav.toc .lbl{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+@media(max-width:1000px){nav.toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:2px 18px}}
+nav.toc a{display:flex;gap:9px;text-decoration:none;color:var(--ink-2);padding:3px 0}
+nav.toc a:hover{color:var(--accent)}
+nav.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+nav.toc .n{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);flex:none;padding-top:1px}
+
+main{min-width:0;padding-top:40px;display:flex;flex-direction:column;gap:60px}
+section{scroll-margin-top:22px}
+.sec-head{display:flex;gap:15px;align-items:baseline;padding-bottom:13px;border-bottom:2px solid var(--ink);margin-bottom:24px}
+.sec-head .n{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:500;color:var(--accent);letter-spacing:.06em;flex:none}
+.sec-head h2{font-size:clamp(24px,3.2vw,32px);font-weight:700;letter-spacing:-.02em;line-height:1.12}
+h3{font-size:19px;font-weight:700;letter-spacing:-.012em;margin:32px 0 11px}
+h4{font-size:14.5px;font-weight:600;margin:22px 0 7px}
+p{margin:0 0 14px;max-width:70ch}
+main ul,main ol{max-width:70ch;margin:0 0 14px;padding-left:21px;display:flex;flex-direction:column;gap:7px}
+li::marker{color:var(--ink-3)}
+strong{font-weight:600}
+a{color:var(--accent)}
+.lead{font-size:17px;color:var(--ink-2);max-width:66ch}
+
+.callout{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:2px;padding:18px 22px;margin:22px 0;box-shadow:var(--shadow)}
+.callout .k{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.callout p:last-child,.callout ul:last-child{margin-bottom:0}
+.callout.warn{border-left-color:var(--high)}
+.callout.warn .k{color:var(--high)}
+.callout.no{border-left-color:var(--critical)}
+.callout.no .k{color:var(--critical)}
+.callout.yes{border-left-color:var(--safe)}
+.callout.yes .k{color:var(--safe)}
+
+.tw{overflow-x:auto;margin:18px 0;border:1px solid var(--line);border-radius:2px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:520px}
+th{text-align:left;font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:500;padding:11px 15px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
+td{padding:10px 15px;border-bottom:1px solid var(--line-soft);vertical-align:top;color:var(--ink-2)}
+tr:last-child td{border-bottom:none}
+td:first-child{color:var(--ink);font-weight:500}
+td.mono,th.mono{font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+
+pre{background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:16px 19px;overflow-x:auto;font-size:12.6px;line-height:1.66;margin:16px 0;color:var(--ink-2)}
+pre b{color:var(--ink);font-weight:600}
+pre em{color:var(--accent);font-style:normal}
+pre i{color:var(--ink-3);font-style:normal}
+code{background:var(--surface-2);border:1px solid var(--line-soft);border-radius:2px;padding:1px 5px;font-size:.88em;color:var(--ink)}
+
+figure{margin:26px 0;background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:22px;box-shadow:var(--shadow)}
+figure svg{display:block;width:100%;max-width:100%;height:auto;color:var(--ink-2)}
+figcaption{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft);font-size:13px;color:var(--ink-3);max-width:78ch}
+figcaption b{color:var(--ink-2);font-weight:600}
+
+.grid{display:grid;gap:13px;margin:20px 0}
+.g2{grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:16px 18px;box-shadow:var(--shadow)}
+.card h4{margin:0 0 7px;font-size:14px}
+.card p{font-size:13.5px;color:var(--ink-2);margin:0;max-width:none}
+.card .tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:6px}
+
+/* Algorithm entries — the spine of the report, so they get their own form. */
+.algo{border-left:2px solid var(--line);padding:0 0 0 18px;margin:20px 0;position:relative}
+.algo::before{content:"";position:absolute;left:-4px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.algo .name{font-family:Archivo,sans-serif;font-weight:700;font-size:15.5px;letter-spacing:-.01em}
+.algo .where{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:2px}
+.algo p{margin:8px 0 0;font-size:14px}
+.algo .formula{font-family:"IBM Plex Mono",monospace;font-size:12.5px;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:2px;padding:9px 12px;margin-top:9px;color:var(--ink);overflow-x:auto}
+
+/* Q&A */
+.qa{background:var(--surface);border:1px solid var(--line);border-radius:2px;margin-bottom:11px;box-shadow:var(--shadow)}
+.qa .q{font-family:Archivo,sans-serif;font-weight:700;font-size:15.5px;padding:15px 20px 0;letter-spacing:-.01em}
+.qa .a{padding:8px 20px 16px}
+.qa .a p{font-size:14px;color:var(--ink-2);margin:0 0 9px;max-width:70ch}
+.qa .a p:last-child{margin-bottom:0}
+.qa .a strong{color:var(--ink)}
+
+.ramp{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:2px;padding:6px 12px;font-size:13px}
+.chip .sw{width:10px;height:10px;border-radius:1px;flex:none}
+.chip .rng{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+.verdict{display:grid;grid-template-columns:auto 1fr;gap:0 16px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:2px;padding:18px 20px;margin:18px 0;box-shadow:var(--shadow)}
+.verdict .mark{font-family:Archivo,sans-serif;font-weight:800;font-size:26px;line-height:1}
+.verdict .mark.no{color:var(--critical)}
+.verdict .mark.part{color:var(--moderate)}
+.verdict .mark.yes{color:var(--safe)}
+.verdict h4{margin:0 0 4px;font-size:15px}
+.verdict p{margin:0;font-size:14px;color:var(--ink-2)}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="shell">
+
+<header class="masthead">
+  <div class="eyebrow">
+    <span><b>SIH26002</b></span>
+    <span>MDoNER</span>
+    <span>Smart Automation</span>
+    <span>Technical report · v1.0</span>
+  </div>
+  <h1>NER-Vision AI <span class="dim">/ technical report</span></h1>
+  <p class="standfirst">Everything built, every algorithm used, and an honest account of what the system does <strong>not</strong> do. Written to be read by a judge who will ask hard questions — and to answer them before they are asked.</p>
+  <div class="links">
+    <a class="link" href="https://sih2k26-one.vercel.app" target="_blank" rel="noopener"><span class="k">Live</span> sih2k26-one.vercel.app</a>
+    <a class="link" href="https://github.com/kalakonda-akshay/sih2k26" target="_blank" rel="noopener"><span class="k">Source</span> kalakonda-akshay/sih2k26</a>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <div class="lbl">Contents</div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span><span>What was built</span></a></li>
+    <li><a href="#s2"><span class="n">02</span><span>Technology stack</span></a></li>
+    <li><a href="#s3"><span class="n">03</span><span>Architecture</span></a></li>
+    <li><a href="#s4"><span class="n">04</span><span>Algorithms</span></a></li>
+    <li><a href="#s5"><span class="n">05</span><span>Data model</span></a></li>
+    <li><a href="#s6"><span class="n">06</span><span>Real-time design</span></a></li>
+    <li><a href="#s7"><span class="n">07</span><span>Does it work offline?</span></a></li>
+    <li><a href="#s8"><span class="n">08</span><span>Judge questions</span></a></li>
+    <li><a href="#s9"><span class="n">09</span><span>Limitations</span></a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- 01 -->
+<section id="s1">
+  <div class="sec-head"><span class="n">01</span><h2>What was built</h2></div>
+
+  <p class="lead">A logistics and road-accessibility intelligence platform for the eight North Eastern states, built on Convex as the sole backend. Sixteen routes, twenty-two backend modules, and five intelligence engines — all running against live data.</p>
+
+  <p>The design rests on one reframe. Logistics in the North East is not a route-optimisation problem on a dense graph; it is a <strong>survivability problem on a sparse one</strong>. Between most district pairs there are one or two viable corridors, so when a landslide closes a single cutting the alternative is hours longer or does not exist. The atomic unit is therefore the <strong>road segment</strong>, and the primary question is whether it will still be passable.</p>
+
+  <div class="grid g3">
+    <div class="card"><span class="tag">Command centre</span><h4>Nine live KPIs</h4><p>One reactive query feeds every card, so the numbers cannot disagree with each other.</p></div>
+    <div class="card"><span class="tag">Map</span><h4>Five layers</h4><p>Vehicles, incidents, roads, AI risk zones, weather — filterable, clusterable, click-to-fly.</p></div>
+    <div class="card"><span class="tag">Risk</span><h4>31 locations scored</h4><p>Six weighted factors, every point attributable to a named input with a stated reason.</p></div>
+    <div class="card"><span class="tag">Routing</span><h4>30-corridor graph</h4><p>Dijkstra with risk-weighted edges; blocked segments removed, not penalised.</p></div>
+    <div class="card"><span class="tag">Fleet</span><h4>18 vehicles</h4><p>Proximity exposure, delivery delay detection, GPS simulation through real mutations.</p></div>
+    <div class="card"><span class="tag">Field</span><h4>Mobile PWA</h4><p>Installable incident reporting with real file storage and GPS capture.</p></div>
+  </div>
+
+  <h3>Verified numbers, not claims</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Measure</th><th class="num">Value</th><th>How it was checked</th></tr></thead>
+    <tbody>
+      <tr><td>Application routes</td><td class="num">16</td><td><code>next build</code> output</td></tr>
+      <tr><td>Convex function modules</td><td class="num">22</td><td>deployed function list</td></tr>
+      <tr><td>Road corridors in graph</td><td class="num">30</td><td><code>routeIntelligence:getNetworkNodes</code></td></tr>
+      <tr><td>Locations risk-assessed</td><td class="num">31</td><td><code>riskEngine:assessAllLocations</code></td></tr>
+      <tr><td>Graph components (open network)</td><td class="num">2</td><td>connected-components pass</td></tr>
+      <tr><td>TypeScript errors</td><td class="num">0</td><td><code>tsc --noEmit</code></td></tr>
+      <tr><td>ESLint errors</td><td class="num">0</td><td><code>eslint src convex</code></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 02 -->
+<section id="s2">
+  <div class="sec-head"><span class="n">02</span><h2>Technology stack</h2></div>
+
+  <div class="tw"><table>
+    <thead><tr><th>Layer</th><th>Choice</th><th>Why this one</th></tr></thead>
+    <tbody>
+      <tr><td>Framework</td><td>Next.js 16 · App Router</td><td>Server components for the shell, client components for anything reactive</td></tr>
+      <tr><td>Language</td><td>TypeScript 5 (strict)</td><td>Schema types flow from Convex into every component; no <code>any</code> in the data model</td></tr>
+      <tr><td>UI</td><td>React 19 · Tailwind v4 · shadcn/ui</td><td>shadcn on this version wraps <strong>Base UI</strong>, not Radix — an important difference (see §08)</td></tr>
+      <tr><td>Backend &amp; database</td><td><strong>Convex</strong></td><td>Queries, mutations, actions, file storage and real-time in one system</td></tr>
+      <tr><td>Real-time</td><td>Convex reactive queries</td><td>No polling, no custom WebSocket server, no subscription code written by us</td></tr>
+      <tr><td>Maps</td><td>Leaflet 1.9 · react-leaflet 5</td><td>Basemap is Esri World Dark Gray Canvas — free, <strong>no API key</strong></td></tr>
+      <tr><td>AI (optional)</td><td>Anthropic SDK, or any OpenAI-compatible endpoint</td><td>Server-side only, behind a provider abstraction, with a deterministic fallback</td></tr>
+      <tr><td>Hosting</td><td>Vercel + Convex Cloud</td><td>Static prerender for all 16 routes; backend deploys independently</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <div class="k">What is deliberately absent</div>
+    <p>No PostgreSQL, PostGIS, Redis, FastAPI, Express, or custom WebSocket server. Convex is the only backend. This is worth stating plainly because the original Phase-1 architecture specified a Postgres + FastAPI spine — it was replaced, and the replacement removed roughly four moving parts from the deployment.</p>
+  </div>
+</section>
+
+<!-- 03 -->
+<section id="s3">
+  <div class="sec-head"><span class="n">03</span><h2>Architecture</h2></div>
+
+  <figure>
+    <svg viewBox="0 0 980 470" role="img" aria-label="Architecture: browser and mobile clients call Convex, which runs five intelligence engines over one document database; a field report cascades through risk scoring, road status, routing, alerts and the dashboard; an optional server-side AI layer reads a bounded context and falls back to the rule engine.">
+      <defs>
+        <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+        <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#BC5B14"/></marker>
+      </defs>
+
+      <!-- clients -->
+      <g fill="none" stroke="currentColor" stroke-width="1.2">
+        <rect x="70" y="26" width="230" height="50" rx="2"/>
+        <rect x="330" y="26" width="230" height="50" rx="2"/>
+      </g>
+      <text x="185" y="47" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Command centre</text>
+      <text x="185" y="64" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">desktop · 15 routes</text>
+      <text x="445" y="47" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Field PWA</text>
+      <text x="445" y="64" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">mobile · installable</text>
+
+      <g stroke="currentColor" stroke-width="1.2" marker-end="url(#a1)">
+        <line x1="185" y1="76" x2="185" y2="112"/>
+        <line x1="445" y1="76" x2="445" y2="112"/>
+      </g>
+      <text x="196" y="98" font-size="10" fill="currentColor" opacity=".75">reactive queries + mutations</text>
+
+      <!-- convex -->
+      <rect x="70" y="114" width="490" height="42" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <text x="315" y="140" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Convex — queries · mutations · actions · file storage</text>
+
+      <line x1="315" y1="156" x2="315" y2="186" stroke="currentColor" stroke-width="1.2" marker-end="url(#a1)"/>
+
+      <!-- engines -->
+      <text x="70" y="180" font-size="9.5" fill="currentColor" opacity=".6" letter-spacing="1.3">INTELLIGENCE ENGINES</text>
+      <g fill="none" stroke="currentColor" stroke-width="1.1" opacity=".85">
+        <rect x="70" y="188" width="92" height="42" rx="2"/>
+        <rect x="170" y="188" width="92" height="42" rx="2"/>
+        <rect x="270" y="188" width="92" height="42" rx="2"/>
+        <rect x="370" y="188" width="92" height="42" rx="2"/>
+        <rect x="470" y="188" width="90" height="42" rx="2"/>
+      </g>
+      <g font-size="10.5" text-anchor="middle" fill="currentColor" font-weight="500">
+        <text x="116" y="206">Risk</text><text x="216" y="206">Route</text><text x="316" y="206">Fleet</text><text x="416" y="206">Analytics</text><text x="515" y="206">Assistant</text>
+      </g>
+      <g font-size="9" text-anchor="middle" fill="currentColor" opacity=".6">
+        <text x="116" y="220">6 factors</text><text x="216" y="220">Dijkstra</text><text x="316" y="220">proximity</text><text x="416" y="220">health score</text><text x="515" y="220">intents</text>
+      </g>
+
+      <line x1="315" y1="230" x2="315" y2="262" stroke="currentColor" stroke-width="1.2" marker-end="url(#a1)"/>
+
+      <!-- db -->
+      <rect x="70" y="264" width="490" height="46" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+      <text x="315" y="286" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">One document database — 11 tables, 40+ indexes</text>
+      <text x="315" y="301" text-anchor="middle" font-size="9.5" text-anchor="middle" fill="currentColor" opacity=".65">roads · vehicles · incidents · alerts · deliveries · routes · predictions · weather · activity</text>
+
+      <!-- reactive return -->
+      <path d="M70 287 L40 287 L40 140 L66 140" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="5 4" marker-end="url(#a1)"/>
+      <text transform="rotate(-90 40 214)" x="40" y="214" text-anchor="middle" font-size="9.5" fill="currentColor" opacity=".75">queries re-run automatically</text>
+
+      <!-- AI column -->
+      <text x="620" y="20" font-size="9.5" fill="#BC5B14" opacity=".8" letter-spacing="1.3">OPTIONAL AI LAYER</text>
+      <rect x="620" y="26" width="300" height="50" rx="2" fill="none" stroke="#BC5B14" stroke-width="1.3"/>
+      <text x="770" y="46" text-anchor="middle" font-size="11.5" font-weight="600" fill="#BC5B14">Bounded context builder</text>
+      <text x="770" y="63" text-anchor="middle" font-size="9.5" fill="#BC5B14" opacity=".85">capped selection · never the whole database</text>
+
+      <line x1="770" y1="76" x2="770" y2="110" stroke="#BC5B14" stroke-width="1.3" marker-end="url(#a2)"/>
+
+      <rect x="620" y="112" width="300" height="46" rx="2" fill="none" stroke="#BC5B14" stroke-width="1.3"/>
+      <text x="770" y="132" text-anchor="middle" font-size="11.5" font-weight="600" fill="#BC5B14">Server-side model call</text>
+      <text x="770" y="148" text-anchor="middle" font-size="9.5" fill="#BC5B14" opacity=".85">key in Convex env · never in the browser</text>
+
+      <line x1="770" y1="158" x2="770" y2="190" stroke="#BC5B14" stroke-width="1.3" marker-end="url(#a2)"/>
+
+      <rect x="620" y="192" width="300" height="46" rx="2" fill="none" stroke="#BC5B14" stroke-width="1.3"/>
+      <text x="770" y="212" text-anchor="middle" font-size="11.5" font-weight="600" fill="#BC5B14">Schema-validated response</text>
+      <text x="770" y="228" text-anchor="middle" font-size="9.5" fill="#BC5B14" opacity=".85">fails validation → rule engine answer</text>
+
+      <path d="M620 215 L580 215 L580 209 L564 209" fill="none" stroke="#BC5B14" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#a2)"/>
+      <text x="588" y="252" font-size="9.5" fill="#BC5B14" opacity=".8">fallback</text>
+
+      <!-- cascade -->
+      <text x="70" y="345" font-size="9.5" fill="currentColor" opacity=".6" letter-spacing="1.3">THE CASCADE — ONE MUTATION, NO PUSH CODE</text>
+      <g font-size="10.5" fill="currentColor">
+        <text x="70" y="372">field report</text>
+        <text x="188" y="372">road status</text>
+        <text x="302" y="372">risk rescore</text>
+        <text x="424" y="372">routes invalidated</text>
+        <text x="578" y="372">vehicles flagged</text>
+        <text x="702" y="372">alert raised</text>
+        <text x="806" y="372">dashboard moves</text>
+      </g>
+      <g stroke="currentColor" stroke-width="1.2" marker-end="url(#a1)" opacity=".8">
+        <line x1="146" y1="368" x2="182" y2="368"/>
+        <line x1="256" y1="368" x2="296" y2="368"/>
+        <line x1="374" y1="368" x2="418" y2="368"/>
+        <line x1="530" y1="368" x2="572" y2="368"/>
+        <line x1="662" y1="368" x2="696" y2="368"/>
+        <line x1="762" y1="368" x2="800" y2="368"/>
+      </g>
+      <text x="70" y="404" font-size="10.5" fill="currentColor" opacity=".75">Every step is a database write. Nothing is pushed to clients — every open screen re-renders because Convex re-ran the queries it touched.</text>
+      <text x="70" y="424" font-size="10.5" fill="currentColor" opacity=".75">Measured end to end at under 400 ms from verify to last screen updated.</text>
+    </svg>
+    <figcaption><b>The cascade is the architecture.</b> A single <code>createIncident</code> mutation degrades the road, re-scores the surrounding locations, invalidates any route crossing the segment, flags nearby vehicles and raises an alert. No component subscribes to another component; they all subscribe to the database, and Convex decides who needs re-rendering. The dashed return path on the left is the entire real-time implementation.</figcaption>
+  </figure>
+</section>
+
+<!-- 04 -->
+<section id="s4">
+  <div class="sec-head"><span class="n">04</span><h2>Algorithms</h2></div>
+
+  <p class="lead">Seventeen named algorithms across five engines. None is a trained model; all are deterministic and reproducible, which is the property that makes a government decision-support system auditable.</p>
+
+  <h3>Graph &amp; routing</h3>
+
+  <div class="algo">
+    <div class="name">Dijkstra's shortest path</div>
+    <div class="where">convex/lib/routeGraph.ts · findShortestPath</div>
+    <p>Single-source shortest path over an undirected weighted graph of 30 corridors and 27 nodes. The cost function is not distance — it blends distance, risk and accessibility, so "shortest" means "best" under a stated policy.</p>
+    <div class="formula">traversalCost = lengthKm × (1 + α × riskScore/100) + accessibilityPenalty + incidentPenalty</div>
+    <p>An array-scan priority queue rather than a binary heap: at tens of nodes the heap's bookkeeping costs more than it saves, and the code stays readable.</p>
+  </div>
+
+  <div class="algo">
+    <div class="name">Penalty-method k-alternative paths</div>
+    <div class="where">convex/lib/routeGraph.ts · findRouteOptions</div>
+    <p>Solve, multiply the winning path's edge costs by four, solve again, repeat. Produces genuinely different alternatives cheaply.</p>
+    <p><strong>This is not Yen's algorithm</strong> and does not guarantee the true k-shortest set. It is bounded, cheap and reliably yields routes that differ by more than one segment — which is what an operator needs. Stated in the source rather than glossed over.</p>
+  </div>
+
+  <div class="algo">
+    <div class="name">Connected components (depth-first search)</div>
+    <div class="where">convex/lib/routeGraph.ts · reachableFrom</div>
+    <p>Distinguishes two failure modes that demand opposite responses: <strong>severed</strong> (a path exists but every route to it runs through a blocked segment — wait for clearance) versus <strong>disconnected</strong> (the two locations were never joined in the data — this route never existed). Collapsing both into "no route found" would tell an operator nothing.</p>
+  </div>
+
+  <h3>Geospatial</h3>
+
+  <div class="algo">
+    <div class="name">Haversine great-circle distance</div>
+    <div class="where">convex/lib/helpers.ts · haversineKm</div>
+    <p>Powers incident-influence radius, vehicle exposure and nearest-node resolution. Straight-line, and the report says so wherever the number is used — see §09.</p>
+    <div class="formula">d = 2R · asin(√(sin²(Δφ/2) + cos φ₁ · cos φ₂ · sin²(Δλ/2)))</div>
+  </div>
+
+  <div class="algo">
+    <div class="name">Forward azimuth (initial bearing)</div>
+    <div class="where">convex/lib/helpers.ts · bearingDegrees</div>
+    <p>Rotates each vehicle marker to its direction of travel, so heading reads without opening a popup.</p>
+  </div>
+
+  <div class="algo">
+    <div class="name">Grid-bucket spatial clustering</div>
+    <div class="where">src/lib/cluster.ts · clusterPoints</div>
+    <p>Cell size halves per zoom level, so a cell stays roughly constant on screen; clusters sit at the <em>centroid</em> of their members rather than the cell centre, so a two-point cluster does not visibly jump away from either point. Dependency-free — <code>leaflet.markercluster</code> has no maintained React 19 binding.</p>
+  </div>
+
+  <div class="algo">
+    <div class="name">Quadratic Bézier curve generation</div>
+    <div class="where">convex/lib/helpers.ts · curvedLine</div>
+    <p>Real mountain roads are never straight. Offsetting the midpoint perpendicular to the chord produces a believable arc for demonstration geometry, stored as a GeoJSON <code>LineString</code> so real OSM polylines replace it without a schema change.</p>
+  </div>
+
+  <h3>Risk scoring</h3>
+
+  <div class="algo">
+    <div class="name">Weighted additive model with capped factors</div>
+    <div class="where">convex/lib/riskCalculations.ts · calculateOverallRisk</div>
+    <p>Six factors whose caps sum to exactly 100, so a factor's cap <em>is</em> its maximum share of the score — which is what lets a contribution bar be read as a percentage.</p>
+    <div class="formula">rainfall 30 · incidents 20 · terrain 15 · road 15 · weather 12 · historical 8 = 100</div>
+  </div>
+
+  <div class="algo">
+    <div class="name">Piecewise-linear rainfall response</div>
+    <div class="where">convex/lib/riskCalculations.ts · calculateRainfallRisk</div>
+    <p>Band boundaries follow IMD's own rainfall classification — heavy at 64.5 mm, very heavy at 115.5 mm, extremely heavy at 204.5 mm — compressed into the 0–30 budget. Rainfall dominates deliberately: rainfall-triggered slope failure is the primary disruption mechanism in this region during monsoon.</p>
+  </div>
+
+  <div class="algo">
+    <div class="name">Linear distance decay</div>
+    <div class="where">convex/lib/riskCalculations.ts · calculateIncidentRisk</div>
+    <p>Incident influence falls linearly to zero at 30 km. The nearest and most severe incident dominates; each additional one contributes a quarter of its value, so a cluster scores higher than a single event without the total running away.</p>
+    <div class="formula">value = severityPoints × max(0, 1 − distanceKm / 30)</div>
+  </div>
+
+  <div class="algo">
+    <div class="name">Logarithmic diminishing returns</div>
+    <div class="where">convex/lib/riskCalculations.ts · calculateHistoricalRisk</div>
+    <p>The first repeat incident at a location is the most informative; the tenth adds little.</p>
+    <div class="formula">points = min(8, 3 + log₂(n) × 2.5)</div>
+  </div>
+
+  <div class="algo">
+    <div class="name">Exponential smoothing (EWMA)</div>
+    <div class="where">convex/lib/riskCalculations.ts · calculateOverallRisk</div>
+    <p>The raw score is blended 85 / 15 with the previous score so one noisy observation cannot flip a corridor between bands and back. Because it is a weighted <em>average</em> rather than an accumulation, it converges on the true value instead of ratcheting upward.</p>
+    <div class="formula">score = 0.85 × raw + 0.15 × previous</div>
+  </div>
+
+  <div class="algo">
+    <div class="name">Deterministic safety envelope</div>
+    <div class="where">convex/riskEngine.ts · confirmedStatusFromIncidents</div>
+    <p>A confirmed critical incident forces the road to <code>blocked</code> at score 100 regardless of what the model says. <strong>A landslide on the carriageway is not a probability.</strong> The road-condition factor is also derived from confirmed incidents rather than the road's stored status — feeding the engine's own output back in would create a ratchet that never releases.</p>
+  </div>
+
+  <div class="algo">
+    <div class="name">Three-component confidence</div>
+    <div class="where">convex/lib/riskCalculations.ts · calculateConfidence</div>
+    <p>Coverage (how many of five inputs were available), freshness (age of the weather observation) and agreement (how concentrated the contributions are — one dominant factor is a clearer signal than six small ones).</p>
+    <div class="formula">confidence = clamp(35 + 30·coverage + 18·freshness + 17·agreement, 35, 95)</div>
+    <p>Capped at 95 deliberately: a rule engine over partial data should never claim certainty.</p>
+  </div>
+
+  <h3>Analytics &amp; assistant</h3>
+
+  <div class="algo">
+    <div class="name">Composite operational health score</div>
+    <div class="where">convex/lib/analytics.ts · calculateOperationalHealth</div>
+    <p>Same shape as the risk engine — six components whose caps sum to 100, each a ratio of real counts with a stated explanation. Road accessibility 25, delivery performance 20, incident load 20, vehicle availability 15, critical alerts 10, predicted risk 10.</p>
+  </div>
+
+  <div class="algo">
+    <div class="name">Fixed-width time bucketing</div>
+    <div class="where">convex/lib/analytics.ts · bucketTimestamps</div>
+    <p>Twelve buckets for 24 h, seven for a week, fifteen for a month — so a trend's shape is comparable between ranges rather than an artefact of bin count.</p>
+  </div>
+
+  <div class="algo">
+    <div class="name">Ordered rule intent classification</div>
+    <div class="where">convex/lib/intents.ts · classifyIntent</div>
+    <p>Keyword and pattern matching over an ordered, most-specific-first rule set, so "delayed critical deliveries" resolves to deliveries rather than vehicles. <strong>This is not natural language understanding</strong>, and when a question falls outside the fixed set it says so rather than guessing.</p>
+  </div>
+
+  <div class="algo">
+    <div class="name">Stable-key deduplication</div>
+    <div class="where">riskEngine · fleet · routeIntelligence</div>
+    <p>Every alert carries a stable identity — <code>risk:&lt;location&gt;:&lt;band&gt;</code>, <code>delivery:&lt;id&gt;:delayed</code>, <code>route:&lt;vehicle&gt;:disrupted</code>. An active alert with the same key suppresses a duplicate; a band change retires the stale one first. Verified: running detection twice raises 1 then 0.</p>
+  </div>
+
+  <h3>Risk bands</h3>
+  <div class="ramp">
+    <span class="chip"><span class="sw" style="background:var(--safe)"></span>Low <span class="rng">0–25</span></span>
+    <span class="chip"><span class="sw" style="background:var(--moderate)"></span>Moderate <span class="rng">26–50</span></span>
+    <span class="chip"><span class="sw" style="background:var(--high)"></span>High <span class="rng">51–75</span></span>
+    <span class="chip"><span class="sw" style="background:var(--critical)"></span>Critical <span class="rng">76–100</span></span>
+  </div>
+</section>
+
+<!-- 05 -->
+<section id="s5">
+  <div class="sec-head"><span class="n">05</span><h2>Data model</h2></div>
+
+  <p class="lead">Eleven tables, 40+ indexes, zero uses of <code>v.any()</code>. Every enum is a literal union defined once and shared by the schema, the argument validators and the frontend.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Table</th><th>Holds</th><th>Design note</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">roads</td><td>30 corridors</td><td><code>startNode</code>/<code>endNode</code> make it a graph; GeoJSON <code>LineString</code> geometry</td></tr>
+      <tr><td class="mono">vehicles</td><td>18 vehicles</td><td>Registration is the natural key, so seeding is idempotent</td></tr>
+      <tr><td class="mono">incidents</td><td>Field reports</td><td><code>clientUuid</code> gives offline-sync idempotency; a replayed report cannot duplicate</td></tr>
+      <tr><td class="mono">riskPredictions</td><td>Append-only forecasts</td><td><code>contributingFactors</code> stores weight <em>and</em> explanation — the explainability payload</td></tr>
+      <tr><td class="mono">alerts</td><td>Operational alerts</td><td><code>dedupeKey</code> + index is what makes suppression cheap</td></tr>
+      <tr><td class="mono">activityLog</td><td>Event feed</td><td>Earns its place: "alert acknowledged" is a <em>transition</em>, unreconstructable from current state</td></tr>
+      <tr><td class="mono">seedMeta</td><td>One bookkeeping row</td><td>Makes the demo seed idempotent and version-aware</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>Plus <code>users</code>, <code>deliveries</code>, <code>routes</code> and <code>weatherData</code>. Relationships use native Convex document ids (<code>v.id("table")</code>) throughout — no hand-rolled foreign keys.</p>
+</section>
+
+<!-- 06 -->
+<section id="s6">
+  <div class="sec-head"><span class="n">06</span><h2>Real-time design</h2></div>
+
+  <p class="lead">There is no real-time code in this project. That is the point.</p>
+
+  <p>Convex tracks which documents a query read. When any of them change, it re-runs the query and pushes the new result to every subscribed client. So the entire real-time behaviour is a consequence of writing normal queries — no WebSocket server, no subscription registry, no cache invalidation logic, no <code>socket.emit</code>.</p>
+
+  <h4>What this buys, concretely</h4>
+  <ul>
+    <li>The nine dashboard KPIs come from <strong>one</strong> query, so they share a single consistent snapshot and cannot disagree with each other mid-update.</li>
+    <li>Each answer in the assistant transcript holds its own subscription, so a two-minute-old answer updates if the situation changes — a stale answer on an operations console is worse than no answer.</li>
+    <li>Opening the dashboard in two browser windows and firing the demo shows both moving together. That is the single most convincing thing to show a judge, and it required no code.</li>
+  </ul>
+
+  <div class="callout warn">
+    <div class="k">The one place this does not apply</div>
+    <p>Convex <em>actions</em> — used for the outbound AI call, because they can reach the network — are not reactive. An AI answer is therefore a snapshot of the moment it was asked, and the UI labels it as such rather than letting it look live.</p>
+  </div>
+</section>
+
+<!-- 07 -->
+<section id="s7">
+  <div class="sec-head"><span class="n">07</span><h2>Does it work offline?</h2></div>
+
+  <div class="verdict">
+    <span class="mark no">No</span>
+    <div>
+      <h4>Not in the full sense, and the app never claims otherwise</h4>
+      <p>The platform requires connectivity to function. What exists is a deliberately scoped subset that prevents data loss — not offline operation.</p>
+    </div>
+  </div>
+
+  <h3>What genuinely works without a connection</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Capability</th><th>Status</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><td>Installable to home screen</td><td style="color:var(--safe)">Works</td><td>Web App Manifest, standalone display, launches at <code>/field</code></td></tr>
+      <tr><td>Offline detection</td><td style="color:var(--safe)">Works</td><td>Surfaced as an explicit banner; the submit button disables</td></tr>
+      <tr><td>Draft preservation</td><td style="color:var(--safe)">Works</td><td>Every keystroke persisted to <code>localStorage</code>; restored on return, and across tabs</td></tr>
+      <tr><td>Offline shell caching</td><td style="color:var(--critical)">Absent</td><td>No service worker — a reload while offline fails</td></tr>
+      <tr><td>Queued mutations / background sync</td><td style="color:var(--critical)">Absent</td><td>Convex mutations do not queue and replay; a report must be submitted online</td></tr>
+      <tr><td>Offline map tiles</td><td style="color:var(--critical)">Absent</td><td>Tiles are fetched from the network on demand</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout no">
+    <div class="k">Why we did not fake it</div>
+    <p>A field officer in a valley with no signal, shown a green "Report sent" that never left the device, is worse off than one shown an honest failure — they believe help is coming. So there is no optimistic "sent" state anywhere: a report is only ever marked submitted once the mutation returns a database id.</p>
+  </div>
+
+  <h4>What full offline would take</h4>
+  <p>The schema is already prepared for it. <code>incidents.clientUuid</code> exists precisely so a replayed report cannot create a duplicate, and <code>incidents.deviceTs</code> preserves observation time separately from arrival time. Completing it needs three additions: a service worker for the app shell, an IndexedDB write queue, and a Background Sync registration to drain that queue on reconnect. Roughly a day of work — deliberately not claimed as done.</p>
+</section>
+
+<!-- 08 -->
+<section id="s8">
+  <div class="sec-head"><span class="n">08</span><h2>Judge questions</h2></div>
+
+  <p class="lead">The questions most likely to be asked, and answers that hold up. Where an answer concedes a limitation, concede it first — volunteering it reads as rigour, being caught hiding it reads as fabrication.</p>
+
+  <div class="qa">
+    <div class="q">Is this actually AI, or just if-statements?</div>
+    <div class="a">
+      <p><strong>It is a transparent weighted rule engine, and we say so on the screen.</strong> The status chip reads "Rule engine active", not "AI engine active", and the engine version is displayed next to it.</p>
+      <p>Here is why that is the right choice rather than a shortfall: a supervised model needs a labelled history of road closures for the NER, which is not publicly available. Fabricating one and calling the output "AI" would be dishonest, and a judge who probes would find it. What we built instead is auditable — every one of the six factors has a cap, a real data source, and a plain-language sentence explaining its contribution.</p>
+      <p>The ML path is prepared, not pretended. <code>calculateOverallRisk</code> is a pure function from a flat feature vector to a scored result; a Python service replaces exactly that one call and nothing else in the application changes.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">Show me a risk score and tell me where it came from.</div>
+    <div class="a">
+      <p>Open <strong>AI Risk Intelligence</strong> and select Seppa. It scores 90/100, and the panel decomposes it: rainfall 28.4 of 30 ("172 mm in 24h — extremely heavy, past the IMD threshold"), nearby incidents 18 of 20 ("confirmed landslide, critical, 3 km away"), road condition 15 of 15, terrain 13.8 of 15 ("steep high-altitude slopes, index 0.92"), weather 12 of 12, historical 3 of 8.</p>
+      <p>Those sum to 90.2. Because the six caps sum to exactly 100, each bar is readable as a percentage of the whole.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">Is this real GPS navigation?</div>
+    <div class="a">
+      <p><strong>No — it is corridor-level path selection, and the distinction matters.</strong> The graph has 27 nodes; each edge is an entire highway between two towns, not a street. It answers "which corridors should this consignment use", never "turn left in 200 metres".</p>
+      <p>We also compute no travel times, because there is no speed data to derive honest ones from. Distance and a weighted cost, yes; an ETA in minutes, no.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">What happens when a road is blocked — does it just get a higher score?</div>
+    <div class="a">
+      <p>No. A blocked segment is <strong>removed from the graph entirely</strong>, not penalised. A closed road is not an expensive option; it is not an option. Trigger the landslide in the demo console and watch the direct Guwahati→Shillong route vanish from the results, leaving only the Nongpoh alternative.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">Why does it recommend a longer route?</div>
+    <div class="a">
+      <p>Because delivery priority changes the cost function. For a critical consignment, Guwahati→Shillong recommends the 67 km two-segment route over the 65 km direct one — the direct corridor is restricted at risk 68 versus 41. The panel states the reason: "average corridor risk is 27 points lower than the next option".</p>
+      <p>The risk coefficient α scales from 1.0 for a routine load to 3.0 for an emergency one, so an ambulance accepts far more distance to avoid risk than a routine truck does.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">How do you stop the alert centre filling with duplicates?</div>
+    <div class="a">
+      <p>Every alert carries a stable <code>dedupeKey</code>. An active alert with the same key suppresses a new one, and when a risk band changes the stale alert is resolved before the new one is raised — so the centre tracks the current situation rather than accumulating history.</p>
+      <p>Demonstrable: run route-disruption detection twice and it raises 1, then 0.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">Does it work offline? Field officers have no signal.</div>
+    <div class="a">
+      <p><strong>Not fully, and that is the honest answer.</strong> Drafts are preserved on the device and connectivity is surfaced clearly, so nothing typed is ever lost. But Convex mutations do not queue, there is no service worker, and map tiles need the network.</p>
+      <p>Critically, there is no false "sent" confirmation — a report is marked submitted only when the database returns an id. In the field, a false confirmation is worse than an honest failure. The schema already carries <code>clientUuid</code> for the sync work; see §07.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">Is the data real?</div>
+    <div class="a">
+      <p>Mixed, and separable. <strong>Real:</strong> district-headquarter coordinates, National Highway designations (NH-6, NH-13, NH-10, NH-37), the eight states and their districts, IMD rainfall classification thresholds, and the terrain profile of each location.</p>
+      <p><strong>Demonstration data:</strong> the specific incidents, vehicles, consignments and the monsoon scenario. Road geometry is representative — a curve between two real endpoints, not a surveyed centreline. The schema stores GeoJSON so real OSM geometry drops in without a migration.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">Why Convex and not a normal backend?</div>
+    <div class="a">
+      <p>Because the real-time requirement disappears. Convex tracks which documents a query read and re-runs it when they change — so a WebSocket server, a subscription registry and cache-invalidation logic all become unnecessary. That is roughly four moving parts removed from the deployment.</p>
+      <p>The trade-off is honest: we are coupled to a managed platform, and heavy graph work runs in the query layer rather than a specialised engine. At this scale that costs nothing measurable.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">How would this scale beyond a demo?</div>
+    <div class="a">
+      <p>Three known pressure points, each with a named fix. The dashboard aggregate scans tables — past a few thousand documents it moves to an incrementally-maintained counts table. The route graph is rebuilt per query — it becomes a cached materialised structure invalidated on road change. Vehicle exposure is O(vehicles × hazards) — it becomes a spatial index.</p>
+      <p>None is architectural; all three are localised.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">Where are your API keys?</div>
+    <div class="a">
+      <p>There are none in the client. The map basemap needs no key at all. The optional AI key lives in a Convex environment variable and is read only inside a server-side action; <code>.env*</code> is gitignored. The only public value is the Convex deployment URL, which is a public identifier by design.</p>
+    </div>
+  </div>
+
+  <div class="qa">
+    <div class="q">What was the hardest bug?</div>
+    <div class="a">
+      <p>A good one to have ready. The road network initially had <strong>six disconnected components</strong> — most origin–destination pairs were unreachable and no alternative existed anywhere, so routing was impossible regardless of the algorithm. We diagnosed it with a connected-components pass before writing any pathfinding, then added nine real NER corridors (Silchar–Imphal, Aizawl–Silchar, Agartala–Silchar, Nagaon–Dimapur and others) to bring it to two.</p>
+      <p>The remaining isolated component is Sikkim — and that is geographically correct: it connects to India via Siliguri in West Bengal, outside the monitored region. We left it isolated and made the engine explain it rather than faking a link.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 09 -->
+<section id="s9">
+  <div class="sec-head"><span class="n">09</span><h2>Limitations</h2></div>
+
+  <p class="lead">Stated plainly, because a system intended for authorities should be auditable — and because volunteering a limitation is what makes the rest of the claims credible.</p>
+
+  <div class="grid g2">
+    <div class="card"><span class="tag">Intelligence</span><h4>Rule engine, not machine learning</h4><p>No trained model. Terrain and flood indices are documented static baselines pending DEM and CWC integration. The integration point is a single pure function.</p></div>
+    <div class="card"><span class="tag">Routing</span><h4>Corridor-level, no travel times</h4><p>27 nodes, each edge a whole highway. No turn-by-turn, no ETA in minutes — there is no speed data to derive one honestly.</p></div>
+    <div class="card"><span class="tag">Geospatial</span><h4>Straight-line proximity</h4><p>Vehicle exposure uses great-circle distance, not road-network distance. It deliberately over-triggers: a false flag is cheap, a missed vehicle entering a closed corridor is not.</p></div>
+    <div class="card"><span class="tag">Coverage</span><h4>Sikkim unroutable</h4><p>Correct, not a defect — it connects via West Bengal, outside the monitored network. The engine distinguishes this from a closure.</p></div>
+    <div class="card"><span class="tag">Offline</span><h4>Draft preservation only</h4><p>No service worker, no queued mutations, no offline tiles. See §07 for exactly what works and what completing it would take.</p></div>
+    <div class="card"><span class="tag">Security</span><h4>No authentication</h4><p>Roles are stored and editable but do not gate access. The schema carries <code>tokenIdentifier</code> so a provider drops in without a migration.</p></div>
+    <div class="card"><span class="tag">Data</span><h4>Representative geometry</h4><p>Real endpoints and real NH numbers; the centrelines between them are generated curves, not surveyed alignments.</p></div>
+    <div class="card"><span class="tag">Assistant</span><h4>Fixed question set</h4><p>Keyword matching over ~13 intents, not language understanding. Unrecognised questions are refused rather than guessed at.</p></div>
+  </div>
+
+  <div class="callout yes">
+    <div class="k">The standing rule</div>
+    <p>No feature in this system is presented as working when it is not. Every limitation above is stated in the product itself — in the status chips, the panel footers and the popup text — not only in this document. That consistency is deliberate: it is what lets everything else on screen be taken at face value.</p>
+  </div>
+</section>
+
+</main>
+</div>
