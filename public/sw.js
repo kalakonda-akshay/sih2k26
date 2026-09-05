@@ -19,7 +19,7 @@
  *   that a report is unsent until the database returns an id.
  */
 
-const VERSION = "ner-vision-v1";
+const VERSION = "ner-vision-v2";
 const SHELL = `${VERSION}-shell`;
 const ASSETS = `${VERSION}-assets`;
 const TILES = `${VERSION}-tiles`;
@@ -70,6 +70,18 @@ self.addEventListener("fetch", (event) => {
   /* Convex is live state. Caching it would show a stale world as if it were
      current, which on an operations console is worse than showing nothing. */
   if (url.hostname.endsWith(".convex.cloud") || url.hostname.endsWith(".convex.site")) {
+    return;
+  }
+
+  /*
+   * React Server Component payloads drive client-side navigation and must
+   * never be cached — a stale payload silently breaks the router.
+   */
+  if (
+    url.searchParams.has("_rsc") ||
+    request.headers.get("RSC") === "1" ||
+    request.headers.get("Next-Router-Prefetch") === "1"
+  ) {
     return;
   }
 
@@ -138,8 +150,19 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /* Everything else same-origin (icons, documents): cache, then network. */
-  if (url.origin === self.location.origin) {
+  /*
+   * Only genuinely immutable files are cached by extension.
+   *
+   * An earlier version cached *any* same-origin GET, which swallowed the
+   * App Router's RSC payload requests (`/dashboard?_rsc=…`) — same-origin,
+   * not mode:"navigate", not under /_next/static — and then served them
+   * cache-first forever. The router received a stale payload and client-side
+   * navigation stopped working. Anything not matched here now falls through
+   * to the network untouched, which is the safe default.
+   */
+  const STATIC = /\.(?:png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|otf)$/i;
+
+  if (url.origin === self.location.origin && STATIC.test(url.pathname)) {
     event.respondWith(
       (async () => {
         const cached = await caches.match(request);
