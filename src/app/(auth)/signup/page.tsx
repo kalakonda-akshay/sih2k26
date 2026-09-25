@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuthActions } from "@convex-dev/auth/react";
+import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
 import { useMutation } from "convex/react";
 import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, UserPlus, Loader2 } from "lucide-react";
@@ -33,6 +33,7 @@ export default function SignupPage() {
   const { t } = useTranslation();
   const router = useRouter();
   const { signIn } = useAuthActions();
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const saveUserProfile = useMutation(api.users.saveUserProfile);
 
   const [name, setName] = useState("");
@@ -43,6 +44,12 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   /** Client-side validation. Returns an error string or null. */
   const validate = (): string | null => {
