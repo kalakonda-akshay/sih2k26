@@ -8,10 +8,12 @@ import {
   TriangleAlert,
   Unlink,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import type { Priority } from "./route-search";
-import { ACCESS_TONE, RISK_TONE, riskLevelFromScore } from "@/lib/risk";
+import { ACCESS_TONE, RISK_TONE, riskLevelFromScore, getTranslatedAccessibility } from "@/lib/risk";
 import { humanize } from "@/lib/format";
+import { translateOptionLabel } from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -41,6 +43,7 @@ export function RouteOptions({
   selectedRank: number;
   onSelect: (rank: number, roadIds: string[]) => void;
 }) {
+  const { t, i18n } = useTranslation();
   const result = useQuery(
     api.routeIntelligence.getRouteOptions,
     origin && destination ? { origin, destination, priority } : "skip",
@@ -50,11 +53,14 @@ export function RouteOptions({
     return (
       <section className="flex min-h-[220px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card/50 p-8 text-center">
         <RouteIcon className="size-6 text-muted-foreground" />
-        <h3 className="mt-3 text-sm font-medium">Select an origin and destination</h3>
+        <h3 className="mt-3 text-sm font-medium">
+          {t("routes.title", "Route Intelligence")}
+        </h3>
         <p className="mt-1.5 max-w-sm text-xs leading-relaxed text-muted-foreground">
-          The engine searches the monitored corridor network for open paths,
-          weighting distance against corridor risk and accessibility according
-          to the delivery priority you choose.
+          {t(
+            "routes.subtitle",
+            "Dijkstra-based corridor computation over the NER accessibility graph",
+          )}
         </p>
       </section>
     );
@@ -90,10 +96,10 @@ export function RouteOptions({
           <div className="min-w-0">
             <h3 className="text-sm font-semibold">
               {result.status === "severed"
-                ? "Corridor severed"
+                ? t("routes.corridor_severed", "Corridor severed")
                 : result.status === "disconnected"
-                  ? "Not connected on this network"
-                  : "Cannot route"}
+                  ? t("routes.not_connected", "Not connected on this network")
+                  : t("routes.cannot_route", "Cannot route")}
             </h3>
             <p className="mt-1 text-xs leading-relaxed opacity-90">
               {result.message}
@@ -101,8 +107,7 @@ export function RouteOptions({
 
             {result.status === "severed" && (
               <p className="mt-2 text-xs leading-relaxed opacity-90">
-                This is a closure, not a data gap — the corridor exists and
-                would be usable once cleared.
+                {t("routes.severed_note", "This is a closure, not a data gap — the corridor exists and would be usable once cleared.")}
               </p>
             )}
           </div>
@@ -119,11 +124,10 @@ export function RouteOptions({
           <RouteIcon className="size-4 text-primary" />
           <div className="min-w-0">
             <h3 className="text-sm font-semibold">
-              {result.options.length} route option
-              {result.options.length === 1 ? "" : "s"}
+              {result.options.length} {t("routes.title", "route options")}
             </h3>
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-              {origin} → {destination} · {priority} priority
+              {origin} → {destination} · {priority} {t("deliveries.priority", "priority")}
             </p>
           </div>
         </header>
@@ -171,7 +175,7 @@ export function RouteOptions({
                           : "border-border bg-muted/40 text-muted-foreground",
                       )}
                     >
-                      {option.label}
+                      {translateOptionLabel(option.label, i18n.language)}
                     </span>
                     <span
                       className={cn(
@@ -179,7 +183,7 @@ export function RouteOptions({
                         accessTone.text,
                       )}
                     >
-                      {accessTone.label}
+                      {getTranslatedAccessibility(option.worstAccessibility, t)}
                     </span>
                     <span className="ml-auto font-mono text-sm tabular">
                       {option.totalDistanceKm} km
@@ -191,18 +195,21 @@ export function RouteOptions({
                   </p>
 
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-                    <Stat label="Segments" value={String(option.segmentCount)} />
                     <Stat
-                      label="Avg risk"
+                      label={t("dashboard.segments_count", { count: "" }).replace(/\{\{count\}\}|\s*$/g, "").trim() || "Segments"}
+                      value={String(option.segmentCount)}
+                    />
+                    <Stat
+                      label={t("risk.score", "Avg risk")}
                       value={`${option.averageRiskScore}/100`}
                       className={tone.text}
                     />
                     <Stat
-                      label="Peak risk"
+                      label={t("risk.high", "Peak risk")}
                       value={`${option.maxRiskScore}/100`}
                     />
                     <Stat
-                      label="Incidents"
+                      label={t("dashboard.incidents", "Incidents")}
                       value={String(option.incidentCount)}
                       className={
                         option.criticalIncidentCount > 0
@@ -211,7 +218,7 @@ export function RouteOptions({
                       }
                     />
                     <Stat
-                      label="Restricted"
+                      label={t("map.filter_warning", "Restricted")}
                       value={String(option.restrictedSegments)}
                     />
                   </div>
@@ -225,7 +232,9 @@ export function RouteOptions({
       {/* Explanation */}
       <section className="overflow-hidden rounded-lg border border-border bg-card">
         <header className="border-b border-border px-4 py-3">
-          <h3 className="text-sm font-semibold">Why this route</h3>
+          <h3 className="text-sm font-semibold">
+            {t("routes.fastest", "Why this route")}
+          </h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
             {result.priorityProfile}
           </p>
@@ -252,12 +261,12 @@ export function RouteOptions({
         <section className="overflow-hidden rounded-lg border border-border bg-card">
           <header className="border-b border-border px-4 py-3">
             <h3 className="text-sm font-semibold">
-              Segments — {result.options[selectedRank].label}
+              {t("routes.segments", "Segments")} — {translateOptionLabel(result.options[selectedRank].label, i18n.language)}
             </h3>
           </header>
           <div className="divide-y divide-border">
             {result.options[selectedRank].segments.map((segment, i) => {
-              const t = ACCESS_TONE[segment.accessibilityStatus];
+              const tTone = ACCESS_TONE[segment.accessibilityStatus];
               return (
                 <div
                   key={`${segment.roadId}-${i}`}
@@ -268,7 +277,7 @@ export function RouteOptions({
                   </span>
                   <span
                     className="size-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: t.hex }}
+                    style={{ backgroundColor: tTone.hex }}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -286,10 +295,10 @@ export function RouteOptions({
                   <span
                     className={cn(
                       "shrink-0 font-mono text-[10px] uppercase tracking-wider",
-                      t.text,
+                      tTone.text,
                     )}
                   >
-                    {humanize(segment.accessibilityStatus)}
+                    {getTranslatedAccessibility(segment.accessibilityStatus, t)}
                   </span>
                 </div>
               );

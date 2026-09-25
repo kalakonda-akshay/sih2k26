@@ -3,20 +3,26 @@
 import { useState } from "react";
 import { useQuery } from "convex/react";
 import { Activity } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import { SEVERITY_TONE, type Severity } from "@/lib/risk";
-import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  formatLocalizedTimeAgo,
+  translateActivityMessage,
+  translateCategory,
+  translateSeverityLabel,
+} from "@/lib/i18n/briefing-translator";
 
 type Category = "logistics" | "incident" | "risk" | "alert" | "system";
 
-const FILTERS: Array<{ value: Category | "all"; label: string }> = [
-  { value: "all", label: "All" },
-  { value: "incident", label: "Incidents" },
-  { value: "risk", label: "Risk" },
-  { value: "alert", label: "Alerts" },
-  { value: "logistics", label: "Logistics" },
+const FILTERS: Array<{ value: Category | "all"; labelKey: string; defaultLabel: string }> = [
+  { value: "all", labelKey: "dashboard.all", defaultLabel: "All" },
+  { value: "incident", labelKey: "dashboard.incidents", defaultLabel: "Incidents" },
+  { value: "risk", labelKey: "dashboard.risk", defaultLabel: "Risk" },
+  { value: "alert", labelKey: "dashboard.alerts", defaultLabel: "Alerts" },
+  { value: "logistics", labelKey: "dashboard.logistics", defaultLabel: "Logistics" },
 ];
 
 const CATEGORY_COLOR: Record<Category, string> = {
@@ -35,6 +41,9 @@ const CATEGORY_COLOR: Record<Category, string> = {
  * render. New events stream in through the same reactive subscription.
  */
 export function ActivityTimeline({ limit = 14 }: { limit?: number }) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
+
   const [filter, setFilter] = useState<Category | "all">("all");
   const entries = useQuery(api.dashboard.getActivityFeed, {
     limit,
@@ -45,7 +54,9 @@ export function ActivityTimeline({ limit = 14 }: { limit?: number }) {
     <section className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
       <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
         <Activity className="size-4 text-primary" />
-        <h3 className="text-sm font-semibold">System Activity</h3>
+        <h3 className="text-sm font-semibold">
+          {t("dashboard.system_activity", "System Activity")}
+        </h3>
         <div className="ml-auto flex flex-wrap gap-1">
           {FILTERS.map((f) => (
             <button
@@ -61,7 +72,7 @@ export function ActivityTimeline({ limit = 14 }: { limit?: number }) {
                   : "border-border bg-muted/40 text-muted-foreground hover:text-foreground",
               )}
             >
-              {f.label}
+              {t(f.labelKey, f.defaultLabel)}
             </button>
           ))}
         </div>
@@ -81,7 +92,10 @@ export function ActivityTimeline({ limit = 14 }: { limit?: number }) {
 
         {entries?.length === 0 && (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            No activity recorded in this category.
+            {t(
+              "dashboard.no_activity",
+              "No activity recorded in this category.",
+            )}
           </p>
         )}
 
@@ -110,7 +124,7 @@ export function ActivityTimeline({ limit = 14 }: { limit?: number }) {
                   />
 
                   <p className="text-xs leading-relaxed text-foreground/90">
-                    {entry.message}
+                    {translateActivityMessage(entry.message, currentLang)}
                   </p>
 
                   <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -118,7 +132,7 @@ export function ActivityTimeline({ limit = 14 }: { limit?: number }) {
                       className="font-mono text-[9px] uppercase tracking-[0.13em]"
                       style={{ color }}
                     >
-                      {entry.category}
+                      {translateCategory(entry.category, currentLang)}
                     </span>
                     {severityTone && (
                       <span
@@ -127,11 +141,14 @@ export function ActivityTimeline({ limit = 14 }: { limit?: number }) {
                           severityTone.text,
                         )}
                       >
-                        {severityTone.label}
+                        {translateSeverityLabel(
+                          severityTone.label,
+                          currentLang,
+                        )}
                       </span>
                     )}
                     <span className="font-mono text-[9px] text-muted-foreground">
-                      {timeAgo(entry.createdAt)}
+                      {formatLocalizedTimeAgo(entry.createdAt, currentLang)}
                     </span>
                   </div>
                 </li>
@@ -143,3 +160,4 @@ export function ActivityTimeline({ limit = 14 }: { limit?: number }) {
     </section>
   );
 }
+

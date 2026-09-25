@@ -2,10 +2,11 @@
 
 import { useQuery } from "convex/react";
 import { ShieldAlert } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
-import { CARGO_LABEL, RISK_TONE, type RiskLevel } from "@/lib/risk";
-import { timeAgo } from "@/lib/format";
+import { getTranslatedCargo, RISK_TONE, type RiskLevel } from "@/lib/risk";
+import { formatLocalizedTimeAgo } from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,6 +23,7 @@ export function HighRiskVehicles({
   onSelect: (id: Id<"vehicles">) => void;
   limit?: number;
 }) {
+  const { t, i18n } = useTranslation();
   const vehicles = useQuery(api.fleet.getHighRiskVehicles, { limit });
 
   return (
@@ -29,9 +31,9 @@ export function HighRiskVehicles({
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <ShieldAlert className="size-4 text-[oklch(0.727_0.163_55)]" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">Vehicles Needing Attention</h3>
+          <h3 className="text-sm font-semibold">{t("vehicles.needing_attention", "Vehicles Needing Attention")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Proximity exposure to live hazards
+            {t("vehicles.exposure_subtitle", "Proximity exposure to live hazards")}
           </p>
         </div>
         <span className="ml-auto shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -51,7 +53,7 @@ export function HighRiskVehicles({
         {vehicles?.length === 0 && (
           <div className="px-4 py-12 text-center">
             <p className="text-sm text-muted-foreground">
-              No vehicle is currently exposed to an elevated hazard.
+              {t("dashboard.no_vehicles_risk", "No vehicle is currently exposed to an elevated hazard.")}
             </p>
           </div>
         )}
@@ -85,17 +87,17 @@ export function HighRiskVehicles({
                         tone.text,
                       )}
                     >
-                      {tone.label} exposure
+                      {t(`risk.${vehicle.exposureLevel}`, tone.label)} {t("vehicles.exposure", "exposure")}
                     </span>
                     {vehicle.deliveryPriority && (
                       <span className="rounded border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                        {vehicle.deliveryPriority}
+                        {t(`deliveries.priority_${vehicle.deliveryPriority}`, vehicle.deliveryPriority)}
                       </span>
                     )}
                   </div>
 
                   <p className="mt-1 truncate text-xs text-muted-foreground">
-                    {CARGO_LABEL[vehicle.cargoType] ?? vehicle.cargoType} →{" "}
+                    {getTranslatedCargo(vehicle.cargoType, t)} →{" "}
                     {vehicle.destination}
                     {vehicle.roadNumber ? ` · ${vehicle.roadNumber}` : ""}
                   </p>
@@ -124,7 +126,7 @@ export function HighRiskVehicles({
                     ))}
                     {vehicle.reasons.length > 3 && (
                       <li className="pl-2.5 font-mono text-[10px] text-muted-foreground">
-                        +{vehicle.reasons.length - 3} more
+                        {t("common.more_count", "+{{count}} more", { count: vehicle.reasons.length - 3 })}
                       </li>
                     )}
                   </ul>
@@ -138,11 +140,11 @@ export function HighRiskVehicles({
                   )}
                   <div className="mt-0.5 font-mono text-[9px] text-muted-foreground">
                     {vehicle.nearestIncidentKm !== null
-                      ? "to incident"
-                      : "no incident"}
+                      ? t("vehicles.to_incident", "to incident")
+                      : t("vehicles.no_incident", "no incident")}
                   </div>
                   <div className="mt-1 font-mono text-[9px] text-muted-foreground">
-                    {timeAgo(vehicle.lastUpdated)}
+                    {formatLocalizedTimeAgo(vehicle.lastUpdated, i18n.language)}
                   </div>
                 </div>
               </div>
@@ -152,8 +154,7 @@ export function HighRiskVehicles({
       </div>
 
       <p className="border-t border-border bg-background/40 px-4 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
-        Exposure uses straight-line distance, not road-network distance. It
-        over-triggers by design — a false flag is cheaper than a missed one.
+        {t("vehicles.exposure_note", "Exposure uses straight-line distance, not road-network distance. It over-triggers by design — a false flag is cheaper than a missed one.")}
       </p>
     </section>
   );

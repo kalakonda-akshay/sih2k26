@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { Lightbulb, ListChecks } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import type { TimeWindow } from "./time-range";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ const SEVERITY_TONE: Record<
  * and claiming otherwise would not survive a judge asking how it works.
  */
 export function DecisionInsights({ window }: { window: TimeWindow }) {
+  const { t } = useTranslation();
   const data = useQuery(api.insights.getDecisionInsights, { window });
 
   return (
@@ -55,9 +57,9 @@ export function DecisionInsights({ window }: { window: TimeWindow }) {
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <Lightbulb className="size-4 text-primary" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">Decision Intelligence</h3>
+          <h3 className="text-sm font-semibold">{t("analytics.decision_insights", "Decision Intelligence")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Deterministic rules over live data
+            {t("analytics.decision_subtitle", "Deterministic rules over live data")}
           </p>
         </div>
         <span className="ml-auto shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -77,10 +79,10 @@ export function DecisionInsights({ window }: { window: TimeWindow }) {
         {data?.insights.length === 0 && (
           <div className="px-4 py-12 text-center">
             <p className="text-sm text-muted-foreground">
-              No rule fired in this window.
+              {t("analytics.no_rules_fired", "No rule fired in this window.")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Operations are within normal parameters.
+              {t("analytics.normal_parameters", "Operations are within normal parameters.")}
             </p>
           </div>
         )}
@@ -108,7 +110,7 @@ export function DecisionInsights({ window }: { window: TimeWindow }) {
                       tone.text,
                     )}
                   >
-                    {insight.severity}
+                    {t(`risk.${insight.severity}`, insight.severity)}
                   </span>
                   <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
                     {insight.code.replace(/_/g, " ")}
@@ -141,7 +143,7 @@ export function DecisionInsights({ window }: { window: TimeWindow }) {
                   )}
 
                 <p className="mt-2 border-t border-border pt-1.5 font-mono text-[9px] leading-relaxed text-muted-foreground">
-                  Rule: {insight.rule}
+                  {t("analytics.rule", "Rule")}: {insight.rule}
                 </p>
               </div>
             </article>
@@ -151,7 +153,7 @@ export function DecisionInsights({ window }: { window: TimeWindow }) {
 
       {data && (
         <p className="border-t border-border bg-background/40 px-4 py-2 font-mono text-[10px] text-muted-foreground">
-          Method: {data.method} — same inputs always produce the same output.
+          {t("analytics.method_note", "Method: {{method}} — same inputs always produce the same output.", { method: data.method })}
         </p>
       )}
     </section>
@@ -165,6 +167,7 @@ export function DecisionInsights({ window }: { window: TimeWindow }) {
  * reason travels with the instruction.
  */
 export function Recommendations({ window }: { window: TimeWindow }) {
+  const { t } = useTranslation();
   const data = useQuery(api.insights.getRecommendations, { window });
 
   return (
@@ -172,9 +175,9 @@ export function Recommendations({ window }: { window: TimeWindow }) {
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <ListChecks className="size-4 text-[oklch(0.735_0.155_158)]" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">Recommended Actions</h3>
+          <h3 className="text-sm font-semibold">{t("briefing.recommendations", "Recommended Actions")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Prioritised, with the evidence attached
+            {t("analytics.rec_subtitle", "Prioritised, with the evidence attached")}
           </p>
         </div>
         <span className="ml-auto shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -194,7 +197,7 @@ export function Recommendations({ window }: { window: TimeWindow }) {
         {data?.recommendations.length === 0 && (
           <div className="px-4 py-12 text-center">
             <p className="text-sm text-muted-foreground">
-              No action recommended right now.
+              {t("briefing.no_actions", "No action recommended right now.")}
             </p>
           </div>
         )}
@@ -219,12 +222,12 @@ export function Recommendations({ window }: { window: TimeWindow }) {
                       tone.text,
                     )}
                   >
-                    {rec.priority}
+                    {t(`risk.${rec.priority}`, rec.priority)}
                   </span>
                   {rec.affected?.count !== undefined &&
                     rec.affected.count > 0 && (
                       <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                        {rec.affected.count} affected
+                        {t("analytics.count_affected", "{{count}} affected", { count: rec.affected.count })}
                       </span>
                     )}
                 </div>

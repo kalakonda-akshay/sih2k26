@@ -9,6 +9,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 const ENTITY_LABEL: Record<string, string> = {
@@ -37,6 +38,7 @@ export type AnswerShape = NonNullable<
 >;
 
 export function AssistantAnswer({ question }: { question: string }) {
+  const { t } = useTranslation();
   const answer = useQuery(api.assistant.ask, { question });
 
   return (
@@ -55,7 +57,7 @@ export function AssistantAnswer({ question }: { question: string }) {
             <div className="flex items-center gap-2 p-4 text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
               <span className="font-mono text-xs uppercase tracking-wider">
-                Querying intelligence system
+                {t("assistant.querying", "Querying intelligence system")}
               </span>
             </div>
           )}
@@ -80,6 +82,27 @@ export function AnswerBody({
   /** True when the answer cannot update itself (the AI action path). */
   snapshot?: boolean;
 }) {
+  const { t } = useTranslation();
+
+  const getEntityLabel = (kind: string) => {
+    switch (kind) {
+      case "district":
+        return t("incidents.district", "District");
+      case "road":
+        return t("map.layer_roads", "Road");
+      case "vehicle":
+        return t("map.layer_vehicles", "Vehicle");
+      case "delivery":
+        return t("deliveries.title", "Delivery");
+      case "incident":
+        return t("map.layer_incidents", "Incident");
+      case "alert":
+        return t("dashboard.alerts", "Alert");
+      default:
+        return kind;
+    }
+  };
+
   return (
     <>
       <div
@@ -91,21 +114,25 @@ export function AnswerBody({
         <div className="flex items-center gap-2">
           <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
             {answer.intent === "unsupported"
-              ? "Not recognised"
+              ? t("assistant.not_recognised", "Not recognised")
               : answer.intent.replace(/_/g, " ")}
           </span>
           <span className="ml-auto font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-            {answer.confidence > 0 ? `${answer.confidence}% match` : "no match"}
+            {answer.confidence > 0
+              ? `${answer.confidence}% ${t("assistant.match", "match")}`
+              : t("assistant.no_match", "no match")}
           </span>
         </div>
-        <p className="mt-1.5 text-sm leading-relaxed">{answer.answer}</p>
+        <p className="mt-1.5 text-sm leading-relaxed">
+          {answer.answer}
+        </p>
       </div>
 
       {answer.observations.length > 0 && (
         <Group
           icon={Eye}
-          title="Observed"
-          subtitle="Read directly from the database"
+          title={t("assistant.observed", "Observed")}
+          subtitle={t("assistant.observed_sub", "Read directly from the database")}
           tone="text-[oklch(0.735_0.155_158)]"
           items={answer.observations}
         />
@@ -114,8 +141,8 @@ export function AnswerBody({
       {answer.risks.length > 0 && (
         <Group
           icon={TriangleAlert}
-          title="Predicted"
-          subtitle="Forecast — not a confirmed event"
+          title={t("assistant.predicted", "Predicted")}
+          subtitle={t("assistant.predicted_sub", "Forecast — not a confirmed event")}
           tone="text-[oklch(0.815_0.145_88)]"
           items={answer.risks}
         />
@@ -124,8 +151,8 @@ export function AnswerBody({
       {answer.recommendations.length > 0 && (
         <Group
           icon={ListChecks}
-          title="Recommended"
-          subtitle="Proposed action, awaiting your approval"
+          title={t("assistant.recommended", "Recommended")}
+          subtitle={t("assistant.recommended_sub", "Proposed action, awaiting your approval")}
           tone="text-[oklch(0.715_0.128_231)]"
           items={answer.recommendations}
         />
@@ -134,7 +161,7 @@ export function AnswerBody({
       {answer.affectedEntities.length > 0 && (
         <div className="border-t border-border px-4 py-3">
           <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-            Referenced records
+            {t("assistant.referenced_records", "Referenced records")}
           </div>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {answer.affectedEntities.map((entity, i) => (
@@ -143,7 +170,7 @@ export function AnswerBody({
                 className="rounded border border-border bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground"
                 title={entity.detail}
               >
-                {ENTITY_LABEL[entity.kind] ?? entity.kind}: {entity.label}
+                {getEntityLabel(entity.kind)}: {entity.label}
               </span>
             ))}
           </div>
@@ -155,21 +182,15 @@ export function AnswerBody({
           <CircleAlert className="mt-px size-3 shrink-0 text-muted-foreground" />
           <ul className="flex flex-col gap-0.5">
             <li className="font-mono text-[10px] leading-relaxed text-muted-foreground">
-      {answer.source === "llm"
-                ? "Generated by a language model from a bounded context."
-                : "Produced by the rule engine — no language model involved."}
-              {snapshot
-                ? " Snapshot at time of asking; it does not update on its own."
-                : " Updates live as the situation changes."}
+              {answer.source === "llm"
+                ? t("assistant.llm_source", "Generated by a language model from a bounded context.")
+                : t("assistant.rule_source", "Determined by operational rules; no generative AI involved.")}
             </li>
-            {answer.limitations.map((limitation, i) => (
-              <li
-                key={i}
-                className="font-mono text-[10px] leading-relaxed text-muted-foreground"
-              >
-                {limitation}
-              </li>
-            ))}
+            <li className="font-mono text-[10px] leading-relaxed text-muted-foreground">
+              {snapshot
+                ? t("assistant.snapshot_note", "Static snapshot taken at question time. Re-ask to refresh.")
+                : t("assistant.live_note", "Live answer. Updates automatically as database records change.")}
+            </li>
           </ul>
         </div>
       </div>
@@ -191,29 +212,24 @@ function Group({
   items: string[];
 }) {
   return (
-    <div className="border-t border-border px-4 py-3">
-      <div className="flex items-center gap-1.5">
-        <Icon className={cn("size-3", tone)} />
-        <span
-          className={cn(
-            "font-mono text-[9px] uppercase tracking-[0.14em]",
-            tone,
-          )}
-        >
+    <div className="border-b border-border last:border-b-0">
+      <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+        <Icon className={cn("size-3.5", tone)} />
+        <span className={cn("font-mono text-[10px] font-semibold uppercase tracking-wider", tone)}>
           {title}
         </span>
-        <span className="font-mono text-[9px] text-muted-foreground">
+        <span className="font-mono text-[10px] text-muted-foreground">
           · {subtitle}
         </span>
       </div>
-      <ul className="mt-1.5 flex flex-col gap-1">
+      <ul className="divide-y divide-border/60">
         {items.map((item, i) => (
           <li
             key={i}
-            className="flex items-start gap-1.5 text-xs leading-relaxed text-foreground/85"
+            className="flex items-start gap-2.5 px-4 py-2 text-xs leading-relaxed"
           >
-            <span className="mt-1.5 size-1 shrink-0 rounded-full bg-muted-foreground" />
-            {item}
+            <span className="mt-1 size-1 shrink-0 rounded-full bg-muted-foreground/60" />
+            <span>{item}</span>
           </li>
         ))}
       </ul>

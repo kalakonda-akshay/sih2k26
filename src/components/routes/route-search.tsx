@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { ArrowRight, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import { cn } from "@/lib/utils";
 
@@ -37,8 +38,16 @@ export function RouteSearch({
     priority: Priority;
   }) => void;
 }) {
+  const { t } = useTranslation();
   const network = useQuery(api.routeIntelligence.getNetworkNodes);
   const nodes = network?.nodes ?? [];
+
+  const priorities: Array<{ value: Priority; label: string }> = [
+    { value: "normal", label: t("deliveries.priority_normal", "Normal") },
+    { value: "high", label: t("deliveries.priority_high", "High") },
+    { value: "critical", label: t("deliveries.priority_critical", "Critical") },
+    { value: "emergency", label: t("deliveries.priority_emergency", "Emergency") },
+  ];
 
   // Which component each node belongs to, so we can warn before searching.
   const componentOf = (node: string) =>
@@ -55,17 +64,17 @@ export function RouteSearch({
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <Search className="size-4 text-primary" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">Route Search</h3>
+          <h3 className="text-sm font-semibold">{t("routes.title", "Route Search")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
             {network
-              ? `${network.routableSegments} routable segments · ${network.blockedSegments} blocked`
-              : "Loading network…"}
+              ? `${network.routableSegments} ${t("routes.routable_segments", "routable segments")} · ${network.blockedSegments} ${t("map.filter_critical", "blocked")}`
+              : t("common.loading", "Loading network…")}
           </p>
         </div>
       </header>
 
       <div className="grid gap-3 p-4 md:grid-cols-[1fr_auto_1fr_1fr]">
-        <Field label="Origin">
+        <Field label={t("routes.origin", "Origin")}>
           <select
             value={origin}
             onChange={(e) =>
@@ -73,7 +82,7 @@ export function RouteSearch({
             }
             className="h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            <option value="">Select origin…</option>
+            <option value="">{t("routes.select_origin", "Select origin…")}</option>
             {nodes.map((node) => (
               <option key={node} value={node}>
                 {node}
@@ -86,7 +95,7 @@ export function RouteSearch({
           <ArrowRight className="size-4 text-muted-foreground" />
         </div>
 
-        <Field label="Destination">
+        <Field label={t("routes.destination", "Destination")}>
           <select
             value={destination}
             onChange={(e) =>
@@ -94,7 +103,7 @@ export function RouteSearch({
             }
             className="h-9 w-full rounded-md border border-border bg-background px-2.5 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            <option value="">Select destination…</option>
+            <option value="">{t("routes.select_destination", "Select destination…")}</option>
             {nodes.map((node) => (
               <option key={node} value={node}>
                 {node}
@@ -103,9 +112,9 @@ export function RouteSearch({
           </select>
         </Field>
 
-        <Field label="Delivery priority">
+        <Field label={t("deliveries.priority", "Delivery priority")}>
           <div className="flex flex-wrap gap-1">
-            {PRIORITIES.map((p) => (
+            {priorities.map((p) => (
               <button
                 key={p.value}
                 type="button"
@@ -130,14 +139,12 @@ export function RouteSearch({
 
       {!sameComponent && origin && destination && (
         <p className="border-t border-border bg-[oklch(0.815_0.145_88)]/8 px-4 py-2 text-[11px] text-[oklch(0.815_0.145_88)]">
-          {origin} and {destination} sit in separate components of the monitored
-          network — no corridor connects them in the current data.
+          {t("routes.separate_components", "{{origin}} and {{destination}} sit in separate components of the monitored network — no corridor connects them in the current data.", { origin, destination })}
         </p>
       )}
 
       <p className="border-t border-border bg-background/40 px-4 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
-        Corridor-level path selection between monitored network nodes. This is
-        not turn-by-turn navigation and does not use a live routing service.
+        {t("routes.network_note", "Corridor-level path selection between monitored network nodes. This is not turn-by-turn navigation and does not use a live routing service.")}
       </p>
     </section>
   );

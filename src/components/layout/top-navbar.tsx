@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { Bell, Menu, Search } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { NAV_ITEMS } from "./app-sidebar";
 import { DocumentsMenu } from "./documents-menu";
 import { InstallApp } from "@/components/pwa/install-app";
+import { LanguageSwitcher } from "./language-switcher";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +25,24 @@ import { cn } from "@/lib/utils";
 import { timeAgo } from "@/lib/format";
 import { SEVERITY_TONE, type Severity } from "@/lib/risk";
 
+const NAV_TITLE_KEY: Record<string, string> = {
+  "/dashboard": "nav.dashboard",
+  "/map": "nav.map",
+  "/routes": "nav.routes",
+  "/risk-intelligence": "nav.risk",
+  "/vehicles": "nav.vehicles",
+  "/deliveries": "nav.deliveries",
+  "/incidents": "nav.incidents",
+  "/alerts": "nav.alerts",
+  "/analytics": "nav.analytics",
+  "/emergency": "nav.emergency",
+  "/assistant": "nav.assistant",
+  "/field": "nav.field",
+  "/settings": "nav.settings",
+};
+
 export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const metrics = useQuery(api.dashboard.getMetrics);
   const alerts = useQuery(api.alerts.listActiveAlerts, { limit: 6 });
@@ -32,8 +51,11 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
   const active = NAV_ITEMS.find(
     (i) => pathname === i.href || pathname.startsWith(`${i.href}/`),
   );
-  const title =
-    active?.label ?? (pathname === "/settings" ? "Settings" : "NER-Vision AI");
+  const title = active
+    ? t(NAV_TITLE_KEY[active.href] || "brand.name", active.label)
+    : pathname === "/settings"
+      ? t("nav.settings", "Settings")
+      : t("brand.name", "NER-Vision AI");
 
   // Data flowing means the websocket is live; undefined means still connecting.
   const connected = metrics !== undefined;
@@ -49,13 +71,13 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
     : "··";
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md md:px-6">
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md md:px-6">
       <Button
         variant="ghost"
         size="icon"
         className="md:hidden"
         onClick={onOpenSidebar}
-        aria-label="Open navigation"
+        aria-label={t("header.open_navigation", "Open navigation")}
       >
         <Menu className="size-5" />
       </Button>
@@ -74,7 +96,10 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
             )}
           />
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-            NER Intelligence Network · {connected ? "Live" : "Connecting"}
+            {t("header.network_status", "NER Intelligence Network")} ·{" "}
+            {connected
+              ? t("header.live", "Live")
+              : t("header.connecting", "Connecting")}
           </span>
         </div>
       </div>
@@ -85,18 +110,24 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search vehicles, roads, districts…"
-            aria-label="Search"
+            placeholder={t(
+              "header.search_placeholder",
+              "Search vehicles, roads, districts…",
+            )}
+            aria-label={t("common.search", "Search")}
             className="h-9 bg-card pl-9 text-sm"
           />
         </div>
       </div>
 
-      <div className="ml-auto flex items-center gap-1 lg:ml-0">
+      <div className="ml-auto flex items-center gap-1.5 lg:ml-0">
+        {/* Language Switcher */}
+        <LanguageSwitcher />
+
         {/* Network health */}
         <div className="mr-1 hidden items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 xl:flex">
           <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            Network
+            {t("header.network", "Network")}
           </span>
           <span className="font-mono text-xs font-semibold tabular text-[oklch(0.735_0.155_158)]">
             {metrics ? `${metrics.networkHealth}%` : "—"}
@@ -107,6 +138,9 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
 
         <DocumentsMenu />
 
+        {/* Regional Language Switcher */}
+        <LanguageSwitcher />
+
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -115,7 +149,7 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
                 variant="ghost"
                 size="icon"
                 className="relative"
-                aria-label={`Notifications: ${alertCount} active`}
+                aria-label={`${t("header.active_alerts", "Active alerts")}: ${alertCount}`}
               />
             }
           >
@@ -135,7 +169,7 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
             */}
             <DropdownMenuGroup>
               <DropdownMenuLabel className="flex items-center justify-between">
-                <span>Active alerts</span>
+                <span>{t("header.active_alerts", "Active alerts")}</span>
                 <span className="font-mono text-xs tabular text-muted-foreground">
                   {alertCount}
                 </span>
@@ -145,12 +179,12 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
 
             {alerts === undefined && (
               <div className="px-2 py-6 text-center text-xs text-muted-foreground">
-                Loading…
+                {t("header.loading", "Loading…")}
               </div>
             )}
             {alerts?.length === 0 && (
               <div className="px-2 py-6 text-center text-xs text-muted-foreground">
-                No active alerts.
+                {t("header.no_active_alerts", "No active alerts.")}
               </div>
             )}
 
@@ -184,7 +218,7 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
               render={<Link href="/alerts" />}
               className="justify-center text-xs"
             >
-              View alert centre
+              {t("header.view_alert_center", "View alert centre")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -196,7 +230,7 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
               <Button
                 variant="ghost"
                 className="gap-2 px-2"
-                aria-label="User menu"
+                aria-label={t("header.user_menu", "User menu")}
               />
             }
           >
@@ -224,7 +258,7 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem render={<Link href="/settings" />}>
-              Settings
+              {t("nav.settings", "Settings")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

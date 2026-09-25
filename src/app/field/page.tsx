@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import {
   BellRing,
   ClipboardList,
@@ -14,6 +15,7 @@ import {
 import { api } from "../../../convex/_generated/api";
 import { IncidentReportForm } from "@/components/field/incident-report-form";
 import { useFieldDraft } from "@/components/field/use-field-draft";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { INCIDENT_LABEL, SEVERITY_TONE, type Severity } from "@/lib/risk";
 import { humanize, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -31,6 +33,7 @@ type Tab = "report" | "tasks" | "alerts";
  * different interface from an operator at a desk, not a squeezed copy of one.
  */
 export default function FieldPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("report");
   const { online } = useFieldDraft();
   const currentUser = useQuery(api.users.getCurrentUser);
@@ -47,14 +50,15 @@ export default function FieldPage() {
           <Siren className="size-5 shrink-0 text-primary" />
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-sm font-semibold">
-              NER-Vision Field Ops
+              {t("field.title", "NER-Vision Field Ops")}
             </h1>
             <p className="truncate font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
               {currentUser?.district
                 ? `${currentUser.district} · ${currentUser.name}`
-                : "Field operations"}
+                : t("nav.field", "Field operations")}
             </p>
           </div>
+          <LanguageSwitcher variant="compact" />
           <span
             className={cn(
               "flex shrink-0 items-center gap-1 rounded border px-1.5 py-1 font-mono text-[9px] uppercase tracking-wider",
@@ -68,7 +72,9 @@ export default function FieldPage() {
             ) : (
               <WifiOff className="size-3" />
             )}
-            {online ? "Online" : "Offline"}
+            {online
+              ? t("field.status_online", "Online")
+              : t("field.status_offline", "Offline")}
           </span>
         </div>
       </header>
@@ -92,23 +98,27 @@ export default function FieldPage() {
           className="flex h-16 flex-col items-center justify-center gap-1 rounded-lg border border-[oklch(0.648_0.201_22)]/40 bg-[oklch(0.648_0.201_22)]/10 text-[oklch(0.648_0.201_22)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           <FilePlus2 className="size-5" />
-          <span className="text-xs font-medium">Report emergency</span>
+          <span className="text-xs font-medium">
+            {t("incidents.report_incident", "Report emergency")}
+          </span>
         </button>
         <Link
           href="/emergency"
           className="flex h-16 flex-col items-center justify-center gap-1 rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           <Siren className="size-5" />
-          <span className="text-xs font-medium">Emergency status</span>
+          <span className="text-xs font-medium">
+            {t("nav.emergency", "Emergency status")}
+          </span>
         </Link>
       </div>
 
       <nav className="flex gap-1 p-4 pb-2" aria-label="Field sections">
         {(
           [
-            ["report", "Report", FilePlus2],
-            ["tasks", "Tasks", ClipboardList],
-            ["alerts", "Alerts", BellRing],
+            ["report", t("field.tab_report", "Report"), FilePlus2],
+            ["tasks", t("field.tab_tasks", "Tasks"), ClipboardList],
+            ["alerts", t("field.tab_alerts", "Alerts"), BellRing],
           ] as const
         ).map(([value, label, Icon]) => (
           <button
@@ -136,7 +146,7 @@ export default function FieldPage() {
         {tab === "tasks" && (
           <section className="overflow-hidden rounded-lg border border-border bg-card">
             <header className="border-b border-border px-4 py-3">
-              <h2 className="text-sm font-semibold">Open incidents</h2>
+              <h2 className="text-sm font-semibold">{t("field.tab_tasks", "Open incidents")}</h2>
               <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
                 {currentUser?.district
                   ? `${currentUser.district} first`
@@ -154,7 +164,7 @@ export default function FieldPage() {
 
               {tasks?.length === 0 && (
                 <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-                  No open incidents.
+                  {t("briefing.no_disruptions", "No open incidents.")}
                 </p>
               )}
 
@@ -202,7 +212,7 @@ export default function FieldPage() {
         {tab === "alerts" && (
           <section className="overflow-hidden rounded-lg border border-border bg-card">
             <header className="border-b border-border px-4 py-3">
-              <h2 className="text-sm font-semibold">Critical alerts</h2>
+              <h2 className="text-sm font-semibold">{t("alerts.title", "Critical alerts")}</h2>
             </header>
 
             <div className="divide-y divide-border">
@@ -215,7 +225,7 @@ export default function FieldPage() {
 
               {alerts?.length === 0 && (
                 <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-                  No critical alerts.
+                  {t("header.no_active_alerts", "No critical alerts.")}
                 </p>
               )}
 
@@ -243,7 +253,7 @@ export default function FieldPage() {
           href="/dashboard"
           className="text-xs text-muted-foreground underline-offset-4 hover:underline"
         >
-          Open the full command centre
+          {t("nav.dashboard", "Open the full command centre")}
         </Link>
       </footer>
     </div>

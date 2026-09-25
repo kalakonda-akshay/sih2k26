@@ -2,10 +2,11 @@
 
 import { useQuery } from "convex/react";
 import { ChartColumnBig } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import type { TimeWindow } from "./time-range";
-import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 /**
  * Trend charts, hand-drawn as inline SVG.
@@ -15,33 +16,34 @@ import { Skeleton } from "@/components/ui/skeleton";
  * emphasised endpoint, drawn from the bucketed Convex series.
  */
 export function TrendCharts({ window }: { window: TimeWindow }) {
+  const { t } = useTranslation();
   const trends = useQuery(api.analytics.getTrends, { window });
 
   const charts = [
     {
       key: "incidents",
-      title: "Incident frequency",
+      title: t("analytics.incident_frequency", "Incident frequency"),
       values: trends?.incidents.map((b) => b.count) ?? null,
       hex: "oklch(0.727 0.163 55)",
-      suffix: "incidents",
+      suffix: t("dashboard.incidents", "incidents"),
     },
     {
       key: "alerts",
-      title: "Alert volume",
+      title: t("analytics.alert_volume", "Alert volume"),
       values: trends?.alerts.map((b) => b.count) ?? null,
       hex: "oklch(0.648 0.201 22)",
-      suffix: "alerts",
+      suffix: t("dashboard.alerts", "alerts"),
     },
     {
       key: "vehicleActivity",
-      title: "Vehicle activity",
+      title: t("analytics.vehicle_activity", "Vehicle activity"),
       values: trends?.vehicleActivity.map((b) => b.count) ?? null,
       hex: "oklch(0.715 0.128 231)",
-      suffix: "events",
+      suffix: t("analytics.events", "events"),
     },
     {
       key: "riskScore",
-      title: "Average risk score",
+      title: t("analytics.avg_risk_score", "Average risk score"),
       // Averages can be null where a bucket had no assessment; carry the
       // previous value forward so the line does not break misleadingly.
       values: trends
@@ -57,13 +59,13 @@ export function TrendCharts({ window }: { window: TimeWindow }) {
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <ChartColumnBig className="size-4 text-primary" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">Operational Trends</h3>
+          <h3 className="text-sm font-semibold">{t("analytics.operational_trends", "Operational Trends")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
             {window === "24h"
-              ? "12 buckets across 24 hours"
+              ? t("analytics.buckets_24h", "12 buckets across 24 hours")
               : window === "7d"
-                ? "Daily across 7 days"
-                : "15 buckets across 30 days"}
+                ? t("analytics.buckets_7d", "Daily across 7 days")
+                : t("analytics.buckets_30d", "15 buckets across 30 days")}
           </p>
         </div>
       </header>

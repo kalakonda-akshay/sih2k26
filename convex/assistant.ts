@@ -30,6 +30,7 @@ interface World {
   alerts: Doc<"alerts">[];
   predictions: Doc<"riskPredictions">[];
   activity: Doc<"activityLog">[];
+  weather: Doc<"weatherData">[];
 }
 
 function latestPredictions(all: Doc<"riskPredictions">[]) {
@@ -49,26 +50,7 @@ export const ask = query({
   handler: async (ctx, { question }): Promise<AssistantAnswer> => {
     const match = classifyIntent(question);
 
-    if (match.intent === "unsupported") {
-      return {
-        intent: "unsupported",
-        answer:
-          "I could not map that question to an operation I can answer from the data I hold. I handle questions about incidents, roads, vehicles, deliveries, district risk, recent changes and current priorities.",
-        summary: "Question not recognised.",
-        observations: [],
-        risks: [],
-        recommendations: [],
-        affectedEntities: [],
-        confidence: 0,
-        limitations: [
-          "This assistant matches keywords against a fixed set of operational questions. It does not interpret free-form language.",
-          `Try one of: ${SUGGESTED_QUESTIONS.slice(0, 3).join(" · ")}`,
-        ],
-        source: "deterministic",
-      };
-    }
-
-    const [incidents, roads, vehicles, deliveries, alerts, predictions, activity] =
+    const [incidents, roads, vehicles, deliveries, alerts, predictions, activity, weather] =
       await Promise.all([
         ctx.db.query("incidents").collect(),
         ctx.db.query("roads").collect(),
@@ -81,6 +63,11 @@ export const ask = query({
           .withIndex("by_createdAt")
           .order("desc")
           .take(200),
+        ctx.db
+          .query("weatherData")
+          .withIndex("by_recordedAt")
+          .order("desc")
+          .take(100),
       ]);
 
     const world: World = {
@@ -91,13 +78,16 @@ export const ask = query({
       alerts,
       predictions: latestPredictions(predictions),
       activity,
+      weather,
     };
 
-    const answer = answerFor(match.intent, world);
+    const targetIntent =
+      match.intent === "unsupported" ? "general_help" : match.intent;
+    const answer = answerFor(targetIntent, world);
 
     return {
       ...answer,
-      intent: match.intent,
+      intent: targetIntent,
       confidence: Math.min(match.confidence, answer.confidence),
       source: "deterministic",
     };
@@ -146,6 +136,12 @@ function answerFor(
     case "operational_health":
     case "situation_summary":
       return situationSummary(w);
+    case "weather_summary":
+      return weatherSummary(w);
+    case "active_alerts":
+      return activeAlerts(w);
+    case "general_help":
+      return generalHelp(w);
   }
 }
 
@@ -697,3 +693,108 @@ function situationSummary(w: World): PartialAnswer {
     ],
   };
 }
+
+function weatherSummary(w: World): PartialAnswer {
+  if (!w.weather || w.weather.length === 0) {
+    return empty("No weather telemetry recorded.", "Weather feeds have not published readings yet.");
+  }
+
+  const heavyRain = w.weather.filter(
+    (item) => item.rainfall >= 25 || item.weatherCondition === "heavy_rain" || item.weatherCondition === "thunderstorm",
+  );
+  const sorted = [...w.weather].sort((a, b) => b.rainfall - a.rainfall);
+  const highest = sorted[0];
+
+  return {
+    answer: heavyRain.length > 0
+      ? `High-intensity rainfall detected at ${heavyRain.length} location(s). The highest intensity is ${highest.locationName} (${highest.district ?? "NER"}) measuring ${highest.rainfall} mm/h (${highest.weatherCondition.replace(/_/g, " ")}).`
+      : `Weather conditions across the region are moderate. Peak rainfall recorded is ${highest.rainfall} mm/h at ${highest.locationName} (${highest.weatherCondition.replace(/_/g, " ")}).`,
+    summary: `${heavyRain.length} high-rainfall zone(s) · Peak: ${highest.locationName} (${highest.rainfall} mm/h).`,
+    observations: sorted.slice(0, 6).map(
+      (item) =>
+        `${item.locationName} (${item.district ?? "NER"}): ${item.weatherCondition.replace(/_/g, " ")} · ${item.rainfall} mm/h · ${item.temperature}°C · wind ${item.windSpeed} km/h.`,
+    ),
+    risks: heavyRain.map(
+      (item) =>
+        `Sustained precipitation at ${item.locationName} increases slope saturation and trigger likelihood for landslides on connecting mountain corridors.`,
+    ),
+    recommendations: heavyRain.length > 0
+      ? [
+          "Instruct logistics dispatchers to alert drivers heading through heavy precipitation zones.",
+          "Pre-position road clearing equipment along vulnerable slope segments.",
+        ]
+      : ["Continue regular automated weather feed monitoring."],
+    affectedEntities: sorted.slice(0, 6).map((item) => ({
+      kind: "district" as const,
+      label: item.locationName,
+      detail: `${item.rainfall} mm/h · ${item.weatherCondition}`,
+    })),
+    confidence: 95,
+    limitations: [
+      "Weather readings reflect telemetry from deployed automated weather stations in the region.",
+    ],
+  };
+}
+
+function activeAlerts(w: World): PartialAnswer {
+  const active = w.alerts.filter((a) => a.status === "active");
+  if (active.length === 0) {
+    return empty("No active alerts.", "All operational and safety alerts are currently cleared.");
+  }
+
+  const critical = active.filter((a) => a.severity === "critical");
+
+  return {
+    answer: `There ${active.length === 1 ? "is" : "are"} ${active.length} active alert${active.length === 1 ? "" : "s"} across the logistics network${critical.length > 0 ? `, including ${critical.length} critical emergency alert(s)` : ""}.`,
+    summary: `${active.length} active alert(s) · ${critical.length} critical.`,
+    observations: active.slice(0, 6).map(
+      (a) => `[${a.severity.toUpperCase()}] ${a.title}: ${a.message} (${a.locationName ?? "Regional"}).`,
+    ),
+    risks: critical.map(
+      (a) => `Critical alert active: ${a.title} (${a.locationName ?? "corridor"}).`,
+    ),
+    recommendations: [
+      "Review and acknowledge critical alerts in the Alert Centre immediately.",
+      "Dispatch highway clearance and relief units to confirmed affected locations.",
+    ],
+    affectedEntities: active.slice(0, 6).map((a) => ({
+      kind: "alert" as const,
+      label: a.title,
+      detail: `${a.severity} · ${a.locationName ?? "Regional"}`,
+    })),
+    confidence: 95,
+    limitations: [],
+  };
+}
+
+function generalHelp(w: World): PartialAnswer {
+  const movingVehicles = w.vehicles.filter((v) => v.status === "active" || v.status === "emergency").length;
+  const blockedRoadsCount = w.roads.filter((r) => r.accessibilityStatus === "blocked").length;
+  const activeIncidentsCount = w.incidents.filter((i) => i.status === "active").length;
+  const activeAlertsCount = w.alerts.filter((a) => a.status === "active").length;
+
+  return {
+    answer: `Hello! I am the NER Operations Assistant. I monitor real-time logistics, road blockages, fleet telemetry, weather, and AI risk predictions across Northeast India. Currently tracking ${w.vehicles.length} vehicles (${movingVehicles} active), ${w.roads.length} corridors (${blockedRoadsCount} blocked), and ${activeIncidentsCount} active incidents.`,
+    summary: "Operations Assistant Ready · Live Data Connected",
+    observations: [
+      `Fleet Status: ${movingVehicles}/${w.vehicles.length} vehicles currently in transit.`,
+      `Corridor Accessibility: ${blockedRoadsCount} blocked road(s), ${w.roads.filter((r) => r.accessibilityStatus === "restricted").length} restricted.`,
+      `Incident Status: ${activeIncidentsCount} active incident(s) across the region.`,
+      `Active Alerts: ${activeAlertsCount} active alert(s) requiring coordination.`,
+    ],
+    risks: [],
+    recommendations: [
+      "Ask about blocked roads: 'Which roads are blocked?'",
+      "Ask about vehicles: 'Which vehicles are delayed?' or 'Show emergency vehicles'",
+      "Ask about incidents: 'Show active incidents' or 'Any landslides?'",
+      "Ask about priorities: 'What should we prioritise right now?'",
+      "Ask about weather: 'How is the weather and rainfall?'",
+    ],
+    affectedEntities: [],
+    confidence: 100,
+    limitations: [
+      "All responses are grounded directly in live Convex database records.",
+    ],
+  };
+}
+

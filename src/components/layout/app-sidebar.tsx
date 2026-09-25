@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import {
   BellRing,
   Bot,
@@ -24,32 +25,35 @@ import { cn } from "@/lib/utils";
 export interface NavItem {
   href: string;
   label: string;
+  i18nKey: string;
   icon: React.ComponentType<{ className?: string }>;
   /** Which live counter, if any, appears as a badge. */
   badge?: "alerts" | "incidents";
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/map", label: "Live Intelligence Map", icon: MapIcon },
-  { href: "/routes", label: "Route Intelligence", icon: RouteIcon },
-  { href: "/risk-intelligence", label: "AI Risk Intelligence", icon: Sparkles },
-  { href: "/vehicles", label: "Vehicle Tracking", icon: Truck },
-  { href: "/deliveries", label: "Deliveries", icon: PackageCheck },
+  { href: "/dashboard", label: "Dashboard", i18nKey: "nav.dashboard", icon: LayoutDashboard },
+  { href: "/map", label: "Live Intelligence Map", i18nKey: "nav.map", icon: MapIcon },
+  { href: "/routes", label: "Route Intelligence", i18nKey: "nav.routes", icon: RouteIcon },
+  { href: "/risk-intelligence", label: "AI Risk Intelligence", i18nKey: "nav.risk", icon: Sparkles },
+  { href: "/vehicles", label: "Vehicle Tracking", i18nKey: "nav.vehicles", icon: Truck },
+  { href: "/deliveries", label: "Deliveries", i18nKey: "nav.deliveries", icon: PackageCheck },
   {
     href: "/incidents",
     label: "Incident Center",
+    i18nKey: "nav.incidents",
     icon: TriangleAlert,
     badge: "incidents",
   },
-  { href: "/alerts", label: "Alert Center", icon: BellRing, badge: "alerts" },
-  { href: "/analytics", label: "Analytics", icon: ChartColumnBig },
-  { href: "/emergency", label: "Emergency Mode", icon: Siren },
-  { href: "/assistant", label: "Operations Assistant", icon: Bot },
-  { href: "/field", label: "Field Operations", icon: Smartphone },
+  { href: "/alerts", label: "Alert Center", i18nKey: "nav.alerts", icon: BellRing, badge: "alerts" },
+  { href: "/analytics", label: "Analytics", i18nKey: "nav.analytics", icon: ChartColumnBig },
+  { href: "/emergency", label: "Emergency Mode", i18nKey: "nav.emergency", icon: Siren },
+  { href: "/assistant", label: "Operations Assistant", i18nKey: "nav.assistant", icon: Bot },
+  { href: "/field", label: "Field Operations", i18nKey: "nav.field", icon: Smartphone },
 ];
 
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const metrics = useQuery(api.dashboard.getMetrics);
   const currentUser = useQuery(api.users.getCurrentUser);
@@ -70,10 +74,10 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold tracking-tight">
-            NER-Vision AI
+            {t("brand.name", "NER-Vision AI")}
           </div>
           <div className="truncate font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-            Predict · Navigate · Deliver
+            {t("brand.tagline", "Predict · Navigate · Deliver")}
           </div>
         </div>
       </div>
@@ -81,7 +85,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <div className="mb-2 px-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-          Operations
+          {t("nav.operations", "Operations")}
         </div>
         <ul className="flex flex-col gap-0.5">
           {NAV_ITEMS.map((item) => {
@@ -117,7 +121,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                       active ? "text-primary" : "text-muted-foreground",
                     )}
                   />
-                  <span className="truncate">{item.label}</span>
+                  <span className="truncate">{t(item.i18nKey, item.label)}</span>
                   {badge !== null && (
                     <span
                       className={cn(
@@ -150,7 +154,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
           )}
         >
           <Settings className="size-4" />
-          Settings
+          {t("nav.settings", "Settings")}
         </Link>
 
         <div className="mt-2 flex items-center gap-3 rounded-md border border-sidebar-border bg-sidebar-accent/40 px-3 py-2.5">
@@ -166,7 +170,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-xs font-medium">
-              {currentUser?.name ?? "Loading…"}
+              {currentUser?.name ?? t("common.loading", "Loading…")}
             </div>
             <div className="truncate font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
               {currentUser?.role?.replace(/_/g, " ") ?? "—"}

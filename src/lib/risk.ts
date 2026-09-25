@@ -148,3 +148,53 @@ export const VEHICLE_TYPE_LABEL: Record<string, string> = {
   ambulance: "Ambulance",
   boat: "River boat",
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyTFunction = any;
+
+export function getTranslatedCargo(cargo: string, t: AnyTFunction): string {
+  const norm = cargo.toLowerCase().replace(/\s+/g, "_");
+  return t(`deliveries.cargo_${norm}`, t(`vehicles.cargo_${norm}`, CARGO_LABEL[norm] ?? cargo));
+}
+
+export function getTranslatedIncident(type: string, t: AnyTFunction): string {
+  const norm = type.toLowerCase().replace(/\s+/g, "_");
+  return t(`incidents.type_${norm}`, INCIDENT_LABEL[norm] ?? type);
+}
+
+export function getTranslatedAlert(type: string, t: AnyTFunction): string {
+  const norm = type.toLowerCase().replace(/\s+/g, "_");
+  return t(`alerts.type_${norm}`, ALERT_TYPE_LABEL[norm] ?? type);
+}
+
+export function getTranslatedVehicleType(type: string, t: AnyTFunction): string {
+  const norm = type.toLowerCase().replace(/\s+/g, "_");
+  return t(`vehicles.type_${norm}`, VEHICLE_TYPE_LABEL[norm] ?? type);
+}
+
+export function getTranslatedVehicleStatus(status: string, t: AnyTFunction): string {
+  const norm = status.toLowerCase();
+  return t(`vehicles.status_${norm}`, VEHICLE_STATUS_TONE[norm]?.label ?? status);
+}
+
+export function getTranslatedRiskLevel(level: string, t: AnyTFunction): string {
+  const norm = level.toLowerCase();
+  return t(`risk.${norm}`, (RISK_TONE as Record<string, Tone>)[norm]?.label ?? level);
+}
+
+export function getTranslatedAccessibility(status: string, t: AnyTFunction): string {
+  const norm = status.toLowerCase();
+  return t(
+    norm === "accessible"
+      ? "map.filter_safe"
+      : norm === "restricted"
+        ? "map.filter_warning"
+        : "map.filter_critical",
+    ACCESS_TONE[norm as AccessibilityStatus]?.label ?? status,
+  );
+}
+
+export const getTranslatedIncidentType = getTranslatedIncident;
+
+
+

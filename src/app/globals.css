@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-sans), var(--font-noto-devanagari), var(--font-noto-bengali), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-sans), var(--font-noto-devanagari), var(--font-noto-bengali), system-ui, -apple-system, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -257,16 +257,10 @@
   font-family: inherit;
 }
 
-/*
- * Basemap treatment.
- *
- * Esri's dark canvas is intentionally flat so overlays dominate — which also
- * makes it read as washed out on its own. A restrained contrast lift and a
- * touch of desaturation give the terrain enough depth to be legible without
- * ever competing with the risk colours drawn on top.
- */
+/* Basemap treatment */
 .leaflet-tile-pane {
   filter: contrast(1.14) brightness(0.94) saturate(0.85);
+  z-index: 5 !important;
 }
 
 /*
@@ -306,6 +300,41 @@
   border-radius: 0 0 var(--radius) var(--radius) !important;
 }
 
+/* Ensure Leaflet stays strictly within its container stacking context and never bleeds over modals/dropdowns */
+.leaflet-container {
+  isolation: isolate;
+  z-index: 0 !important;
+}
+
+.leaflet-pane {
+  z-index: 10 !important;
+}
+
+.leaflet-overlay-pane {
+  z-index: 15 !important;
+}
+
+.leaflet-shadow-pane {
+  z-index: 18 !important;
+}
+
+.leaflet-marker-pane {
+  z-index: 20 !important;
+}
+
+.leaflet-tooltip-pane {
+  z-index: 25 !important;
+}
+
+.leaflet-popup-pane {
+  z-index: 30 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 35 !important;
+}
+
 .leaflet-popup-content-wrapper,
 .leaflet-popup-tip {
   background: var(--card);
@@ -343,3 +372,42 @@
 .leaflet-control-attribution a {
   color: var(--muted-foreground) !important;
 }
+
+/* Indic and North-Eastern regional script font fallbacks */
+:lang(hi), :lang(ne), :lang(brx), [data-script="Devanagari"] {
+  font-family: var(--font-sans), var(--font-noto-devanagari), system-ui, sans-serif;
+}
+
+:lang(as), :lang(mni), :lang(trp), [data-script="Bengali"] {
+  font-family: var(--font-sans), var(--font-noto-bengali), system-ui, sans-serif;
+}
+
+/* Tactical Map Radar Pulse Beacon */
+@keyframes radar-pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(2.2);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+.radar-pulse-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  animation: radar-pulse-ring 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  pointer-events: none;
+}
+
+/* Measurement tool crosshair */
+.map-measuring-cursor .leaflet-container {
+  cursor: crosshair !important;
+}
+

@@ -1,33 +1,51 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { CircleUser, Server, Settings as SettingsIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import {
+  Check,
+  Globe,
+  Info,
+  Languages,
+  Server,
+  Settings as SettingsIcon,
+  Shield,
+  User,
+} from "lucide-react";
 import { api } from "../../../../convex/_generated/api";
 import { UserManagement } from "@/components/settings/user-management";
 import { EngineConfig } from "@/components/settings/engine-config";
 import { DataManagement } from "@/components/settings/data-management";
-import { Skeleton } from "@/components/ui/skeleton";
+import { SUPPORTED_LANGUAGES, type SupportedLanguageCode } from "@/lib/i18n/config";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /**
  * Settings.
  *
- * Everything on this page reads or writes real records. There are no toggles
- * that do nothing: where a capability is not implemented — authentication,
- * for one — the panel says so plainly instead of offering a switch that has
- * no effect.
+ * Platform configuration, regional language preferences, engine controls,
+ * and user management.
  */
 export default function SettingsPage() {
+  const { t, i18n } = useTranslation();
+  const currentLang = (i18n.language?.split("-")[0] || "en") as SupportedLanguageCode;
   const currentUser = useQuery(api.users.getCurrentUser);
   const metrics = useQuery(api.dashboard.getMetrics);
 
-  // The deployment URL is a public identifier, not a secret. No key is ever
-  // read in the browser — AI credentials live in Convex env vars, server-side.
   const convexHost = process.env.NEXT_PUBLIC_CONVEX_URL
     ? new URL(process.env.NEXT_PUBLIC_CONVEX_URL).host
     : null;
 
+  const handleSelectLanguage = (code: string) => {
+    void i18n.changeLanguage(code);
+  };
+
+  const selectedMeta =
+    SUPPORTED_LANGUAGES.find((l) => l.code === currentLang) ??
+    SUPPORTED_LANGUAGES[0];
+
   return (
-    <div className="space-y-4 p-4 md:p-6">
+    <div className="space-y-6 p-4 md:p-6 max-w-5xl">
       {/* Header */}
       <section className="relative overflow-hidden rounded-lg border border-border bg-card">
         <div className="command-grid absolute inset-0 opacity-[0.35]" />
@@ -40,44 +58,165 @@ export default function SettingsPage() {
               </span>
             </div>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-              Settings
+              {t("settings.title", "Settings")}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Accounts, intelligence-engine configuration and the demonstration
-              dataset.
+              {t(
+                "settings.subtitle",
+                "Platform configuration, user profile and language preferences",
+              )}
             </p>
           </div>
+        </div>
+      </section>
 
-          {/* Signed-in identity */}
-          <div className="flex items-center gap-3 rounded-md border border-border bg-background/60 px-3 py-2.5">
-            <CircleUser className="size-8 shrink-0 text-muted-foreground" />
-            <div className="min-w-0">
-              {currentUser === undefined ? (
-                <>
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="mt-1 h-3 w-20" />
-                </>
-              ) : (
-                <>
-                  <div className="truncate text-sm font-medium">
-                    {currentUser?.name ?? "No account"}
-                  </div>
-                  <div className="truncate font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                    {currentUser?.role?.replace(/_/g, " ") ?? "—"}
-                    {currentUser?.district ? ` · ${currentUser.district}` : ""}
-                  </div>
-                </>
+      {/* Language Section */}
+      <section className="rounded-lg border border-border bg-card p-5 md:p-6 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-md border border-border bg-accent/40 text-primary">
+            <Languages className="size-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold">
+              {t("settings.language_section", "Regional Language Preferences")}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "settings.language_description",
+                "Select your preferred regional language for the NER-Vision command centre interface. Text updates immediately.",
               )}
-            </div>
+            </p>
           </div>
         </div>
 
-        <p className="relative border-t border-border px-5 py-2.5 font-mono text-[10px] leading-relaxed text-muted-foreground md:px-6">
-          No authentication provider is configured, so the account shown is the
-          seeded administrator rather than a signed-in user.
-        </p>
+        {/* Status Callout */}
+        <div className="mt-4 flex items-start gap-3 rounded-md border border-border/80 bg-accent/20 p-3.5 text-xs">
+          <Info className="size-4 shrink-0 text-primary mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-medium text-foreground">
+              {t("settings.current_language", "Current Language")}:{" "}
+              <span className="text-primary font-semibold">
+                {selectedMeta.nativeName} ({selectedMeta.name})
+              </span>{" "}
+              — {selectedMeta.script} script
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              {selectedMeta.group === "B"
+                ? t(
+                    "settings.group_b_notice",
+                    "Group B: Native speaker translation in progress. Falling back to English.",
+                  )
+                : selectedMeta.group === "A"
+                  ? t(
+                      "settings.group_a_notice",
+                      "Group A: Machine translation draft enabled. Community review welcomed.",
+                    )
+                  : "Base system language: English (United States). Fully verified."}
+            </p>
+          </div>
+        </div>
+
+        {/* Language Grid */}
+        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+          {SUPPORTED_LANGUAGES.map((lang) => {
+            const isSelected = currentLang === lang.code;
+
+            return (
+              <button
+                key={lang.code}
+                type="button"
+                onClick={() => handleSelectLanguage(lang.code)}
+                className={cn(
+                  "flex items-center justify-between rounded-lg border p-3 text-left transition-all",
+                  isSelected
+                    ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/40 shadow-xs"
+                    : "border-border bg-card/60 hover:bg-accent/40 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm font-medium">
+                      {lang.nativeName}
+                    </span>
+                    {lang.group === "B" && (
+                      <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                        En fallback
+                      </span>
+                    )}
+                    {lang.group === "A" && (
+                      <span className="rounded bg-primary/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary">
+                        Draft MT
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <span>{lang.name}</span>
+                    <span>·</span>
+                    <span className="font-mono text-[10px]">{lang.code}</span>
+                  </div>
+                </div>
+
+                {isSelected ? (
+                  <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <Check className="size-3 stroke-[3]" />
+                  </div>
+                ) : (
+                  <div className="size-5 shrink-0 rounded-full border border-border" />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </section>
 
+      {/* Role & Access Section */}
+      <section className="rounded-lg border border-border bg-card p-5 md:p-6 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-md border border-border bg-accent/40 text-primary">
+            <Shield className="size-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold">
+              {t("settings.role_management", "Role Management & Access Control")}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {t(
+                "settings.role_description",
+                "Field Officer, Operator and Regional Command permissions.",
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-md border border-border bg-accent/20 p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-sm font-semibold text-primary">
+              {currentUser?.name
+                ? currentUser.name
+                    .split(" ")
+                    .slice(0, 2)
+                    .map((p) => p[0])
+                    .join("")
+                    .toUpperCase()
+                : "··"}
+            </div>
+            <div>
+              <div className="font-semibold text-sm">
+                {currentUser?.name ?? t("common.loading", "Loading…")}
+              </div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                {currentUser?.role?.replace(/_/g, " ") ?? "—"} ·{" "}
+                {currentUser?.organization ?? "MDoNER Regional Command"}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {currentUser?.email ?? "—"} · {currentUser?.district ?? "NER Central"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Engine & Data Management */}
       <div className="grid gap-4 xl:grid-cols-2">
         <div className="space-y-4">
           <UserManagement />

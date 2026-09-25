@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import { useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { Brain, ChevronDown, Sparkles } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { RISK_TONE, type RiskLevel } from "@/lib/risk";
-import { timeAgo } from "@/lib/format";
+import {
+  formatLocalizedTimeAgo,
+  translatePredictedIssue,
+  translateRiskFactor,
+} from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -17,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  * contributing factors — the score is explainable rather than asserted.
  */
 export function RiskIntelligence({ limit = 4 }: { limit?: number }) {
+  const { t, i18n } = useTranslation();
   const predictions = useQuery(api.riskPredictions.getLatestPredictions, {
     limit,
   });
@@ -27,13 +33,13 @@ export function RiskIntelligence({ limit = 4 }: { limit?: number }) {
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <Brain className="size-4 text-primary" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">AI Risk Intelligence</h3>
+          <h3 className="text-sm font-semibold">{t("dashboard.panels.risk_intelligence", "AI Risk Intelligence")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Explainable disruption forecasting
+            {t("risk.subtitle", "Explainable disruption forecasting")}
           </p>
         </div>
         <span className="ml-auto shrink-0 rounded border border-primary/35 bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary">
-          Predicted risk
+          {t("risk.level", "Predicted risk")}
         </span>
       </header>
 
@@ -67,7 +73,7 @@ export function RiskIntelligence({ limit = 4 }: { limit?: number }) {
                   <div className="flex items-center gap-2">
                     <Sparkles className={cn("size-3.5", tone.text)} />
                     <h4 className="truncate text-sm font-medium">
-                      {prediction.predictedIssue}
+                      {translatePredictedIssue(prediction.predictedIssue, i18n.language)}
                     </h4>
                   </div>
                   <p className="mt-1 truncate text-xs text-muted-foreground">
@@ -93,7 +99,7 @@ export function RiskIntelligence({ limit = 4 }: { limit?: number }) {
                       tone.text,
                     )}
                   >
-                    {tone.label}
+                    {t(`risk.${prediction.riskLevel}`, tone.label)}
                   </div>
                 </div>
               </div>
@@ -111,21 +117,21 @@ export function RiskIntelligence({ limit = 4 }: { limit?: number }) {
 
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  Confidence{" "}
+                  {t("risk.confidence", "Confidence")}{" "}
                   <span className="tabular text-foreground/90">
                     {Math.round(prediction.confidence)}%
                   </span>
                 </span>
                 {prediction.horizonHours && (
                   <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                    Horizon{" "}
+                    {t("routes.estimated_time", "Horizon")}{" "}
                     <span className="tabular text-foreground/90">
                       {prediction.horizonHours}h
                     </span>
                   </span>
                 )}
                 <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-                  {timeAgo(prediction.createdAt)}
+                  {formatLocalizedTimeAgo(prediction.createdAt, i18n.language)}
                 </span>
               </div>
 
@@ -136,7 +142,7 @@ export function RiskIntelligence({ limit = 4 }: { limit?: number }) {
                 aria-expanded={isOpen}
                 className="mt-3 flex w-full items-center gap-1.5 rounded font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
-                Contributing factors ({topFactors.length})
+                {t("risk.factors", "Contributing factors")} ({topFactors.length})
                 <ChevronDown
                   className={cn(
                     "size-3 transition-transform",
@@ -153,7 +159,7 @@ export function RiskIntelligence({ limit = 4 }: { limit?: number }) {
                       className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1"
                     >
                       <span className="truncate text-[11px] text-foreground/85">
-                        {factor.factor}
+                        {translateRiskFactor(factor.factor, i18n.language)}
                       </span>
                       <span className="font-mono text-[10px] tabular text-muted-foreground">
                         {factor.weight}%
@@ -180,7 +186,7 @@ export function RiskIntelligence({ limit = 4 }: { limit?: number }) {
               {/* Recommended action */}
               <div className="mt-3 rounded-md border border-border bg-background/60 px-2.5 py-2">
                 <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-                  Recommended action
+                  {t("risk.recommendation", "Recommended action")}
                 </div>
                 <p className="mt-1 text-xs leading-relaxed text-foreground/90">
                   {prediction.recommendedAction}

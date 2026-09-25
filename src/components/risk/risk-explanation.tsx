@@ -2,10 +2,15 @@
 
 import { useQuery } from "convex/react";
 import { CircleHelp, Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { RISK_TONE, type RiskLevel } from "@/lib/risk";
 import { formatDateTime, humanize } from "@/lib/format";
+import {
+  translatePredictedIssue,
+  translateRiskFactor,
+} from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,6 +27,7 @@ export function RiskExplanation({
 }: {
   predictionId: Id<"riskPredictions"> | null;
 }) {
+  const { t, i18n } = useTranslation();
   const detail = useQuery(
     api.riskEngine.explainPrediction,
     predictionId ? { predictionId } : "skip",
@@ -32,12 +38,13 @@ export function RiskExplanation({
       <section className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-card/50 p-8 text-center">
         <CircleHelp className="size-6 text-muted-foreground" />
         <h3 className="mt-3 text-sm font-medium">
-          Why is this location at risk?
+          {t("risk.why_at_risk", "Why is this location at risk?")}
         </h3>
         <p className="mt-1.5 max-w-sm text-xs leading-relaxed text-muted-foreground">
-          Select a prediction to see the full factor breakdown — what the
-          engine measured, how much each input contributed, and why it
-          recommends what it does.
+          {t(
+            "risk.select_prediction_hint",
+            "Select a prediction to see the full factor breakdown — what the engine measured, how much each input contributed, and why it recommends what it does.",
+          )}
         </p>
       </section>
     );
@@ -58,7 +65,7 @@ export function RiskExplanation({
   if (detail === null) {
     return (
       <section className="rounded-lg border border-border bg-card p-6 text-center text-sm text-muted-foreground">
-        That prediction is no longer available.
+        {t("risk.prediction_unavailable", "That prediction is no longer available.")}
       </section>
     );
   }
@@ -76,10 +83,10 @@ export function RiskExplanation({
         <div className="flex items-center gap-2">
           <Info className="size-4 text-primary" />
           <h3 className="text-sm font-semibold">
-            Why is this location at risk?
+            {t("risk.why_at_risk", "Why is this location at risk?")}
           </h3>
           <span className="ml-auto shrink-0 rounded border border-primary/35 bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary">
-            Predicted risk
+            {t("risk.predicted_risk_badge", "Predicted risk")}
           </span>
         </div>
       </header>
@@ -96,7 +103,7 @@ export function RiskExplanation({
               {road ? ` · ${road.roadNumber} ${road.roadName}` : ""}
             </p>
             <p className={cn("mt-1.5 text-sm", tone.text)}>
-              {prediction.predictedIssue}
+              {translatePredictedIssue(prediction.predictedIssue, i18n.language)}
             </p>
           </div>
 
@@ -116,26 +123,26 @@ export function RiskExplanation({
                 tone.text,
               )}
             >
-              {tone.label}
+              {t(`risk.${prediction.riskLevel}`, tone.label)}
             </div>
           </div>
         </div>
 
         <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <Stat label="Confidence" value={`${Math.round(prediction.confidence)}%`} />
+          <Stat label={t("risk.confidence", "Confidence")} value={`${Math.round(prediction.confidence)}%`} />
           <Stat
-            label="Horizon"
+            label={t("routes.estimated_time", "Horizon")}
             value={prediction.horizonHours ? `${prediction.horizonHours}h` : "—"}
           />
           <Stat
-            label="Issue type"
+            label={t("common.type", "Issue type")}
             value={
               prediction.predictedIssueType
                 ? humanize(prediction.predictedIssueType.replace(/_risk$/, ""))
                 : "—"
             }
           />
-          <Stat label="Generated" value={formatDateTime(prediction.createdAt)} />
+          <Stat label={t("common.updated", "Generated")} value={formatDateTime(prediction.createdAt)} />
         </dl>
       </div>
 
@@ -143,10 +150,10 @@ export function RiskExplanation({
       <div className="p-4">
         <div className="flex items-baseline justify-between">
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-            Contributing factors
+            {t("risk.factors", "Contributing factors")}
           </span>
           <span className="font-mono text-[10px] tabular text-muted-foreground">
-            {Math.round(totalWeight)} points total
+            {t("risk.points_total", "{{count}} points total", { count: Math.round(totalWeight) })}
           </span>
         </div>
 
@@ -159,7 +166,7 @@ export function RiskExplanation({
               <li key={factor.factor}>
                 <div className="flex items-baseline gap-2">
                   <span className="text-xs font-medium text-foreground">
-                    {factor.factor}
+                    {translateRiskFactor(factor.factor, i18n.language)}
                   </span>
                   <span
                     className={cn(
@@ -197,7 +204,7 @@ export function RiskExplanation({
 
         {factors.length === 0 && (
           <p className="py-6 text-center text-xs text-muted-foreground">
-            No factor contributed points — this location scored zero.
+            {t("risk.no_factors", "No factor contributed points — this location scored zero.")}
           </p>
         )}
       </div>
@@ -205,7 +212,7 @@ export function RiskExplanation({
       {/* Recommended action */}
       <div className="border-t border-border p-4">
         <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-          Recommended action
+          {t("risk.recommendation", "Recommended action")}
         </div>
         <p className="mt-1.5 text-sm leading-relaxed text-foreground/90">
           {prediction.recommendedAction}
@@ -215,9 +222,7 @@ export function RiskExplanation({
       {/* Provenance */}
       <div className="border-t border-border bg-background/40 px-4 py-2.5">
         <p className="font-mono text-[10px] leading-relaxed text-muted-foreground">
-          Score = sum of six capped factors (30 rainfall · 20 incidents · 15
-          terrain · 15 road · 12 weather · 8 historical), blended 85/15 with the
-          previous score to damp oscillation. Engine{" "}
+          {t("risk.calculation_note", "Score = sum of six capped factors (30 rainfall · 20 incidents · 15 terrain · 15 road · 12 weather · 8 historical), blended 85/15 with the previous score to damp oscillation.")} Engine{" "}
           <span className="text-foreground/75">
             {prediction.modelVersion ?? detail.engineVersion}
           </span>

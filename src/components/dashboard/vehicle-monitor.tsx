@@ -2,15 +2,12 @@
 
 import Link from "next/link";
 import { useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, Truck } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
-import {
-  CARGO_LABEL,
-  RISK_TONE,
-  VEHICLE_STATUS_TONE,
-  type RiskLevel,
-} from "@/lib/risk";
-import { formatCoords, timeAgo } from "@/lib/format";
+import { CARGO_LABEL, RISK_TONE, VEHICLE_STATUS_TONE, type RiskLevel } from "@/lib/risk";
+import { formatCoords } from "@/lib/format";
+import { formatLocalizedTimeAgo } from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,15 +20,16 @@ import { Skeleton } from "@/components/ui/skeleton";
  * are always at the top without the client sorting anything.
  */
 export function VehicleMonitor({ limit = 6 }: { limit?: number }) {
+  const { t, i18n } = useTranslation();
   const vehicles = useQuery(api.vehicles.getPriorityVehicles, { limit });
 
   return (
     <section className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <Truck className="size-4 text-primary" />
-        <h3 className="text-sm font-semibold">Active Vehicle Monitor</h3>
+        <h3 className="text-sm font-semibold">{t("dashboard.panels.vehicle_monitor", "Active Vehicle Monitor")}</h3>
         <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          Priority
+          {t("deliveries.priority", "Priority")}
         </span>
       </header>
 
@@ -46,7 +44,7 @@ export function VehicleMonitor({ limit = 6 }: { limit?: number }) {
 
         {vehicles?.length === 0 && (
           <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-            No vehicles registered.
+            {t("vehicles.status_offline", "No vehicles registered.")}
           </div>
         )}
 
@@ -79,12 +77,12 @@ export function VehicleMonitor({ limit = 6 }: { limit?: number }) {
                       statusTone.text,
                     )}
                   >
-                    {statusTone.label}
+                    {t(`vehicles.status_${vehicle.status}`, statusTone.label)}
                   </span>
                 </div>
 
                 <div className="mt-1 truncate text-xs text-muted-foreground">
-                  {CARGO_LABEL[vehicle.cargoType] ?? vehicle.cargoType}
+                  {t(`deliveries.cargo_${vehicle.cargoType}`, CARGO_LABEL[vehicle.cargoType] ?? vehicle.cargoType)}
                   {" · "}
                   {formatCoords(vehicle.latitude, vehicle.longitude)}
                 </div>
@@ -105,10 +103,10 @@ export function VehicleMonitor({ limit = 6 }: { limit?: number }) {
                       riskTone.text,
                     )}
                   >
-                    {riskTone.label} risk
+                    {t(`risk.${vehicle.riskLevel}`, riskTone.label)}
                   </span>
                   <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-                    {timeAgo(vehicle.lastUpdated)}
+                    {formatLocalizedTimeAgo(vehicle.lastUpdated, i18n.language)}
                   </span>
                 </div>
               </div>
@@ -131,7 +129,7 @@ export function VehicleMonitor({ limit = 6 }: { limit?: number }) {
             "w-full text-xs",
           )}
         >
-          View all vehicles
+          {t("dashboard.view_all", "View all")} ({t("nav.vehicles", "Vehicles")})
           <ArrowRight className="size-3.5" />
         </Link>
       </div>

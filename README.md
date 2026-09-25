@@ -184,6 +184,45 @@ Stated plainly, because a system used by authorities should be auditable.
 
 ---
 
+## Multi-Language (i18n) Support — 12 Regional Languages
+
+To serve field officers, emergency dispatchers, and state authorities across the North Eastern Region, NER-Vision provides first-class internationalization (i18n) supporting **12 languages**.
+
+### Language Coverage Matrix
+
+| Language | Code | Script | Category | Translation Status |
+|---|---|---|---|---|
+| **English** | `en` | Latin | Base | Complete (Default baseline) |
+| **Hindi** | `hi` | Devanagari | Group A | Machine translation draft — review needed |
+| **Assamese** | `as` | Bengali/Assamese | Group A | Machine translation draft — review needed |
+| **Meitei / Manipuri** | `mni` | Bengali script | Group A | Machine translation draft — review needed |
+| **Mizo** | `lus` | Latin | Group A | Machine translation draft — review needed |
+| **Kokborok** | `trp` | Bengali / Latin | Group A | Machine translation draft — review needed |
+| **Khasi** | `kha` | Latin | Group A | Machine translation draft — review needed |
+| **Bodo** | `brx` | Devanagari | Group A | Machine translation draft — review needed |
+| **Nepali** | `ne` | Devanagari | Group A | Machine translation draft — review needed |
+| **Garo** | `grt` | Latin | Group B | **English placeholder** — native translation required |
+| **Nyishi** | `njz` | Latin | Group B | **English placeholder** — native translation required |
+| **Adi** | `adi` | Latin | Group B | **English placeholder** — native translation required |
+
+### Honest Regional Translation Policy
+
+- **Group A (Draft Machine Translations):** For languages with accessible computational translation models, comprehensive drafts were produced and cataloged. Every Group A file includes an explicit `_metadata.status: "draft_machine_translation"` and `needs_native_review: true` tag.
+- **Group B (Strict No-Hallucination Policy):** For vulnerable or low-resource tribal languages lacking validated automated corpora (**Garo**, **Nyishi**, and **Adi**), **no translations were fabricated**. Rather than generating inaccurate or misleading synthetic translations, these locales provide clean English placeholders marked `_metadata.status: "placeholder_untranslated"`, paired with notice badges in the UI and a comprehensive translation tracker.
+- **Meitei Script Standard:** Per standard administrative convention in Manipur, Meitei (`mni`) is rendered in the Eastern Nagari / Bengali script.
+- **Script-Accurate UI:** The language switcher displays each language's native name in its own authentic script (e.g., `हिन्दी`, `অসমীয়া`, `মৈতৈলোন্`, `नेपाली`, `बर'`).
+
+### Technical Implementation
+
+- **Library:** `i18next`, `react-i18next`, and `i18next-browser-languagedetector`.
+- **Zero Full-Page Reload:** Switching languages instantly triggers React component re-renders through reactive i18next state.
+- **Persistence & Fallbacks:** Automatically detects and preserves language selection in `localStorage` (`i18nextLng`). Any missing regional key falls back cleanly to English (`en`).
+- **Typography & Font Integrity:** Configured via `next/font/google` (`Noto_Sans_Devanagari` and `Noto_Sans_Bengali`) with CSS variables (`--font-noto-devanagari`, `--font-noto-bengali`) to prevent tofu / glyph replacement boxes.
+- **Document Metadata:** The `I18nProvider` dynamically syncs `<html lang="...">` and `data-script="..."` attributes on the DOM root for accessibility screen readers and font cascades.
+- **Status Tracker:** See [`src/lib/i18n/TRANSLATION_STATUS.md`](src/lib/i18n/TRANSLATION_STATUS.md) for full key counts, verification checklists, and native translator contribution guidelines.
+
+---
+
 ## Verification
 
 ```bash

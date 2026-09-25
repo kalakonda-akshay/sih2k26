@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { PackageCheck, Search, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
-import { CARGO_LABEL } from "@/lib/risk";
+import { getTranslatedCargo } from "@/lib/risk";
 import { formatDateTime, humanize, timeUntil } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ const PRIORITY_TONE: Record<string, string> = {
  * so the loads that need a decision are always at the top.
  */
 export function DeliveryTable() {
+  const { t } = useTranslation();
   const deliveries = useQuery(api.fleet.listDeliveriesDetailed);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState(ALL);
@@ -65,11 +67,13 @@ export function DeliveryTable() {
         <div className="flex flex-wrap items-center gap-3">
           <PackageCheck className="size-4 text-primary" />
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold">Consignments</h3>
+            <h3 className="text-sm font-semibold">
+              {t("deliveries.title", "Consignments")}
+            </h3>
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
               {rows
-                ? `${rows.length} of ${deliveries?.length ?? 0}`
-                : "Loading"}
+                ? `${rows.length} / ${deliveries?.length ?? 0}`
+                : t("common.loading", "Loading")}
             </p>
           </div>
 
@@ -78,8 +82,11 @@ export function DeliveryTable() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Vehicle, route or driver…"
-              aria-label="Search consignments"
+              placeholder={t(
+                "header.search_placeholder",
+                "Vehicle, route or driver…",
+              )}
+              aria-label={t("common.search", "Search consignments")}
               className="h-8 bg-background pl-8 text-xs"
             />
           </div>
@@ -87,7 +94,7 @@ export function DeliveryTable() {
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <FilterRow
-            label="Status"
+            label={t("common.status", "Status")}
             value={status}
             onChange={setStatus}
             options={[
@@ -97,12 +104,14 @@ export function DeliveryTable() {
               "delivered",
               "cancelled",
             ]}
+            formatOption={(opt) => t(`deliveries.status_${opt}`, humanize(opt))}
           />
           <FilterRow
-            label="Priority"
+            label={t("deliveries.priority", "Priority")}
             value={priority}
             onChange={setPriority}
             options={["normal", "high", "critical", "emergency"]}
+            formatOption={(opt) => t(`deliveries.priority_${opt}`, humanize(opt))}
           />
           {(status !== ALL || priority !== ALL || search) && (
             <button
@@ -115,7 +124,7 @@ export function DeliveryTable() {
               className="ml-auto inline-flex items-center gap-1 rounded border border-border bg-muted/30 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <X className="size-2.5" />
-              Clear
+              {t("common.reset", "Clear")}
             </button>
           )}
         </div>
@@ -126,21 +135,21 @@ export function DeliveryTable() {
           <thead>
             <tr className="border-b border-border bg-muted/30">
               {[
-                "Vehicle",
-                "Cargo",
-                "Priority",
-                "Origin",
-                "Destination",
-                "Status",
-                "Progress",
-                "ETA",
-                "Arrived",
+                { key: "v", label: t("vehicles.vehicle_number", "Vehicle") },
+                { key: "c", label: t("deliveries.cargo_type", "Cargo") },
+                { key: "p", label: t("deliveries.priority", "Priority") },
+                { key: "o", label: t("routes.origin", "Origin") },
+                { key: "d", label: t("routes.destination", "Destination") },
+                { key: "s", label: t("common.status", "Status") },
+                { key: "pr", label: t("deliveries.progress", "Progress") },
+                { key: "eta", label: t("deliveries.eta", "ETA") },
+                { key: "a", label: t("deliveries.status_delivered", "Arrived") },
               ].map((h) => (
                 <th
-                  key={h}
+                  key={h.key}
                   className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
                 >
-                  {h}
+                  {h.label}
                 </th>
               ))}
             </tr>
@@ -161,7 +170,10 @@ export function DeliveryTable() {
                   colSpan={9}
                   className="px-3 py-12 text-center text-muted-foreground"
                 >
-                  No consignments match these filters.
+                  {t(
+                    "deliveries.no_consignments",
+                    "No consignments match these filters.",
+                  )}
                 </td>
               </tr>
             )}
@@ -187,7 +199,7 @@ export function DeliveryTable() {
                     )}
                   </td>
                   <td className="px-3 py-2.5 text-xs">
-                    {CARGO_LABEL[d.cargoType] ?? humanize(d.cargoType)}
+                    {getTranslatedCargo(d.cargoType, t)}
                   </td>
                   <td
                     className={cn(
@@ -195,7 +207,7 @@ export function DeliveryTable() {
                       PRIORITY_TONE[d.priority] ?? "text-muted-foreground",
                     )}
                   >
-                    {d.priority}
+                    {t(`deliveries.priority_${d.priority}`, d.priority)}
                   </td>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground">
                     {d.origin}
@@ -209,11 +221,11 @@ export function DeliveryTable() {
                           "border-border text-muted-foreground",
                       )}
                     >
-                      {humanize(d.status)}
+                      {t(`deliveries.status_${d.status}`, humanize(d.status))}
                     </span>
                     {d.routeStatus === "blocked" && (
                       <div className="mt-0.5 font-mono text-[9px] uppercase text-[oklch(0.648_0.201_22)]">
-                        route blocked
+                        {t("routes.blocked_notice", "route blocked")}
                       </div>
                     )}
                   </td>
@@ -262,12 +274,15 @@ function FilterRow({
   value,
   onChange,
   options,
+  formatOption,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: string[];
+  formatOption?: (opt: string) => string;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-1">
       <span className="mr-0.5 font-mono text-[9px] uppercase tracking-[0.13em] text-muted-foreground">
@@ -287,7 +302,11 @@ function FilterRow({
               : "border-border bg-muted/30 text-muted-foreground hover:text-foreground",
           )}
         >
-          {option === ALL ? "all" : option.replace(/_/g, " ")}
+          {option === ALL
+            ? t("dashboard.all", "all")
+            : formatOption
+              ? formatOption(option)
+              : option.replace(/_/g, " ")}
         </button>
       ))}
     </div>

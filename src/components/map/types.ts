@@ -12,16 +12,20 @@ export type MapRoad = MapIntelligence["roads"][number];
 export type MapPrediction = MapIntelligence["predictions"][number];
 export type MapWeather = MapIntelligence["weather"][number];
 
+export type BasemapStyle = "dark" | "satellite" | "topo" | "streets";
+
 export interface LayerToggles {
   vehicles: boolean;
   incidents: boolean;
   roads: boolean;
   risk: boolean;
   weather: boolean;
+  radar: boolean;
 }
 
 export interface MapFilters {
   layers: LayerToggles;
+  basemap: BasemapStyle;
   state: string;
   district: string;
   vehicleStatus: string;
@@ -50,7 +54,9 @@ export const DEFAULT_FILTERS: MapFilters = {
     roads: true,
     risk: true,
     weather: false,
+    radar: false,
   },
+  basemap: "satellite",
   state: ALL,
   district: ALL,
   vehicleStatus: ALL,
@@ -99,6 +105,7 @@ export function applyQuickFilter(
           roads: true,
           risk: true,
           weather: false,
+          radar: current.layers.radar,
         },
       };
     case "critical":
@@ -111,6 +118,7 @@ export function applyQuickFilter(
           roads: true,
           risk: true,
           weather: true,
+          radar: true,
         },
         riskLevel: "critical",
         accessibility: "blocked",
@@ -124,6 +132,7 @@ export function applyQuickFilter(
           roads: true,
           risk: false,
           weather: false,
+          radar: current.layers.radar,
         },
       };
     case "incidents":
@@ -135,6 +144,7 @@ export function applyQuickFilter(
           roads: true,
           risk: false,
           weather: false,
+          radar: current.layers.radar,
         },
       };
     case "roads":
@@ -146,6 +156,7 @@ export function applyQuickFilter(
           roads: true,
           risk: false,
           weather: false,
+          radar: current.layers.radar,
         },
       };
     case "risk":
@@ -157,6 +168,7 @@ export function applyQuickFilter(
           roads: true,
           risk: true,
           weather: true,
+          radar: current.layers.radar,
         },
       };
   }

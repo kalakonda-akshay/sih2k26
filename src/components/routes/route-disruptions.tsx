@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import {
   Ban,
   CircleAlert,
@@ -10,7 +11,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
-import { CARGO_LABEL } from "@/lib/risk";
+import { getTranslatedCargo } from "@/lib/risk";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +28,7 @@ export function RouteDisruptions({
 }: {
   onSelectRoute?: (roadIds: string[]) => void;
 }) {
+  const { t } = useTranslation();
   const disruptions = useQuery(api.routeIntelligence.getRouteDisruptions);
   const detect = useMutation(api.routeIntelligence.detectRouteDisruptions);
   const [busy, setBusy] = useState(false);
@@ -56,9 +58,9 @@ export function RouteDisruptions({
       <header className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
         <ShieldAlert className="size-4 text-[oklch(0.648_0.201_22)]" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">Route Disruptions</h3>
+          <h3 className="text-sm font-semibold">{t("routes.disruptions", "Route Disruptions")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Consignments whose corridor is cut
+            {t("routes.consignments_cut", "Consignments whose corridor is cut")}
           </p>
         </div>
         <Button
@@ -73,7 +75,7 @@ export function RouteDisruptions({
           ) : (
             <CircleAlert className="size-3" />
           )}
-          Raise alerts
+          {t("routes.raise_alerts", "Raise alerts")}
         </Button>
       </header>
 
@@ -90,7 +92,7 @@ export function RouteDisruptions({
           <div className="px-4 py-10 text-center">
             <CircleCheck className="mx-auto size-5 text-[oklch(0.735_0.155_158)]" />
             <p className="mt-2 text-sm text-muted-foreground">
-              No consignment is currently cut off by a closure.
+              {t("routes.no_disruptions", "No consignment is currently cut off by a closure.")}
             </p>
           </div>
         )}
@@ -113,21 +115,24 @@ export function RouteDisruptions({
                       : "border-border bg-muted/40 text-muted-foreground",
                   )}
                 >
-                  {row.priority}
+                  {t(`deliveries.priority_${row.priority}`, row.priority)}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {CARGO_LABEL[row.cargoType] ?? row.cargoType} → {row.destination}
+                  {getTranslatedCargo(row.cargoType, t)} → {row.destination}
                 </span>
               </div>
 
               <div className="mt-2 flex items-start gap-2">
                 <Ban className="mt-0.5 size-3.5 shrink-0 text-[oklch(0.648_0.201_22)]" />
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Natural corridor from {row.origin} runs through{" "}
-                  <span className="font-mono text-foreground/90">
-                    {row.blockedBy.map((b) => b.roadNumber).join(", ")}
-                  </span>
-                  , currently blocked.
+                  {t(
+                    "routes.corridor_blocked_notice",
+                    "Natural corridor from {{origin}} runs through {{roads}}, currently blocked.",
+                    {
+                      origin: row.origin,
+                      roads: row.blockedBy.map((b) => b.roadNumber).join(", "),
+                    },
+                  )}
                 </p>
               </div>
 
@@ -142,21 +147,23 @@ export function RouteDisruptions({
                   className="mt-2.5 w-full rounded-md border border-[oklch(0.735_0.155_158)]/35 bg-[oklch(0.735_0.155_158)]/8 px-2.5 py-2 text-left transition-colors hover:bg-[oklch(0.735_0.155_158)]/14 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                   <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-[oklch(0.735_0.155_158)]">
-                    Alternative available
+                    {t("routes.alternative_available", "Alternative corridor active")}
                   </div>
                   <p className="mt-0.5 text-xs text-foreground/90">
                     {row.alternative.nodes.join(" → ")}
                   </p>
                   <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
                     {row.alternative.totalDistanceKm} km ·{" "}
-                    {row.alternative.segmentCount} segments · avg risk{" "}
+                    {row.alternative.segmentCount} {t("routes.road_segments", "segments")} · {t("risk.score", "avg risk")}{" "}
                     {row.alternative.averageRiskScore}/100
                   </p>
                 </button>
               ) : (
                 <p className="mt-2.5 rounded-md border border-[oklch(0.648_0.201_22)]/35 bg-[oklch(0.648_0.201_22)]/8 px-2.5 py-2 text-xs text-[oklch(0.648_0.201_22)]">
-                  No open alternative corridor exists on the monitored network.
-                  Consider air-lift or hold until clearance.
+                  {t(
+                    "routes.no_route_found",
+                    "No open alternative corridor exists on the monitored network. Consider air-lift or hold until clearance.",
+                  )}
                 </p>
               )}
             </article>

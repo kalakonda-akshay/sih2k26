@@ -2,7 +2,9 @@
 
 import { useQuery } from "convex/react";
 import { HeartPulse } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
+import { translateHealthComponent } from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -38,6 +40,7 @@ const BAND_TONE: Record<string, { text: string; hex: string; label: string }> = 
  * is no hardcoded constant to disbelieve.
  */
 export function HealthScore() {
+  const { t, i18n } = useTranslation();
   const health = useQuery(api.analytics.getOperationalHealth);
   const tone = health ? BAND_TONE[health.band] : null;
 
@@ -46,9 +49,9 @@ export function HealthScore() {
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <HeartPulse className="size-4 text-primary" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">NER Logistics Health Score</h3>
+          <h3 className="text-sm font-semibold">{t("analytics.health_score_title", "NER Logistics Health Score")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Six weighted components · deterministic
+            {t("analytics.health_subtitle", "Six weighted components · deterministic")}
           </p>
         </div>
       </header>
@@ -76,7 +79,7 @@ export function HealthScore() {
                     tone?.text,
                   )}
                 >
-                  {tone?.label}
+                  {t(`analytics.band_${health.band}`, tone?.label ?? "")}
                 </div>
               </div>
             </>
@@ -105,7 +108,7 @@ export function HealthScore() {
                   <li key={component.key}>
                     <div className="flex items-baseline gap-2">
                       <span className="text-xs font-medium">
-                        {component.label}
+                        {translateHealthComponent(component.label, i18n.language)}
                       </span>
                       <span className="ml-auto font-mono text-xs tabular">
                         {component.score}
@@ -142,9 +145,7 @@ export function HealthScore() {
       </div>
 
       <p className="border-t border-border bg-background/40 px-4 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
-        Score = sum of six capped components (25 roads · 20 delivery · 20
-        incidents · 15 vehicles · 10 alerts · 10 predicted risk). Higher is
-        healthier. Computed from live counts, not a stored value.
+        {t("analytics.health_note", "Score = sum of six capped components (25 roads · 20 delivery · 20 incidents · 15 vehicles · 10 alerts · 10 predicted risk). Higher is healthier. Computed from live counts, not a stored value.")}
       </p>
     </section>
   );

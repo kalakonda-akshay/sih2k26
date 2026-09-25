@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import {
   ChevronDown,
   CircleAlert,
@@ -21,6 +22,7 @@ import {
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { translateActivityMessage } from "@/lib/i18n/briefing-translator";
 
 const TICK_MS = 2500;
 
@@ -41,6 +43,8 @@ type Outcome = { kind: "success" | "error"; message: string };
  * throw against an empty database.
  */
 export function DemoControls() {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
   const [open, setOpen] = useState(false);
   const [running, setRunning] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -133,13 +137,15 @@ export function DemoControls() {
           className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
         >
           <Wand2 className="size-4 text-primary" />
-          <span className="text-sm font-medium">Demo Simulation</span>
+          <span className="text-sm font-medium">
+            {t("demo.simulation", "Demo Simulation")}
+          </span>
           {simulationActive && (
             <span className="live-dot ml-1 inline-block size-1.5 rounded-full bg-[oklch(0.735_0.155_158)] text-[oklch(0.735_0.155_158)]" />
           )}
           {!loadingStatus && !ready && (
             <span className="ml-1 rounded border border-[oklch(0.815_0.145_88)]/35 bg-[oklch(0.815_0.145_88)]/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[oklch(0.815_0.145_88)]">
-              No data
+              {t("demo.no_data", "No data")}
             </span>
           )}
           <ChevronDown
@@ -163,7 +169,7 @@ export function DemoControls() {
             >
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-                  Step 0 · Dataset
+                  {t("demo.step_0", "Step 0 · Dataset")}
                 </span>
                 <span
                   className={cn(
@@ -175,23 +181,41 @@ export function DemoControls() {
                         : "text-[oklch(0.815_0.145_88)]",
                   )}
                 >
-                  {loadingStatus ? "checking…" : ready ? "ready" : "not ready"}
+                  {loadingStatus
+                    ? t("demo.checking", "checking…")
+                    : ready
+                      ? t("demo.ready", "ready")
+                      : t("demo.not_ready", "not ready")}
                 </span>
               </div>
 
               {!loadingStatus && !ready && (
                 <p className="mt-1.5 text-[11px] leading-relaxed text-[oklch(0.815_0.145_88)]">
                   {seeded
-                    ? "Seed record exists but required rows are missing. Loading will repair the dataset."
-                    : "Database is empty. Load the demo dataset before running the simulation."}
+                    ? t(
+                        "demo.repair_db",
+                        "Seed record exists but required rows are missing. Loading will repair the dataset.",
+                      )
+                    : t(
+                        "demo.empty_db",
+                        "Database is empty. Load the demo dataset before running the simulation.",
+                      )}
                 </p>
               )}
 
               {status?.counts && ready && (
                 <p className="mt-1.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
-                  {status.counts.vehicles} vehicles · {status.counts.roads}{" "}
-                  roads · {status.counts.incidents} incidents ·{" "}
-                  {status.counts.alerts} alerts
+                  {t("dashboard.vehicles_count", {
+                    count: status.counts.vehicles,
+                  })}{" "}
+                  ·{" "}
+                  {t("dashboard.roads_count", { count: status.counts.roads })}{" "}
+                  ·{" "}
+                  {t("dashboard.incidents_count", {
+                    count: status.counts.incidents,
+                  })}{" "}
+                  ·{" "}
+                  {status.counts.alerts} {t("dashboard.alerts", "alerts")}
                 </p>
               )}
 
@@ -214,7 +238,9 @@ export function DemoControls() {
                 ) : (
                   <Database className="size-3" />
                 )}
-                {ready ? "Reload demo data" : "Load demo data"}
+                {ready
+                  ? t("demo.reload_data", "Reload demo data")
+                  : t("demo.load_data", "Load demo data")}
               </Button>
             </div>
 
@@ -232,10 +258,10 @@ export function DemoControls() {
                   <Play className="size-3.5" />
                 )}
                 {simulationActive
-                  ? "Pause vehicle movement"
-                  : "Start vehicle movement"}
+                  ? t("demo.pause_movement", "Pause vehicle movement")
+                  : t("demo.start_movement", "Start vehicle movement")}
                 <span className="ml-auto font-mono text-[9px] uppercase text-muted-foreground">
-                  Step 1
+                  {t("demo.step_1", "Step 1")}
                 </span>
               </Button>
 
@@ -260,9 +286,9 @@ export function DemoControls() {
                 ) : (
                   <CloudRain className="size-3.5 text-[oklch(0.715_0.128_231)]" />
                 )}
-                Heavy rainfall at Nongpoh
+                {t("demo.heavy_rainfall", "Heavy rainfall at Nongpoh")}
                 <span className="ml-auto font-mono text-[9px] uppercase text-muted-foreground">
-                  Step 2
+                  {t("demo.step_2", "Step 2")}
                 </span>
               </Button>
 
@@ -283,9 +309,9 @@ export function DemoControls() {
                 ) : (
                   <Brain className="size-3.5 text-primary" />
                 )}
-                Run full risk assessment
+                {t("demo.run_assessment", "Run full risk assessment")}
                 <span className="ml-auto font-mono text-[9px] uppercase text-muted-foreground">
-                  Step 3
+                  {t("demo.step_3", "Step 3")}
                 </span>
               </Button>
 
@@ -306,9 +332,9 @@ export function DemoControls() {
                 ) : (
                   <TrendingUp className="size-3.5 text-[oklch(0.815_0.145_88)]" />
                 )}
-                Escalate risk on NH-6
+                {t("demo.escalate_risk", "Escalate risk on NH-6")}
                 <span className="ml-auto font-mono text-[9px] uppercase text-muted-foreground">
-                  Step 4
+                  {t("demo.step_4", "Step 4")}
                 </span>
               </Button>
 
@@ -329,9 +355,9 @@ export function DemoControls() {
                 ) : (
                   <TriangleAlert className="size-3.5 text-[oklch(0.648_0.201_22)]" />
                 )}
-                Trigger landslide incident
+                {t("demo.trigger_landslide", "Trigger landslide incident")}
                 <span className="ml-auto font-mono text-[9px] uppercase text-muted-foreground">
-                  Step 5
+                  {t("demo.step_5", "Step 5")}
                 </span>
               </Button>
 
@@ -354,9 +380,9 @@ export function DemoControls() {
                 ) : (
                   <RouteIcon className="size-3.5 text-[oklch(0.735_0.155_158)]" />
                 )}
-                Detect route disruptions
+                {t("demo.detect_disruptions", "Detect route disruptions")}
                 <span className="ml-auto font-mono text-[9px] uppercase text-muted-foreground">
-                  Step 6
+                  {t("demo.step_6", "Step 6")}
                 </span>
               </Button>
 
@@ -377,7 +403,7 @@ export function DemoControls() {
                 ) : (
                   <RotateCcw className="size-3.5" />
                 )}
-                Reset scenario
+                {t("demo.reset_scenario", "Reset scenario")}
               </Button>
             </div>
 
@@ -405,14 +431,16 @@ export function DemoControls() {
                       : "text-[oklch(0.648_0.201_22)]",
                   )}
                 >
-                  {outcome.message}
+                  {translateActivityMessage(outcome.message, currentLang)}
                 </p>
               </div>
             )}
 
             <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
-              All actions write to Convex. Open this dashboard in a second
-              window to watch both update together.
+              {t(
+                "demo.convex_note",
+                "All actions write to Convex. Open this dashboard in a second window to watch both update together.",
+              )}
             </p>
           </div>
         )}

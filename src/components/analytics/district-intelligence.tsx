@@ -2,6 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { MapPinned } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import type { TimeWindow } from "./time-range";
 import { RISK_TONE, type RiskLevel } from "@/lib/risk";
@@ -26,20 +27,32 @@ function healthTone(score: number) {
  * that needs a decision is always at the top.
  */
 export function DistrictIntelligence({ window }: { window: TimeWindow }) {
+  const { t } = useTranslation();
   const districts = useQuery(api.analytics.getDistrictIntelligence, { window });
+
+  const headers = [
+    t("analytics.district", "District"),
+    t("analytics.health", "Health"),
+    t("risk.score", "Risk"),
+    t("analytics.roads_open", "Roads open"),
+    t("dashboard.metrics.blocked_roads", "Blocked"),
+    t("dashboard.incidents", "Incidents"),
+    t("dashboard.metrics.critical_alerts", "Critical alerts"),
+    t("nav.vehicles", "Vehicles"),
+  ];
 
   return (
     <section className="overflow-hidden rounded-lg border border-border bg-card">
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <MapPinned className="size-4 text-primary" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">District Intelligence</h3>
+          <h3 className="text-sm font-semibold">{t("analytics.district_intelligence", "District Intelligence")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Worst health first · needs attention at the top
+            {t("analytics.district_subtitle", "Worst health first · needs attention at the top")}
           </p>
         </div>
         <span className="ml-auto shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {districts ? `${districts.length} districts` : "…"}
+          {districts ? `${districts.length} ${t("analytics.districts_count", "districts")}` : "…"}
         </span>
       </header>
 
@@ -47,16 +60,7 @@ export function DistrictIntelligence({ window }: { window: TimeWindow }) {
         <table className="w-full min-w-[820px] text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {[
-                "District",
-                "Health",
-                "Risk",
-                "Roads open",
-                "Blocked",
-                "Incidents",
-                "Critical alerts",
-                "Vehicles",
-              ].map((h) => (
+              {headers.map((h) => (
                 <th
                   key={h}
                   className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
@@ -82,7 +86,7 @@ export function DistrictIntelligence({ window }: { window: TimeWindow }) {
                   colSpan={8}
                   className="px-3 py-12 text-center text-muted-foreground"
                 >
-                  No district data yet — load the demo dataset.
+                  {t("analytics.no_district_data", "No district data yet — load the demo dataset.")}
                 </td>
               </tr>
             )}
@@ -131,7 +135,7 @@ export function DistrictIntelligence({ window }: { window: TimeWindow }) {
                       riskTone.text,
                     )}
                   >
-                    {riskTone.label}
+                    {t(`risk.${d.riskLevel}`, riskTone.label)}
                     <span className="ml-1 tabular text-muted-foreground">
                       {d.averageRisk}
                     </span>
@@ -154,7 +158,7 @@ export function DistrictIntelligence({ window }: { window: TimeWindow }) {
                     {d.activeIncidents}
                     {d.windowIncidents > 0 && (
                       <span className="ml-1 text-[10px]">
-                        ({d.windowIncidents} in window)
+                        ({d.windowIncidents})
                       </span>
                     )}
                   </td>

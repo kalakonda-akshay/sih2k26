@@ -34,26 +34,36 @@ export function VehicleLayer({ vehicles }: { vehicles: MapVehicle[] }) {
         const riskTone = RISK_TONE[vehicle.riskLevel as RiskLevel];
         const emergency = vehicle.status === "emergency";
 
+        const isAlert = emergency || vehicle.riskLevel === "critical";
+
         const icon = L.divIcon({
           className: "",
           iconSize: [24, 24],
           iconAnchor: [12, 12],
           popupAnchor: [0, -13],
           html: `
-            <div style="
-              width:24px;height:24px;border-radius:50%;
-              display:flex;align-items:center;justify-content:center;
-              background:${statusTone.hex}24;
-              border:${emergency ? 2 : 1.5}px solid ${statusTone.hex};
-              box-shadow:0 0 0 3px ${riskTone.hex}26;
-            ">
+            <div style="position:relative;width:24px;height:24px;">
+              ${
+                isAlert
+                  ? `<div class="radar-pulse-ring" style="border:2px solid ${statusTone.hex};box-shadow:0 0 10px ${statusTone.hex}80;"></div>`
+                  : ""
+              }
               <div style="
-                width:0;height:0;
-                border-left:4px solid transparent;
-                border-right:4px solid transparent;
-                border-bottom:9px solid ${statusTone.hex};
-                transform:rotate(${Number.isFinite(vehicle.heading) ? vehicle.heading : 0}deg);
-              "></div>
+                position:relative;z-index:2;
+                width:24px;height:24px;border-radius:50%;
+                display:flex;align-items:center;justify-content:center;
+                background:${statusTone.hex}24;
+                border:${emergency ? 2 : 1.5}px solid ${statusTone.hex};
+                box-shadow:0 0 0 3px ${riskTone.hex}26;
+              ">
+                <div style="
+                  width:0;height:0;
+                  border-left:4px solid transparent;
+                  border-right:4px solid transparent;
+                  border-bottom:9px solid ${statusTone.hex};
+                  transform:rotate(${Number.isFinite(vehicle.heading) ? vehicle.heading : 0}deg);
+                "></div>
+              </div>
             </div>`,
         });
 

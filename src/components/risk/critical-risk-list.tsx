@@ -2,10 +2,14 @@
 
 import { useQuery } from "convex/react";
 import { ChevronRight, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { RISK_TONE, type RiskLevel } from "@/lib/risk";
-import { timeAgo } from "@/lib/format";
+import {
+  formatLocalizedTimeAgo,
+  translatePredictedIssue,
+} from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -25,6 +29,7 @@ export function CriticalRiskList({
   onSelect: (id: Id<"riskPredictions">) => void;
   limit?: number;
 }) {
+  const { t, i18n } = useTranslation();
   const assessments = useQuery(api.riskEngine.getCurrentAssessments, { limit });
 
   return (
@@ -32,13 +37,13 @@ export function CriticalRiskList({
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <Sparkles className="size-4 text-primary" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">Risk Predictions</h3>
+          <h3 className="text-sm font-semibold">{t("dashboard.panels.risk_intelligence", "Risk Predictions")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Select a location to see why
+            {t("risk.select_location_prompt", "Select a location to see why")}
           </p>
         </div>
         <span className="ml-auto shrink-0 rounded border border-primary/35 bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-primary">
-          Predicted risk
+          {t("risk.predicted_risk_badge", "Predicted risk")}
         </span>
       </header>
 
@@ -54,10 +59,10 @@ export function CriticalRiskList({
         {assessments?.length === 0 && (
           <div className="px-4 py-12 text-center">
             <p className="text-sm text-muted-foreground">
-              No assessments yet.
+              {t("risk.no_assessments", "No assessments yet.")}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Run the risk engine from the Demo Simulation console.
+              {t("risk.run_engine_hint", "Run the risk engine from the Demo Simulation console.")}
             </p>
           </div>
         )}
@@ -100,7 +105,7 @@ export function CriticalRiskList({
                         tone.text,
                       )}
                     >
-                      {tone.label}
+                      {t(`risk.${prediction.riskLevel}`, tone.label)}
                     </span>
                   </div>
 
@@ -108,7 +113,7 @@ export function CriticalRiskList({
                     {prediction.district}, {prediction.state}
                   </p>
                   <p className="mt-1 truncate text-xs text-foreground/80">
-                    {prediction.predictedIssue}
+                    {translatePredictedIssue(prediction.predictedIssue, i18n.language)}
                   </p>
 
                   <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
@@ -123,13 +128,13 @@ export function CriticalRiskList({
 
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3">
                     <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Confidence{" "}
+                      {t("risk.confidence", "Confidence")}{" "}
                       <span className="tabular text-foreground/85">
                         {Math.round(prediction.confidence)}%
                       </span>
                     </span>
                     <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-                      {timeAgo(prediction.createdAt)}
+                      {formatLocalizedTimeAgo(prediction.createdAt, i18n.language)}
                     </span>
                   </div>
                 </div>

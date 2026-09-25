@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 const SAFE = "oklch(0.735 0.155 158)";
@@ -17,6 +18,7 @@ const CRITICAL = "oklch(0.648 0.201 22)";
  * (dashed diamond) — a distinction colour alone cannot carry.
  */
 export function MapLegend() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(true);
 
   return (
@@ -28,7 +30,7 @@ export function MapLegend() {
         className="flex w-full items-center gap-1.5 px-2.5 py-1.5 transition-colors hover:bg-muted/40 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
       >
         <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-          Legend
+          {t("map.legend_title", "Legend")}
         </span>
         <ChevronDown
           className={cn(
@@ -40,20 +42,20 @@ export function MapLegend() {
 
       {open && (
         <div className="flex flex-col gap-2.5 border-t border-border px-2.5 py-2">
-          <Group title="Road status">
-            <Line hex={SAFE} label="Accessible" />
-            <Line hex={HIGH} label="Restricted" dash="14 6" />
-            <Line hex={CRITICAL} label="Blocked" dash="9 7" thick />
+          <Group title={t("map.legend_roads", "Road status")}>
+            <Line hex={SAFE} label={t("map.filter_safe", "Accessible")} />
+            <Line hex={HIGH} label={t("map.filter_warning", "Restricted")} dash="14 6" />
+            <Line hex={CRITICAL} label={t("map.filter_critical", "Blocked")} dash="9 7" thick />
           </Group>
 
-          <Group title="Risk level">
-            <Swatch hex={SAFE} label="Low" />
-            <Swatch hex={MODERATE} label="Moderate" />
-            <Swatch hex={HIGH} label="High" />
-            <Swatch hex={CRITICAL} label="Critical" />
+          <Group title={t("risk.level", "Risk level")}>
+            <Swatch hex={SAFE} label={t("risk.low", "Low")} />
+            <Swatch hex={MODERATE} label={t("risk.moderate", "Moderate")} />
+            <Swatch hex={HIGH} label={t("risk.high", "High")} />
+            <Swatch hex={CRITICAL} label={t("risk.critical", "Critical")} />
           </Group>
 
-          <Group title="Markers">
+          <Group title={t("map.layers", "Markers")}>
             <div className="flex items-center gap-2">
               <span
                 className="inline-flex size-3.5 shrink-0 items-center justify-center rounded-full border"
@@ -64,7 +66,7 @@ export function MapLegend() {
                   style={{ borderBottomColor: SAFE }}
                 />
               </span>
-              <span className="text-[10px] text-muted-foreground">Vehicle</span>
+              <span className="text-[10px] text-muted-foreground">{t("map.layer_vehicles", "Vehicle")}</span>
             </div>
             <div className="flex items-center gap-2">
               <span
@@ -72,7 +74,7 @@ export function MapLegend() {
                 style={{ borderColor: CRITICAL, background: `${CRITICAL}24` }}
               />
               <span className="text-[10px] text-muted-foreground">
-                Emergency vehicle
+                {t("emergency.title", "Emergency vehicle")}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -87,7 +89,7 @@ export function MapLegend() {
                 L
               </span>
               <span className="text-[10px] text-muted-foreground">
-                Confirmed incident
+                {t("incidents.verified", "Confirmed incident")}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -96,7 +98,16 @@ export function MapLegend() {
                 style={{ borderColor: HIGH, background: `${HIGH}1f` }}
               />
               <span className="text-[10px] text-muted-foreground">
-                AI predicted risk
+                {t("risk.title", "AI predicted risk")}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="relative flex size-3.5 shrink-0 items-center justify-center">
+                <span className="absolute size-3 rounded-full border border-destructive animate-ping opacity-75" />
+                <span className="size-2 rounded-full bg-destructive" />
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                {t("map.pulse_beacon", "Live critical alert")}
               </span>
             </div>
           </Group>

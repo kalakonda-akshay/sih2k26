@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, BadgeCheck, TriangleAlert } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { INCIDENT_LABEL, SEVERITY_TONE, type Severity } from "@/lib/risk";
-import { humanize, timeAgo } from "@/lib/format";
+import { humanize } from "@/lib/format";
+import { formatLocalizedTimeAgo } from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,15 +17,16 @@ import { Skeleton } from "@/components/ui/skeleton";
  * the model forecasts shown in the AI risk panel.
  */
 export function IncidentList({ limit = 6 }: { limit?: number }) {
+  const { t, i18n } = useTranslation();
   const incidents = useQuery(api.incidents.listActiveIncidents, { limit });
 
   return (
     <section className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <TriangleAlert className="size-4 text-[oklch(0.727_0.163_55)]" />
-        <h3 className="text-sm font-semibold">Recent Incidents</h3>
+        <h3 className="text-sm font-semibold">{t("dashboard.panels.incident_list", "Recent Incidents")}</h3>
         <span className="ml-auto rounded border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-          Confirmed
+          {t("incidents.verified", "Confirmed")}
         </span>
       </header>
 
@@ -38,7 +41,7 @@ export function IncidentList({ limit = 6 }: { limit?: number }) {
 
         {incidents?.length === 0 && (
           <div className="px-4 py-10 text-center text-sm text-muted-foreground">
-            No active incidents reported.
+            {t("dashboard.panels.incident_list", "No active incidents reported.")}
           </div>
         )}
 
@@ -61,8 +64,7 @@ export function IncidentList({ limit = 6 }: { limit?: number }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="text-sm font-medium">
-                      {INCIDENT_LABEL[incident.incidentType] ??
-                        humanize(incident.incidentType)}
+                      {t(`incidents.type_${incident.incidentType}`, INCIDENT_LABEL[incident.incidentType] ?? humanize(incident.incidentType))}
                     </span>
                     <span
                       className={cn(
@@ -72,12 +74,12 @@ export function IncidentList({ limit = 6 }: { limit?: number }) {
                         tone.text,
                       )}
                     >
-                      {tone.label}
+                      {t(`risk.${incident.severity}`, tone.label)}
                     </span>
                     {incident.verified && (
                       <BadgeCheck
                         className="size-3.5 text-[oklch(0.735_0.155_158)]"
-                        aria-label="Verified"
+                        aria-label={t("incidents.verified", "Verified")}
                       />
                     )}
                   </div>
@@ -89,10 +91,10 @@ export function IncidentList({ limit = 6 }: { limit?: number }) {
 
                   <div className="mt-1.5 flex items-center gap-2">
                     <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                      {humanize(incident.status)}
+                      {incident.status === "active" ? t("vehicles.status_active", "Active") : incident.status}
                     </span>
                     <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-                      {timeAgo(incident.createdAt)}
+                      {formatLocalizedTimeAgo(incident.createdAt, i18n.language)}
                     </span>
                   </div>
                 </div>
@@ -114,7 +116,7 @@ export function IncidentList({ limit = 6 }: { limit?: number }) {
             "w-full text-xs",
           )}
         >
-          Open incident centre
+          {t("nav.incidents", "Incident Center")}
           <ArrowRight className="size-3.5" />
         </Link>
       </div>

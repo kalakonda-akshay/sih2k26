@@ -9,6 +9,7 @@ import {
   TriangleAlert,
   Truck,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import { MetricCard } from "@/components/dashboard/metric-card";
 
@@ -21,55 +22,56 @@ import { MetricCard } from "@/components/dashboard/metric-card";
  * disagree.
  */
 export function VehicleOverview() {
+  const { t } = useTranslation();
   const f = useQuery(api.fleet.getFleetOverview);
 
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
       <MetricCard
-        label="Total Registered"
+        label={t("vehicles.metrics.total_registered", "Total Registered")}
         value={f?.totalVehicles}
         icon={Truck}
         tone="neutral"
-        context={f ? `${f.idleVehicles} idle` : undefined}
+        context={f ? `${f.idleVehicles} ${t("vehicles.status_idle", "idle")}` : undefined}
       />
       <MetricCard
-        label="Active Vehicles"
+        label={t("dashboard.metrics.active_vehicles", "Active Vehicles")}
         value={f?.activeVehicles}
         total={f?.totalVehicles}
         icon={Truck}
         tone="safe"
-        context={f ? "En route now" : undefined}
+        context={f ? t("vehicles.en_route_now", "En route now") : undefined}
       />
       <MetricCard
-        label="Delayed Vehicles"
+        label={t("vehicles.metrics.delayed_vehicles", "Delayed Vehicles")}
         value={f?.delayedVehicles}
         total={f?.totalVehicles}
         icon={Timer}
         tone="moderate"
-        context={f ? `${f.delayedDeliveries} delayed loads` : undefined}
+        context={f ? `${f.delayedDeliveries} ${t("vehicles.delayed_loads", "delayed loads")}` : undefined}
       />
       <MetricCard
-        label="Emergency Vehicles"
+        label={t("vehicles.metrics.emergency_vehicles", "Emergency Vehicles")}
         value={f?.emergencyVehicles}
         icon={Siren}
         tone="critical"
-        context={f ? "Priority response" : undefined}
+        context={f ? t("vehicles.priority_response", "Priority response") : undefined}
       />
       <MetricCard
-        label="In High-Risk Zones"
+        label={t("vehicles.metrics.in_high_risk_zones", "In High-Risk Zones")}
         value={f?.inHighRiskZone}
         total={f?.totalVehicles}
         icon={TriangleAlert}
         tone="high"
-        context={f ? "Proximity exposure" : undefined}
+        context={f ? t("vehicles.proximity_exposure", "Proximity exposure") : undefined}
       />
       <MetricCard
-        label="Critical Deliveries"
+        label={t("vehicles.metrics.critical_deliveries", "Critical Deliveries")}
         value={f?.criticalDeliveries}
         total={f?.activeDeliveries}
         icon={PackageCheck}
         tone="critical"
-        context={f ? "Critical or emergency" : undefined}
+        context={f ? t("vehicles.critical_or_emergency", "Critical or emergency") : undefined}
       />
     </div>
   );
@@ -77,13 +79,14 @@ export function VehicleOverview() {
 
 /** Compact status strip used above the delivery table. */
 export function FleetStatusStrip() {
+  const { t } = useTranslation();
   const f = useQuery(api.fleet.getFleetOverview);
 
   const items = [
-    { label: "Active deliveries", value: f?.activeDeliveries, icon: PackageCheck },
-    { label: "Delayed", value: f?.delayedDeliveries, icon: Timer },
-    { label: "Critical priority", value: f?.criticalDeliveries, icon: Siren },
-    { label: "Idle vehicles", value: f?.idleVehicles, icon: CirclePause },
+    { label: t("dashboard.metrics.active_deliveries", "Active deliveries"), value: f?.activeDeliveries, icon: PackageCheck },
+    { label: t("vehicles.status_delayed", "Delayed"), value: f?.delayedDeliveries, icon: Timer },
+    { label: t("deliveries.priority_critical", "Critical priority"), value: f?.criticalDeliveries, icon: Siren },
+    { label: t("vehicles.status_idle", "Idle vehicles"), value: f?.idleVehicles, icon: CirclePause },
   ];
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import {
   Ban,
   ListChecks,
@@ -10,11 +11,13 @@ import {
   Truck,
 } from "lucide-react";
 import { api } from "../../../../convex/_generated/api";
-import { CARGO_LABEL, RISK_TONE, riskLevelFromScore } from "@/lib/risk";
+import { CARGO_LABEL, RISK_TONE, riskLevelFromScore, getTranslatedCargo, getTranslatedIncidentType } from "@/lib/risk";
 import { humanize, timeAgo } from "@/lib/format";
+import { formatLocalizedTimeAgo, translateEmergencySummary, translateEmergencyAction } from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DemoControls } from "@/components/dashboard/demo-controls";
+import { SmsAutomationPanel } from "@/components/emergency/sms-automation-panel";
 
 const SEVERITY_TONE: Record<string, { text: string; hex: string; label: string }> =
   {
@@ -51,6 +54,8 @@ const SEVERITY_TONE: Record<string, { text: string; hex: string; label: string }
  * usual failure of a manual emergency flag.
  */
 export default function EmergencyPage() {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
   const briefing = useQuery(api.briefing.getEmergencyBriefing);
   const tone = briefing ? SEVERITY_TONE[briefing.severity] : null;
 
@@ -75,7 +80,7 @@ export default function EmergencyPage() {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-lg font-semibold">
-                Emergency Logistics Mode
+                {t("emergency.title", "Emergency Logistics Mode")}
               </h2>
               {briefing && (
                 <span
@@ -85,7 +90,10 @@ export default function EmergencyPage() {
                   )}
                   style={{ borderColor: `${tone?.hex}59` }}
                 >
-                  {tone?.label}
+                  {t(
+                    `risk.${briefing.severity === "none" ? "low" : briefing.severity === "elevated" ? "moderate" : briefing.severity === "major" ? "high" : "critical"}`,
+                    tone?.label ?? "",
+                  )}
                 </span>
               )}
             </div>
@@ -94,12 +102,12 @@ export default function EmergencyPage() {
               <Skeleton className="mt-2 h-4 w-96" />
             ) : (
               <p className="mt-1 text-sm text-muted-foreground">
-                {briefing.summary}
+                {translateEmergencySummary(briefing.summary, currentLang)}
               </p>
             )}
 
             <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-              Status derived from live conditions — not a manual switch
+              {t("emergency.protocol_active", "Status derived from live conditions — not a manual switch")}
             </p>
           </div>
         </div>
@@ -110,9 +118,9 @@ export default function EmergencyPage() {
         <header className="flex items-center gap-2 border-b border-border px-4 py-3">
           <ListChecks className="size-4 text-primary" />
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold">Recommended Response</h3>
+            <h3 className="text-sm font-semibold">{t("briefing.recommendations", "Recommended Response")}</h3>
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-              Proposed actions · require human approval
+              {t("briefing.human_approval_note", "Proposed actions · require human approval")}
             </p>
           </div>
         </header>
@@ -131,19 +139,49 @@ export default function EmergencyPage() {
                 {i + 1}
               </span>
               <p className="text-sm leading-relaxed text-foreground/90">
-                {action}
+                {translateEmergencyAction(action, currentLang)}
               </p>
             </li>
           ))}
         </ul>
       </section>
 
+      {/* Emergency SMS Automation Engine */}
+      <SmsAutomationPanel
+        currentAlert={{
+          title: briefing?.criticalIncidents?.[0]?.type
+            ? `Critical ${briefing.criticalIncidents[0].type.toUpperCase()} in ${briefing.criticalIncidents[0].locationName}`
+            : briefing?.blockedRoads?.[0]
+              ? `Corridor Blockage: ${briefing.blockedRoads[0].roadNumber} (${briefing.blockedRoads[0].roadName})`
+              : "Emergency Logistics Alert — Northeast Corridor",
+          severity:
+            briefing?.severity === "severe"
+              ? "critical"
+              : briefing?.severity === "major"
+                ? "major"
+                : "high",
+          locationName:
+            briefing?.criticalIncidents?.[0]?.locationName ||
+            briefing?.blockedRoads?.[0]?.roadName ||
+            "Sonapur, NH-6 Corridor",
+          district:
+            briefing?.criticalIncidents?.[0]?.district ||
+            briefing?.blockedRoads?.[0]?.district ||
+            briefing?.affectedDistricts?.[0] ||
+            "East Jaintia Hills",
+          recommendedAction:
+            briefing?.recommendedActions?.[0] ||
+            "Divert vehicles to designated safe bypass immediately.",
+          roadNumber: briefing?.blockedRoads?.[0]?.roadNumber || "NH-6",
+        }}
+      />
+
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Blocked corridors */}
         <section className="overflow-hidden rounded-lg border border-border bg-card">
           <header className="flex items-center gap-2 border-b border-border px-4 py-3">
             <Ban className="size-4 text-[oklch(0.648_0.201_22)]" />
-            <h3 className="text-sm font-semibold">Closed Corridors</h3>
+            <h3 className="text-sm font-semibold">{t("dashboard.metrics.blocked_roads", "Closed Corridors")}</h3>
             <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               {briefing ? briefing.blockedRoads.length : "…"}
             </span>
@@ -152,17 +190,17 @@ export default function EmergencyPage() {
           <div className="divide-y divide-border">
             {briefing?.blockedRoads.length === 0 && (
               <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-                No corridor is closed to traffic.
+                {t("routes.no_closures", "No corridor is closed to traffic.")}
               </p>
             )}
 
             {briefing?.blockedRoads.map((road) => {
-              const t = RISK_TONE[riskLevelFromScore(road.riskScore)];
+              const rTone = RISK_TONE[riskLevelFromScore(road.riskScore)];
               return (
                 <div key={road._id} className="flex items-start gap-3 p-4">
                   <span
                     className="mt-1.5 size-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: t.hex }}
+                    style={{ backgroundColor: rTone.hex }}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -175,7 +213,7 @@ export default function EmergencyPage() {
                       {road.district}
                     </div>
                   </div>
-                  <span className={cn("font-mono text-xs tabular", t.text)}>
+                  <span className={cn("font-mono text-xs tabular", rTone.text)}>
                     {Math.round(road.riskScore)}/100
                   </span>
                 </div>
@@ -188,7 +226,7 @@ export default function EmergencyPage() {
         <section className="overflow-hidden rounded-lg border border-border bg-card">
           <header className="flex items-center gap-2 border-b border-border px-4 py-3">
             <Siren className="size-4 text-[oklch(0.648_0.201_22)]" />
-            <h3 className="text-sm font-semibold">Critical Incidents</h3>
+            <h3 className="text-sm font-semibold">{t("alerts.title", "Critical Incidents")}</h3>
             <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
               {briefing ? briefing.criticalIncidents.length : "…"}
             </span>
@@ -197,7 +235,7 @@ export default function EmergencyPage() {
           <div className="divide-y divide-border">
             {briefing?.criticalIncidents.length === 0 && (
               <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-                No incident is at critical severity.
+                {t("alerts.no_critical_incidents", "No incident is at critical severity.")}
               </p>
             )}
 
@@ -205,21 +243,21 @@ export default function EmergencyPage() {
               <div key={incident._id} className="p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-medium">
-                    {humanize(incident.type)}
+                    {getTranslatedIncidentType(incident.type, t)}
                   </span>
                   {incident.verified ? (
                     <span className="rounded border border-[oklch(0.735_0.155_158)]/35 bg-[oklch(0.735_0.155_158)]/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[oklch(0.735_0.155_158)]">
-                      Verified
+                      {t("incidents.verified", "Verified")}
                     </span>
                   ) : (
                     <span className="rounded border border-border bg-muted/40 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                      Unverified
+                      {t("incidents.unverified", "Unverified")}
                     </span>
                   )}
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
                   {incident.locationName}, {incident.district} ·{" "}
-                  {timeAgo(incident.createdAt)}
+                  {formatLocalizedTimeAgo(incident.createdAt, currentLang)}
                 </div>
               </div>
             ))}
@@ -231,25 +269,25 @@ export default function EmergencyPage() {
       <section className="overflow-hidden rounded-lg border border-border bg-card">
         <header className="flex items-center gap-2 border-b border-border px-4 py-3">
           <Truck className="size-4 text-primary" />
-          <h3 className="text-sm font-semibold">Response Resources</h3>
+          <h3 className="text-sm font-semibold">{t("emergency.priority_supplies", "Response Resources")}</h3>
         </header>
 
         <div className="grid gap-px bg-border sm:grid-cols-4">
           {[
             {
-              label: "Emergency vehicles",
+              label: t("emergency.emergency_vehicles", "Emergency vehicles"),
               value: briefing?.resources.emergencyVehicles.length,
             },
             {
-              label: "Available vehicles",
+              label: t("vehicles.available_vehicles", "Available vehicles"),
               value: briefing?.resources.availableVehicles,
             },
             {
-              label: "Priority loads",
+              label: t("deliveries.priority_loads", "Priority loads"),
               value: briefing?.resources.priorityLoads,
             },
             {
-              label: "Priority delayed",
+              label: t("deliveries.priority_delayed", "Priority delayed"),
               value: briefing?.resources.delayedPriorityLoads,
             },
           ].map((stat) => (
@@ -273,11 +311,11 @@ export default function EmergencyPage() {
                     {vehicle.vehicleNumber}
                   </span>
                   <span className="rounded border border-[oklch(0.648_0.201_22)]/40 bg-[oklch(0.648_0.201_22)]/12 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-[oklch(0.648_0.201_22)]">
-                    Emergency
+                    {t("deliveries.priority_emergency", "Emergency")}
                   </span>
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  {CARGO_LABEL[vehicle.cargoType] ?? vehicle.cargoType} →{" "}
+                  {getTranslatedCargo(vehicle.cargoType, t)} →{" "}
                   {vehicle.destination} · {vehicle.driverName}
                 </div>
               </div>
@@ -291,7 +329,7 @@ export default function EmergencyPage() {
         <section className="rounded-lg border border-border bg-card p-4">
           <div className="flex items-center gap-2">
             <MapPinned className="size-4 text-[oklch(0.727_0.163_55)]" />
-            <h3 className="text-sm font-semibold">Affected Districts</h3>
+            <h3 className="text-sm font-semibold">{t("analytics.district_intelligence", "Affected Districts")}</h3>
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {briefing.affectedDistricts.map((district) => (

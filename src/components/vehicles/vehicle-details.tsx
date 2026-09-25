@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { Crosshair, Radio } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
+import { useTranslation } from "react-i18next";
 import {
   ACCESS_TONE,
   CARGO_LABEL,
@@ -11,6 +12,11 @@ import {
   RISK_TONE,
   VEHICLE_STATUS_TONE,
   VEHICLE_TYPE_LABEL,
+  getTranslatedCargo,
+  getTranslatedRiskLevel,
+  getTranslatedVehicleStatus,
+  getTranslatedVehicleType,
+  getTranslatedIncidentType,
   type AccessibilityStatus,
   type RiskLevel,
 } from "@/lib/risk";
@@ -21,6 +27,7 @@ import {
   timeAgo,
   timeUntil,
 } from "@/lib/format";
+import { formatLocalizedTimeAgo, translatePredictedIssue } from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -43,6 +50,7 @@ export function VehicleDetails({
   onClose: () => void;
   onFocusMap?: (lat: number, lng: number) => void;
 }) {
+  const { t } = useTranslation();
   const detail = useQuery(
     api.fleet.getVehicleDetail,
     vehicleId ? { vehicleId } : "skip",
@@ -54,7 +62,7 @@ export function VehicleDetails({
         side="right"
         className="w-full overflow-y-auto p-0 sm:max-w-md"
       >
-        <SheetTitle className="sr-only">Vehicle details</SheetTitle>
+        <SheetTitle className="sr-only">{t("vehicles.title", "Vehicle details")}</SheetTitle>
 
         {detail === undefined && vehicleId !== null && (
           <div className="space-y-3 p-5">
@@ -66,7 +74,7 @@ export function VehicleDetails({
 
         {detail === null && (
           <div className="p-6 text-sm text-muted-foreground">
-            That vehicle is no longer available.
+            {t("vehicles.not_found", "That vehicle is no longer available.")}
           </div>
         )}
 
@@ -95,6 +103,7 @@ function VehicleHeader({
   detail: Detail;
   onFocusMap?: (lat: number, lng: number) => void;
 }) {
+  const { t } = useTranslation();
   const { vehicle, exposure } = detail;
   const statusTone =
     VEHICLE_STATUS_TONE[vehicle.status] ?? VEHICLE_STATUS_TONE.idle;
@@ -105,8 +114,7 @@ function VehicleHeader({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-            {VEHICLE_TYPE_LABEL[vehicle.vehicleType] ??
-              humanize(vehicle.vehicleType)}
+            {getTranslatedVehicleType(vehicle.vehicleType, t)}
           </div>
           <h2 className="mt-1 font-mono text-lg font-semibold tracking-tight">
             {vehicle.vehicleNumber}
@@ -120,7 +128,7 @@ function VehicleHeader({
                 statusTone.text,
               )}
             >
-              {statusTone.label}
+              {getTranslatedVehicleStatus(vehicle.status, t)}
             </span>
             <span
               className={cn(
@@ -130,7 +138,7 @@ function VehicleHeader({
                 exposureTone.text,
               )}
             >
-              {exposureTone.label} exposure
+              {getTranslatedRiskLevel(exposure.riskLevel, t)} {t("vehicles.exposure", "exposure")}
             </span>
           </div>
         </div>
@@ -143,7 +151,7 @@ function VehicleHeader({
             onClick={() => onFocusMap(vehicle.latitude, vehicle.longitude)}
           >
             <Crosshair className="size-3" />
-            Focus
+            {t("map.focus", "Focus")}
           </Button>
         )}
       </div>
@@ -152,23 +160,24 @@ function VehicleHeader({
 }
 
 function VehicleInfoSection({ detail }: { detail: Detail }) {
+  const { t, i18n } = useTranslation();
   const { vehicle } = detail;
 
   return (
-    <Section title="Vehicle & live location" icon={Radio}>
+    <Section title={t("vehicles.info_and_location", "Vehicle & live location")} icon={Radio}>
       <Grid
         rows={[
-          ["Driver", vehicle.driverName],
-          ["Contact", vehicle.driverPhone],
+          [t("vehicles.driver", "Driver"), vehicle.driverName],
+          [t("vehicles.contact", "Contact"), vehicle.driverPhone],
           [
-            "Cargo",
-            CARGO_LABEL[vehicle.cargoType] ?? humanize(vehicle.cargoType),
+            t("vehicles.cargo", "Cargo"),
+            getTranslatedCargo(vehicle.cargoType, t),
           ],
-          ["Position", formatCoords(vehicle.latitude, vehicle.longitude)],
-          ["Speed", `${Math.round(vehicle.speed)} km/h`],
-          ["Heading", `${Math.round(vehicle.heading)}°`],
-          ["Destination", vehicle.destination],
-          ["Last update", timeAgo(vehicle.lastUpdated)],
+          [t("vehicles.position", "Position"), formatCoords(vehicle.latitude, vehicle.longitude)],
+          [t("vehicles.speed", "Speed"), `${Math.round(vehicle.speed)} km/h`],
+          [t("vehicles.heading", "Heading"), `${Math.round(vehicle.heading)}°`],
+          [t("vehicles.destination", "Destination"), vehicle.destination],
+          [t("vehicles.updated", "Last update"), formatLocalizedTimeAgo(vehicle.lastUpdated, i18n.language)],
         ]}
       />
     </Section>
@@ -176,13 +185,14 @@ function VehicleInfoSection({ detail }: { detail: Detail }) {
 }
 
 function DeliverySection({ detail }: { detail: Detail }) {
+  const { t } = useTranslation();
   const { delivery, route } = detail;
 
   if (!delivery) {
     return (
-      <Section title="Delivery">
+      <Section title={t("deliveries.title", "Delivery")}>
         <p className="text-xs text-muted-foreground">
-          No active consignment assigned to this vehicle.
+          {t("deliveries.no_consignments", "No active consignment assigned to this vehicle.")}
         </p>
       </Section>
     );
@@ -192,18 +202,18 @@ function DeliverySection({ detail }: { detail: Detail }) {
     delivery.priority === "critical" || delivery.priority === "emergency";
 
   return (
-    <Section title="Delivery">
+    <Section title={t("deliveries.title", "Delivery")}>
       <Grid
         rows={[
-          ["Origin", delivery.origin],
-          ["Destination", delivery.destination],
-          ["Priority", humanize(delivery.priority)],
-          ["Status", humanize(delivery.status)],
-          ["ETA", timeUntil(delivery.estimatedArrival)],
-          ["Scheduled", formatDateTime(delivery.estimatedArrival)],
-          ...(route ? ([["Route", route.name]] as Array<[string, string]>) : []),
+          [t("routes.origin", "Origin"), delivery.origin],
+          [t("routes.destination", "Destination"), delivery.destination],
+          [t("deliveries.priority", "Priority"), t(`deliveries.priority_${delivery.priority}`, humanize(delivery.priority))],
+          [t("common.status", "Status"), t(`deliveries.status_${delivery.status}`, humanize(delivery.status))],
+          [t("deliveries.eta", "ETA"), timeUntil(delivery.estimatedArrival)],
+          [t("deliveries.scheduled", "Scheduled"), formatDateTime(delivery.estimatedArrival)],
+          ...(route ? ([[t("routes.title", "Route"), route.name]] as Array<[string, string]>) : []),
           ...(route
-            ? ([["Route status", humanize(route.status)]] as Array<
+            ? ([[t("routes.status", "Route status"), humanize(route.status)]] as Array<
                 [string, string]
               >)
             : []),
@@ -214,7 +224,7 @@ function DeliverySection({ detail }: { detail: Detail }) {
         <div className="mt-3">
           <div className="flex items-baseline justify-between">
             <span className="font-mono text-[9px] uppercase tracking-[0.13em] text-muted-foreground">
-              Progress
+              {t("deliveries.progress", "Progress")}
             </span>
             <span className="font-mono text-[10px] tabular text-muted-foreground">
               {Math.round(delivery.progress)}%
@@ -238,11 +248,13 @@ function DeliverySection({ detail }: { detail: Detail }) {
 }
 
 function RiskSection({ detail }: { detail: Detail }) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
   const { exposure, road, nearbyIncidents, nearbyPredictions } = detail;
   const tone = RISK_TONE[exposure.riskLevel as RiskLevel];
 
   return (
-    <Section title="Risk intelligence">
+    <Section title={t("risk.title", "Risk intelligence")}>
       {road && (
         <div className="mb-3 rounded-md border border-border bg-background/50 px-2.5 py-2">
           <div className="flex items-center gap-2">
@@ -266,9 +278,9 @@ function RiskSection({ detail }: { detail: Detail }) {
             </span>
           </div>
           <div className="mt-1 font-mono text-[10px] text-muted-foreground">
-            Corridor risk {Math.round(road.riskScore)}/100
+            {t("risk.corridor_risk", "Corridor risk")} {Math.round(road.riskScore)}/100
             {detail.roadDistanceKm !== null
-              ? ` · ${Math.round(detail.roadDistanceKm)} km from vehicle`
+              ? ` · ${Math.round(detail.roadDistanceKm)} km ${t("vehicles.from_vehicle", "from vehicle")}`
               : ""}
           </div>
         </div>
@@ -276,7 +288,7 @@ function RiskSection({ detail }: { detail: Detail }) {
 
       {exposure.reasons.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          No hazard within range of this vehicle.
+          {t("dashboard.no_vehicles_risk", "No hazard within range of this vehicle.")}
         </p>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -301,10 +313,10 @@ function RiskSection({ detail }: { detail: Detail }) {
 
       {nearbyIncidents.length > 0 && (
         <SubList
-          title={`Nearby incidents (${nearbyIncidents.length})`}
+          title={`${t("dashboard.incidents", "Nearby incidents")} (${nearbyIncidents.length})`}
           items={nearbyIncidents.map((i) => ({
             key: `${i.locationName}-${i.distanceKm}`,
-            label: `${INCIDENT_LABEL[i.incidentType] ?? humanize(i.incidentType)} — ${i.locationName}`,
+            label: `${getTranslatedIncidentType(i.incidentType, t)} — ${i.locationName}`,
             meta: `${Math.round(i.distanceKm)} km · ${i.severity}`,
           }))}
         />
@@ -312,31 +324,31 @@ function RiskSection({ detail }: { detail: Detail }) {
 
       {nearbyPredictions.length > 0 && (
         <SubList
-          title={`Predicted risk zones (${nearbyPredictions.length})`}
+          title={`${t("risk.title", "Predicted risk zones")} (${nearbyPredictions.length})`}
           items={nearbyPredictions.map((p) => ({
             key: `${p.locationName}-${p.distanceKm}`,
-            label: `${p.predictedIssue} — ${p.locationName}`,
-            meta: `${Math.round(p.distanceKm)} km · ${p.riskLevel}`,
+            label: `${translatePredictedIssue(p.predictedIssue, currentLang)} — ${p.locationName}`,
+            meta: `${Math.round(p.distanceKm)} km · ${getTranslatedRiskLevel(p.riskLevel, t)}`,
           }))}
         />
       )}
 
       <p className={cn("mt-3 text-[10px] leading-relaxed", tone.text)}>
-        Distances are straight-line, not road-network. Treat them as a
-        proximity warning, not a drive-time estimate.
+        {t("vehicles.exposure_note", "Distances are straight-line, not road-network. Treat them as a proximity warning, not a drive-time estimate.")}
       </p>
     </Section>
   );
 }
 
 function TimelineSection({ detail }: { detail: Detail }) {
+  const { t, i18n } = useTranslation();
   const { timeline } = detail;
 
   return (
-    <Section title="Activity timeline">
+    <Section title={t("dashboard.system_activity", "Activity timeline")}>
       {timeline.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          No recorded events for this vehicle yet.
+          {t("dashboard.no_activity", "No recorded events for this vehicle yet.")}
         </p>
       ) : (
         <ol className="relative flex flex-col">
@@ -354,7 +366,7 @@ function TimelineSection({ detail }: { detail: Detail }) {
                 {entry.message}
               </p>
               <span className="font-mono text-[9px] text-muted-foreground">
-                {timeAgo(entry.createdAt)}
+                {formatLocalizedTimeAgo(entry.createdAt, i18n.language)}
               </span>
             </li>
           ))}

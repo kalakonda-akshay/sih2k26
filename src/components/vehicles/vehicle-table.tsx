@@ -3,16 +3,19 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { Search, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import {
-  CARGO_LABEL,
+  getTranslatedCargo,
+  getTranslatedRiskLevel,
+  getTranslatedVehicleStatus,
+  getTranslatedVehicleType,
   RISK_TONE,
   VEHICLE_STATUS_TONE,
-  VEHICLE_TYPE_LABEL,
   type RiskLevel,
 } from "@/lib/risk";
-import { humanize, timeAgo } from "@/lib/format";
+import { formatLocalizedTimeAgo } from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,6 +68,8 @@ export function VehicleTable({
   onSelect: (id: Id<"vehicles">) => void;
   selectedId: Id<"vehicles"> | null;
 }) {
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
   const fleet = useQuery(api.fleet.listFleet);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<FilterKey, string>>({
@@ -113,9 +118,13 @@ export function VehicleTable({
       <header className="space-y-3 border-b border-border p-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold">Live Vehicle List</h3>
+            <h3 className="text-sm font-semibold">
+              {t("vehicles.title", "Live Vehicle List")}
+            </h3>
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-              {rows ? `${rows.length} of ${fleet?.length ?? 0} vehicles` : "Loading"}
+              {rows
+                ? `${rows.length} / ${fleet?.length ?? 0} ${t("dashboard.vehicles_count", { count: "" }).replace(/\{\{count\}\}|\s*$/g, "").trim() || "vehicles"}`
+                : t("common.loading", "Loading")}
             </p>
           </div>
 
@@ -124,8 +133,11 @@ export function VehicleTable({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Vehicle, driver or destination…"
-              aria-label="Search vehicles"
+              placeholder={t(
+                "header.search_placeholder",
+                "Vehicle, driver or destination…",
+              )}
+              aria-label={t("common.search", "Search vehicles")}
               className="h-8 bg-background pl-8 text-xs"
             />
           </div>
@@ -135,10 +147,27 @@ export function VehicleTable({
           {FILTER_GROUPS.map((group) => (
             <div key={group.key} className="flex flex-wrap items-center gap-1">
               <span className="mr-0.5 font-mono text-[9px] uppercase tracking-[0.13em] text-muted-foreground">
-                {group.label}
+                {group.key === "status"
+                  ? t("common.status", group.label)
+                  : group.key === "cargoType"
+                    ? t("vehicles.cargo", group.label)
+                    : group.key === "exposureLevel"
+                      ? t("risk.score", group.label)
+                      : t("deliveries.priority", group.label)}
               </span>
               {[ALL, ...group.options].map((option) => {
                 const selected = filters[group.key] === option;
+                const optionLabel =
+                  option === ALL
+                    ? t("dashboard.all", "all")
+                    : group.key === "status"
+                      ? getTranslatedVehicleStatus(option, t)
+                      : group.key === "cargoType"
+                        ? getTranslatedCargo(option, t)
+                        : group.key === "exposureLevel"
+                          ? getTranslatedRiskLevel(option, t)
+                          : t(`deliveries.priority_${option}`, option);
+
                 return (
                   <button
                     key={option}
@@ -155,7 +184,7 @@ export function VehicleTable({
                         : "border-border bg-muted/30 text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {option === ALL ? "all" : option}
+                    {optionLabel}
                   </button>
                 );
               })}
@@ -169,7 +198,7 @@ export function VehicleTable({
               className="ml-auto inline-flex items-center gap-1 rounded border border-border bg-muted/30 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               <X className="size-2.5" />
-              Clear
+              {t("common.reset", "Clear")}
             </button>
           )}
         </div>
@@ -180,22 +209,22 @@ export function VehicleTable({
           <thead>
             <tr className="border-b border-border bg-muted/30">
               {[
-                "Vehicle",
-                "Type",
-                "Cargo",
-                "Status",
-                "Exposure",
-                "Priority",
-                "Speed",
-                "Destination",
-                "Corridor",
-                "Updated",
+                { key: "v", label: t("vehicles.vehicle_number", "Vehicle") },
+                { key: "t", label: t("vehicles.type", "Type") },
+                { key: "c", label: t("vehicles.cargo", "Cargo") },
+                { key: "s", label: t("vehicles.status", "Status") },
+                { key: "e", label: t("risk.score", "Exposure") },
+                { key: "p", label: t("deliveries.priority", "Priority") },
+                { key: "sp", label: t("vehicles.speed", "Speed") },
+                { key: "d", label: t("vehicles.destination", "Destination") },
+                { key: "cr", label: t("risk.corridor", "Corridor") },
+                { key: "u", label: t("vehicles.updated", "Updated") },
               ].map((h) => (
                 <th
-                  key={h}
+                  key={h.key}
                   className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground"
                 >
-                  {h}
+                  {h.label}
                 </th>
               ))}
             </tr>
@@ -216,7 +245,10 @@ export function VehicleTable({
                   colSpan={10}
                   className="px-3 py-12 text-center text-muted-foreground"
                 >
-                  No vehicles match these filters.
+                  {t(
+                    "dashboard.no_vehicles_risk",
+                    "No vehicles match these filters.",
+                  )}
                 </td>
               </tr>
             )}
@@ -251,11 +283,10 @@ export function VehicleTable({
                     {vehicle.vehicleNumber}
                   </td>
                   <td className="px-3 py-2.5 text-xs text-muted-foreground">
-                    {VEHICLE_TYPE_LABEL[vehicle.vehicleType] ??
-                      vehicle.vehicleType}
+                    {getTranslatedVehicleType(vehicle.vehicleType, t)}
                   </td>
                   <td className="px-3 py-2.5 text-xs">
-                    {CARGO_LABEL[vehicle.cargoType] ?? vehicle.cargoType}
+                    {getTranslatedCargo(vehicle.cargoType, t)}
                   </td>
                   <td className="px-3 py-2.5">
                     <span
@@ -266,7 +297,7 @@ export function VehicleTable({
                         statusTone.text,
                       )}
                     >
-                      {statusTone.label}
+                      {getTranslatedVehicleStatus(vehicle.status, t)}
                     </span>
                   </td>
                   <td className="px-3 py-2.5">
@@ -276,7 +307,7 @@ export function VehicleTable({
                         exposureTone.text,
                       )}
                     >
-                      {exposureTone.label}
+                      {getTranslatedRiskLevel(vehicle.exposureLevel, t)}
                     </span>
                     {vehicle.reasonCount > 0 && (
                       <span className="ml-1 font-mono text-[9px] text-muted-foreground">
@@ -295,7 +326,7 @@ export function VehicleTable({
                             : "text-muted-foreground",
                         )}
                       >
-                        {vehicle.deliveryPriority}
+                        {t(`deliveries.priority_${vehicle.deliveryPriority}`, vehicle.deliveryPriority)}
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
@@ -307,12 +338,9 @@ export function VehicleTable({
                   <td className="px-3 py-2.5 text-xs">{vehicle.destination}</td>
                   <td className="px-3 py-2.5 font-mono text-[10px] text-muted-foreground">
                     {vehicle.roadNumber ?? "—"}
-                    {vehicle.roadStatus && vehicle.roadStatus !== "accessible"
-                      ? ` · ${humanize(vehicle.roadStatus)}`
-                      : ""}
                   </td>
                   <td className="px-3 py-2.5 font-mono text-[10px] text-muted-foreground">
-                    {timeAgo(vehicle.lastUpdated)}
+                    {formatLocalizedTimeAgo(vehicle.lastUpdated, currentLang)}
                   </td>
                 </tr>
               );

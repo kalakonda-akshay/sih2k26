@@ -15,6 +15,7 @@ import {
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const TICK_MS = 2500;
 
@@ -30,6 +31,7 @@ type Outcome = { kind: "success" | "error"; message: string };
  * anything, because the movement was persisted.
  */
 export function FleetSimulation() {
+  const { t } = useTranslation();
   const [running, setRunning] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -93,13 +95,13 @@ export function FleetSimulation() {
         <div className="flex items-center gap-2">
           <Satellite className="size-4 text-primary" />
           <div>
-            <h3 className="text-sm font-semibold">GPS Simulation</h3>
+            <h3 className="text-sm font-semibold">{t("demo.simulation", "GPS Simulation")}</h3>
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
               {simulationActive
                 ? `Live · ${TICK_MS / 1000}s tick`
                 : ready
-                  ? "Stopped"
-                  : "Load demo data first"}
+                  ? t("vehicles.status_stopped", "Stopped")
+                  : t("demo.load_data", "Load demo data first")}
             </p>
           </div>
           {simulationActive && (
@@ -120,7 +122,7 @@ export function FleetSimulation() {
             ) : (
               <Play className="size-3" />
             )}
-            {simulationActive ? "Pause" : "Start"}
+            {simulationActive ? t("common.pause", "Pause") : t("common.start", "Start")}
           </Button>
 
           <Button
@@ -141,7 +143,7 @@ export function FleetSimulation() {
             ) : (
               <RotateCcw className="size-3" />
             )}
-            Reset
+            {t("common.reset", "Reset")}
           </Button>
 
           <Button
@@ -163,7 +165,7 @@ export function FleetSimulation() {
             ) : (
               <Timer className="size-3" />
             )}
-            Detect delays
+            {t("vehicles.detect_delays", "Detect delays")}
           </Button>
         </div>
       </div>

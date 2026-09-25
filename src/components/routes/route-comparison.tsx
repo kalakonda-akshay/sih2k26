@@ -2,9 +2,11 @@
 
 import { useQuery } from "convex/react";
 import { Columns3 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import type { Priority } from "./route-search";
 import { ACCESS_TONE, RISK_TONE, riskLevelFromScore } from "@/lib/risk";
+import { translateOptionLabel } from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 
 /**
@@ -23,6 +25,7 @@ export function RouteComparison({
   destination: string;
   priority: Priority;
 }) {
+  const { t, i18n } = useTranslation();
   const result = useQuery(
     api.routeIntelligence.getRouteOptions,
     origin && destination ? { origin, destination, priority } : "skip",
@@ -40,27 +43,27 @@ export function RouteComparison({
     label: string;
     value: (o: (typeof options)[number]) => React.ReactNode;
   }> = [
-    { label: "Distance", value: (o) => `${o.totalDistanceKm} km` },
-    { label: "Road segments", value: (o) => String(o.segmentCount) },
+    { label: t("routes.distance", "Distance"), value: (o) => `${o.totalDistanceKm} km` },
+    { label: t("routes.road_segments", "Road segments"), value: (o) => String(o.segmentCount) },
     {
-      label: "Average risk",
+      label: t("risk.score", "Average risk"),
       value: (o) => {
-        const t = RISK_TONE[riskLevelFromScore(o.averageRiskScore)];
-        return <span className={t.text}>{o.averageRiskScore}/100</span>;
+        const tone = RISK_TONE[riskLevelFromScore(o.averageRiskScore)];
+        return <span className={tone.text}>{o.averageRiskScore}/100</span>;
       },
     },
-    { label: "Peak segment risk", value: (o) => `${o.maxRiskScore}/100` },
+    { label: t("routes.peak_segment_risk", "Peak segment risk"), value: (o) => `${o.maxRiskScore}/100` },
     {
-      label: "Accessibility",
+      label: t("routes.accessibility", "Accessibility"),
       value: (o) => {
-        const t = ACCESS_TONE[o.worstAccessibility];
-        return <span className={t.text}>{t.label}</span>;
+        const tone = ACCESS_TONE[o.worstAccessibility];
+        return <span className={tone.text}>{t(`routes.status_${o.worstAccessibility}`, tone.label)}</span>;
       },
     },
-    { label: "Restricted segments", value: (o) => String(o.restrictedSegments) },
-    { label: "Active incidents", value: (o) => String(o.incidentCount) },
+    { label: t("routes.restricted_segments", "Restricted segments"), value: (o) => String(o.restrictedSegments) },
+    { label: t("dashboard.metrics.active_incidents", "Active incidents"), value: (o) => String(o.incidentCount) },
     {
-      label: "Critical incidents",
+      label: t("alerts.critical", "Critical incidents"),
       value: (o) => (
         <span
           className={
@@ -73,7 +76,7 @@ export function RouteComparison({
         </span>
       ),
     },
-    { label: "Weighted cost", value: (o) => String(o.totalCost) },
+    { label: t("routes.weighted_cost", "Weighted cost"), value: (o) => String(o.totalCost) },
   ];
 
   return (
@@ -81,9 +84,9 @@ export function RouteComparison({
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <Columns3 className="size-4 text-primary" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">Route Comparison</h3>
+          <h3 className="text-sm font-semibold">{t("routes.route_comparison", "Route Comparison")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Computed values · lower weighted cost wins
+            {t("routes.comparison_subtitle", "Computed values · lower weighted cost wins")}
           </p>
         </div>
       </header>
@@ -93,7 +96,7 @@ export function RouteComparison({
           <thead>
             <tr className="border-b border-border bg-muted/30">
               <th className="px-3 py-2.5 text-left font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                Factor
+                {t("routes.factor", "Factor")}
               </th>
               {options.map((o) => (
                 <th
@@ -105,7 +108,7 @@ export function RouteComparison({
                       : "text-muted-foreground",
                   )}
                 >
-                  {o.label}
+                  {translateOptionLabel(o.label, i18n.language)}
                 </th>
               ))}
             </tr>

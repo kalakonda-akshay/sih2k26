@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { Activity, Radio, ShieldCheck } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { formatClock } from "@/lib/format";
@@ -12,14 +13,15 @@ import { cn } from "@/lib/utils";
  * critical alerts appear.
  */
 export function HeroStatus() {
+  const { t } = useTranslation();
   const m = useQuery(api.dashboard.getMetrics);
 
   const degraded = (m?.blockedRoads ?? 0) > 0 || (m?.criticalAlerts ?? 0) > 0;
   const statusLabel = !m
-    ? "Connecting"
+    ? t("header.connecting", "Connecting")
     : degraded
-      ? "Operational — degraded network"
-      : "System operational";
+      ? t("dashboard.network_degraded", "Operational — degraded network")
+      : t("dashboard.system_operational", "System operational");
 
   return (
     <section className="relative overflow-hidden rounded-lg border border-border bg-card">
@@ -40,11 +42,13 @@ export function HeroStatus() {
             </span>
           </div>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-balance md:text-3xl">
-            North East Logistics Intelligence
+            {t("dashboard.hero_title", "North East Logistics Intelligence")}
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Real-time accessibility, logistics and disruption intelligence
-            across the North Eastern Region.
+            {t(
+              "dashboard.hero_description",
+              "Real-time accessibility, logistics and disruption intelligence across the North Eastern Region.",
+            )}
           </p>
         </div>
 
@@ -54,11 +58,17 @@ export function HeroStatus() {
             label={statusLabel}
             tone={!m ? "moderate" : degraded ? "high" : "safe"}
           />
-          <StatusChip icon={Radio} label="Monitoring 8 states" tone="neutral" />
+          <StatusChip
+            icon={Radio}
+            label={t("dashboard.monitoring_states", "Monitoring 8 states")}
+            tone="neutral"
+          />
           <StatusChip
             icon={Activity}
             label={
-              m ? `Live · ${formatClock(m.lastUpdated)}` : "Awaiting data"
+              m
+                ? `${t("header.live", "Live")} · ${formatClock(m.lastUpdated)}`
+                : t("dashboard.awaiting_data", "Awaiting data")
             }
             tone={m ? "safe" : "moderate"}
             pulse={Boolean(m)}

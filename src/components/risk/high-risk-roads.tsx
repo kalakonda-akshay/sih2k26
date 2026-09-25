@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { ArrowUpRight, Route as RouteIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import {
   ACCESS_TONE,
@@ -10,7 +11,10 @@ import {
   type AccessibilityStatus,
   type RiskLevel,
 } from "@/lib/risk";
-import { timeAgo } from "@/lib/format";
+import {
+  formatLocalizedTimeAgo,
+  translateRiskFactor,
+} from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  * drawn in its accessibility colour.
  */
 export function HighRiskRoads({ limit = 10 }: { limit?: number }) {
+  const { t, i18n } = useTranslation();
   const roads = useQuery(api.riskEngine.getHighRiskRoads, { limit });
 
   return (
@@ -29,9 +34,9 @@ export function HighRiskRoads({ limit = 10 }: { limit?: number }) {
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <RouteIcon className="size-4 text-[oklch(0.727_0.163_55)]" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">High-Risk Roads</h3>
+          <h3 className="text-sm font-semibold">{t("dashboard.metrics.high_risk_roads", "High-Risk Roads")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Corridors in the high or critical band
+            {t("risk.high_or_critical", "Corridors in the high or critical band")}
           </p>
         </div>
         <span className="ml-auto shrink-0 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -51,7 +56,7 @@ export function HighRiskRoads({ limit = 10 }: { limit?: number }) {
         {roads?.length === 0 && (
           <div className="px-4 py-12 text-center">
             <p className="text-sm text-muted-foreground">
-              No corridor is currently in the high or critical band.
+              {t("risk.no_high_risk_roads", "No corridor is currently in the high or critical band.")}
             </p>
           </div>
         )}
@@ -88,21 +93,21 @@ export function HighRiskRoads({ limit = 10 }: { limit?: number }) {
                         accessTone.text,
                       )}
                     >
-                      {accessTone.label}
+                      {t(`routes.status_${road.accessibilityStatus}`, accessTone.label)}
                     </span>
                   </div>
 
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {road.district}, {road.state} · updated{" "}
-                    {timeAgo(road.lastUpdated)}
+                    {road.district}, {road.state} · {t("common.updated", "updated")}{" "}
+                    {formatLocalizedTimeAgo(road.lastUpdated, i18n.language)}
                   </p>
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
                     <span className="font-mono text-[9px] uppercase tracking-[0.13em] text-muted-foreground">
-                      Primary factor
+                      {t("risk.primary_factor", "Primary factor")}
                     </span>
                     <span className="text-[11px] text-foreground/85">
-                      {road.primaryFactor}
+                      {translateRiskFactor(road.primaryFactor, i18n.language)}
                     </span>
                     {road.primaryFactorWeight > 0 && (
                       <span

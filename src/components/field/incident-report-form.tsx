@@ -8,7 +8,16 @@ import {
   isQueueAvailable,
   newClientUuid,
 } from "@/lib/offline-queue";
-import { Camera, CircleCheck, Crosshair, Inbox, Loader2, TriangleAlert, X } from "lucide-react";
+import {
+  Camera,
+  CircleCheck,
+  Crosshair,
+  Inbox,
+  Loader2,
+  TriangleAlert,
+  X,
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { useFieldDraft, useLocationCapture } from "./use-field-draft";
@@ -51,6 +60,7 @@ type Submission =
  * command centre uses.
  */
 export function IncidentReportForm() {
+  const { t } = useTranslation();
   const { draft, setDraft, clearDraft, restored, online } = useFieldDraft();
   const { state: location, capture } = useLocationCapture();
   const currentUser = useQuery(api.users.getCurrentUser);
@@ -226,7 +236,7 @@ export function IncidentReportForm() {
     return (
       <section className="rounded-lg border border-[oklch(0.735_0.155_158)]/35 bg-[oklch(0.735_0.155_158)]/8 p-6 text-center">
         <CircleCheck className="mx-auto size-8 text-[oklch(0.735_0.155_158)]" />
-        <h3 className="mt-3 text-base font-semibold">Report filed</h3>
+        <h3 className="mt-3 text-base font-semibold">{t("common.success", "Report filed")}</h3>
         <p className="mt-1.5 text-sm text-muted-foreground">
           The command centre has it now. Risk and road status update
           automatically.
@@ -235,7 +245,7 @@ export function IncidentReportForm() {
           className="mt-4 h-11 w-full text-sm"
           onClick={() => setSubmission({ state: "idle" })}
         >
-          Report another
+          {t("field.tab_report", "Report another")}
         </Button>
       </section>
     );
@@ -247,7 +257,7 @@ export function IncidentReportForm() {
       className="space-y-4 rounded-lg border border-border bg-card p-4"
     >
       <div>
-        <h3 className="text-base font-semibold">Report an incident</h3>
+        <h3 className="text-base font-semibold">{t("field.tab_report", "Report an incident")}</h3>
         <p className="mt-0.5 text-xs text-muted-foreground">
           Filed straight to the command centre.
         </p>
@@ -255,12 +265,12 @@ export function IncidentReportForm() {
 
       {restored && (
         <p className="rounded-md border border-[oklch(0.815_0.145_88)]/35 bg-[oklch(0.815_0.145_88)]/10 px-3 py-2 text-xs text-[oklch(0.815_0.145_88)]">
-          Unsent draft restored from this device.
+          {t("field.draft_saved", "Unsent draft restored from this device.")}
         </p>
       )}
 
       {/* Type — big touch targets */}
-      <Field label="Incident type">
+      <Field label={t("incidents.incident_type", "Incident type")}>
         <div className="grid grid-cols-2 gap-1.5">
           {INCIDENT_TYPES.map(([value, label]) => (
             <button
@@ -282,7 +292,7 @@ export function IncidentReportForm() {
         </div>
       </Field>
 
-      <Field label="Severity">
+      <Field label={t("incidents.severity", "Severity")}>
         <div className="grid grid-cols-4 gap-1.5">
           {SEVERITIES.map(([value, label]) => (
             <button
@@ -304,18 +314,18 @@ export function IncidentReportForm() {
         </div>
       </Field>
 
-      <Field label="What did you observe?" hint="At least 10 characters">
+      <Field label={t("field.description_label", "What did you observe?")} hint="At least 10 characters">
         <textarea
           value={draft.description}
           onChange={(e) => setDraft({ description: e.target.value })}
           rows={4}
-          placeholder="Debris across both lanes, approx 40 m stretch, impassable to trucks…"
+          placeholder={t("field.description_placeholder", "Debris across both lanes, approx 40 m stretch, impassable to trucks…")}
           className="w-full rounded-md border border-border bg-background p-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         />
       </Field>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Location name">
+        <Field label={t("incidents.location", "Location name")}>
           <input
             value={draft.locationName}
             onChange={(e) => setDraft({ locationName: e.target.value })}
@@ -323,7 +333,7 @@ export function IncidentReportForm() {
             className="h-11 w-full rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           />
         </Field>
-        <Field label="District">
+        <Field label={t("incidents.district", "District")}>
           <input
             value={draft.district}
             onChange={(e) => setDraft({ district: e.target.value })}
@@ -343,7 +353,7 @@ export function IncidentReportForm() {
       </Field>
 
       {/* Location capture */}
-      <Field label="Coordinates" hint="Optional — a single GPS fix, not tracking">
+      <Field label={t("field.location_gps", "Coordinates")} hint="Optional — a single GPS fix, not tracking">
         <Button
           type="button"
           variant="outline"
@@ -358,7 +368,7 @@ export function IncidentReportForm() {
           )}
           {location.status === "granted"
             ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)} (±${Math.round(location.accuracy)} m)`
-            : "Capture my location"}
+            : t("field.location_gps", "Capture my location")}
         </Button>
 
         {location.status === "denied" && (
@@ -375,7 +385,7 @@ export function IncidentReportForm() {
       </Field>
 
       {/* Photo */}
-      <Field label="Photograph" hint="Optional · JPEG or PNG up to 8 MB">
+      <Field label={t("field.photo_label", "Photograph")} hint="Optional · JPEG or PNG up to 8 MB">
         <input
           ref={fileInput}
           type="file"
@@ -390,7 +400,7 @@ export function IncidentReportForm() {
           className="flex h-11 w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <Camera className="size-4" />
-          {photo ? photo.name : "Attach a photograph"}
+          {photo ? photo.name : t("field.photo_label", "Attach a photograph")}
         </label>
 
         {photo && (
@@ -400,7 +410,7 @@ export function IncidentReportForm() {
             className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <X className="size-3" />
-            Remove
+            {t("common.cancel", "Remove")}
           </button>
         )}
         {photoError && (
@@ -414,8 +424,7 @@ export function IncidentReportForm() {
         <p className="flex items-start gap-2 rounded-md border border-[oklch(0.815_0.145_88)]/35 bg-[oklch(0.815_0.145_88)]/10 px-3 py-2 text-xs text-[oklch(0.815_0.145_88)]">
           <TriangleAlert className="mt-px size-3.5 shrink-0" />
           <span>
-            You are offline. Your draft is saved on this device — submit once
-            connectivity returns. Reports are not queued for automatic sending.
+            {t("field.status_offline", "You are offline. Your draft is saved on this device — submit once connectivity returns. Reports are not queued for automatic sending.")}
           </span>
         </p>
       )}
@@ -437,7 +446,7 @@ export function IncidentReportForm() {
             {submission.step}
           </>
         ) : (
-          "File report"
+          t("field.submit_report", "File report")
         )}
       </Button>
 

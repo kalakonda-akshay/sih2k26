@@ -1,44 +1,82 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Layers, RotateCcw, SlidersHorizontal } from "lucide-react";
+import {
+  ChevronDown,
+  CloudRain,
+  Compass,
+  Layers,
+  Map,
+  Maximize,
+  Minimize,
+  Mountain,
+  Navigation,
+  RotateCcw,
+  Ruler,
+  Satellite,
+  Scan,
+  SlidersHorizontal,
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   ALL,
   applyQuickFilter,
   DEFAULT_FILTERS,
   QUICK_FILTERS,
+  type BasemapStyle,
   type LayerToggles,
   type MapFilters,
   type MapIntelligence,
 } from "./types";
 import { cn } from "@/lib/utils";
+import {
+  getTranslatedVehicleStatus,
+  getTranslatedIncidentType,
+  getTranslatedRiskLevel,
+  getTranslatedAccessibility,
+} from "@/lib/risk";
 
-const LAYER_LABELS: Array<{ key: keyof LayerToggles; label: string }> = [
-  { key: "vehicles", label: "Vehicles" },
-  { key: "incidents", label: "Incidents" },
-  { key: "roads", label: "Roads" },
-  { key: "risk", label: "AI Risk" },
-  { key: "weather", label: "Weather" },
+const BASEMAP_OPTIONS: Array<{
+  id: BasemapStyle;
+  labelKey: string;
+  defaultLabel: string;
+  icon: typeof Map;
+}> = [
+  { id: "satellite", labelKey: "map.basemap_satellite", defaultLabel: "Satellite", icon: Satellite },
+  { id: "topo", labelKey: "map.basemap_topo", defaultLabel: "Topo", icon: Mountain },
+  { id: "streets", labelKey: "map.basemap_streets", defaultLabel: "Streets", icon: Navigation },
+  { id: "dark", labelKey: "map.basemap_dark", defaultLabel: "Dark", icon: Map },
 ];
 
 /**
- * Map control panel.
- *
- * Two tiers by design: the quick-filter presets and layer toggles are always
- * visible because they carry most of the value, while the six field-level
- * filters live behind a disclosure so the default view stays uncrowded.
+ * Upgraded Tactical Map control panel.
+ * Includes basemap switcher (Dark, Satellite, Topo, Streets), live Doppler radar toggle,
+ * interactive distance ruler, fit-bounds, NER reset, and fullscreen toggles.
  */
 export function MapControls({
   filters,
   onChange,
   facets,
   counts,
+  measureMode,
+  onToggleMeasure,
+  onFitAll,
+  onResetView,
+  isFullscreen,
+  onToggleFullscreen,
 }: {
   filters: MapFilters;
   onChange: (next: MapFilters) => void;
   facets: MapIntelligence["facets"];
   counts: { vehicles: number; incidents: number; roads: number; risk: number };
+  measureMode?: boolean;
+  onToggleMeasure?: () => void;
+  onFitAll?: () => void;
+  onResetView?: () => void;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }) {
+  const { t } = useTranslation();
   const [showFilters, setShowFilters] = useState(false);
 
   const districts =
@@ -62,125 +100,256 @@ export function MapControls({
       layers: { ...filters.layers, [key]: !filters.layers[key] },
     });
 
-  return (
-    <div className="border-b border-border">
-      {/* Quick filters */}
-      <div className="flex flex-wrap items-center gap-1.5 px-4 py-2.5">
-        <span className="mr-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-          Quick view
-        </span>
-        {QUICK_FILTERS.map((preset) => (
-          <button
-            key={preset.id}
-            type="button"
-            onClick={() => onChange(applyQuickFilter(filters, preset.id))}
-            className="rounded border border-border bg-muted/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-          >
-            {preset.label}
-          </button>
-        ))}
+  const layerLabels: Record<keyof LayerToggles, string> = {
+    vehicles: t("map.layer_vehicles", "Vehicles"),
+    incidents: t("map.layer_incidents", "Incidents"),
+    roads: t("map.layer_roads", "Roads"),
+    risk: t("risk.title", "AI Risk"),
+    weather: t("map.layer_weather", "Weather"),
+    radar: t("map.layer_radar", "Radar"),
+  };
 
-        <button
-          type="button"
-          onClick={() => onChange(DEFAULT_FILTERS)}
-          className="ml-auto flex items-center gap-1 rounded border border-border bg-muted/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-        >
-          <RotateCcw className="size-3" />
-          Reset
-        </button>
+  return (
+    <div className="border-b border-border bg-card">
+      {/* Tier 1: Quick filters and Basemap Selector */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
+        {/* Quick view presets */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-1 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
+            {t("common.filter", "Quick view")}
+          </span>
+          {QUICK_FILTERS.map((preset) => {
+            const quickLabel =
+              preset.id === "all"
+                ? t("map.filter_all", "All Intelligence")
+                : preset.id === "critical"
+                  ? t("map.filter_critical", "Critical Only")
+                  : preset.id === "vehicles"
+                    ? t("map.layer_vehicles", "Vehicles")
+                    : preset.id === "incidents"
+                      ? t("map.layer_incidents", "Incidents")
+                      : preset.id === "roads"
+                        ? t("map.layer_roads", "Road Status")
+                        : t("risk.title", "AI Risk");
+
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => onChange(applyQuickFilter(filters, preset.id))}
+                className="rounded border border-border bg-muted/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                {quickLabel}
+              </button>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={() => onChange(DEFAULT_FILTERS)}
+            className="flex items-center gap-1 rounded border border-border bg-muted/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            <RotateCcw className="size-3" />
+            {t("common.reset", "Reset")}
+          </button>
+        </div>
+
+        {/* Basemap Switcher */}
+        <div className="flex items-center gap-1 rounded-md border border-border/70 bg-muted/30 p-0.5">
+          <span className="px-1.5 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+            {t("map.basemap", "Basemap")}
+          </span>
+          {BASEMAP_OPTIONS.map((bm) => {
+            const Icon = bm.icon;
+            const isSelected = filters.basemap === bm.id;
+            return (
+              <button
+                key={bm.id}
+                type="button"
+                onClick={() => set({ basemap: bm.id })}
+                className={cn(
+                  "flex items-center gap-1 rounded px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider transition-colors",
+                  isSelected
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+                title={t(bm.labelKey, bm.defaultLabel)}
+              >
+                <Icon className="size-2.5" />
+                <span className="hidden sm:inline">{t(bm.labelKey, bm.defaultLabel)}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Layers */}
-      <div className="flex flex-wrap items-center gap-1.5 border-t border-border px-4 py-2.5">
-        <Layers className="mr-0.5 size-3.5 text-muted-foreground" />
-        {LAYER_LABELS.map(({ key, label }) => {
-          const on = filters.layers[key];
-          const count =
-            key === "vehicles"
-              ? counts.vehicles
-              : key === "incidents"
-                ? counts.incidents
-                : key === "roads"
-                  ? counts.roads
-                  : key === "risk"
-                    ? counts.risk
-                    : null;
+      {/* Tier 2: Layer Toggles and Tactical Utility Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-2">
+        {/* Layer toggles */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Layers className="mr-0.5 size-3.5 text-muted-foreground" />
+          {(["vehicles", "incidents", "roads", "risk", "weather", "radar"] as const).map((key) => {
+            const on = filters.layers[key];
+            const label = layerLabels[key];
+            const count =
+              key === "vehicles"
+                ? counts.vehicles
+                : key === "incidents"
+                  ? counts.incidents
+                  : key === "roads"
+                    ? counts.roads
+                    : key === "risk"
+                      ? counts.risk
+                      : null;
 
-          return (
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => toggleLayer(key)}
+                aria-pressed={on}
+                className={cn(
+                  "flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors",
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+                  on
+                    ? key === "radar"
+                      ? "border-sky-500/50 bg-sky-500/15 text-sky-400 font-semibold"
+                      : "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border bg-muted/40 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {key === "radar" && <CloudRain className="size-2.5 animate-pulse" />}
+                {label}
+                {count !== null && (
+                  <span className="tabular opacity-70">{count}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Utility action tools */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* Distance Measure Tool */}
+          {onToggleMeasure && (
             <button
-              key={key}
               type="button"
-              onClick={() => toggleLayer(key)}
-              aria-pressed={on}
+              onClick={onToggleMeasure}
+              title={t("map.measure_distance", "Measure Distance")}
               className={cn(
-                "flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors",
-                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-                on
-                  ? "border-primary/40 bg-primary/10 text-primary"
+                "flex items-center gap-1 rounded border px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors",
+                measureMode
+                  ? "border-sky-500 bg-sky-500/20 text-sky-400 font-semibold shadow-sm"
                   : "border-border bg-muted/40 text-muted-foreground hover:text-foreground",
               )}
             >
-              {label}
-              {count !== null && (
-                <span className="tabular opacity-70">{count}</span>
-              )}
+              <Ruler className="size-3" />
+              <span className="hidden sm:inline">{t("map.measure_distance", "Measure")}</span>
             </button>
-          );
-        })}
+          )}
 
-        <button
-          type="button"
-          onClick={() => setShowFilters((s) => !s)}
-          aria-expanded={showFilters}
-          className={cn(
-            "ml-auto flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-            activeFieldFilters > 0
-              ? "border-primary/40 bg-primary/10 text-primary"
-              : "border-border bg-muted/40 text-muted-foreground hover:text-foreground",
+          {/* Fit all active entities */}
+          {onFitAll && (
+            <button
+              type="button"
+              onClick={onFitAll}
+              title={t("map.fit_bounds", "Fit all active entities")}
+              className="flex items-center gap-1 rounded border border-border bg-muted/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Scan className="size-3" />
+              <span className="hidden sm:inline">{t("map.fit_bounds", "Fit All")}</span>
+            </button>
           )}
-        >
-          <SlidersHorizontal className="size-3" />
-          Filters
-          {activeFieldFilters > 0 && (
-            <span className="tabular">{activeFieldFilters}</span>
+
+          {/* Reset NER overview */}
+          {onResetView && (
+            <button
+              type="button"
+              onClick={onResetView}
+              title={t("map.reset_view", "Reset to Northeast Overview")}
+              className="flex items-center gap-1 rounded border border-border bg-muted/40 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Compass className="size-3" />
+              <span className="hidden sm:inline">{t("map.reset_view", "NER View")}</span>
+            </button>
           )}
-          <ChevronDown
+
+          {/* Fullscreen toggle */}
+          {onToggleFullscreen && (
+            <button
+              type="button"
+              onClick={onToggleFullscreen}
+              title={isFullscreen ? t("map.exit_fullscreen", "Exit Fullscreen") : t("map.fullscreen", "Fullscreen")}
+              className={cn(
+                "flex items-center gap-1 rounded border px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors",
+                isFullscreen
+                  ? "border-primary/50 bg-primary/15 text-primary"
+                  : "border-border bg-muted/40 text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {isFullscreen ? <Minimize className="size-3" /> : <Maximize className="size-3" />}
+              <span className="hidden sm:inline">
+                {isFullscreen ? t("map.exit_fullscreen", "Exit") : t("map.fullscreen", "Fullscreen")}
+              </span>
+            </button>
+          )}
+
+          {/* Detailed field filter disclosure */}
+          <button
+            type="button"
+            onClick={() => setShowFilters((s) => !s)}
+            aria-expanded={showFilters}
             className={cn(
-              "size-3 transition-transform",
-              showFilters && "rotate-180",
+              "flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+              activeFieldFilters > 0
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border bg-muted/40 text-muted-foreground hover:text-foreground",
             )}
-          />
-        </button>
+          >
+            <SlidersHorizontal className="size-3" />
+            {t("common.filter", "Filters")}
+            {activeFieldFilters > 0 && (
+              <span className="tabular">{activeFieldFilters}</span>
+            )}
+            <ChevronDown
+              className={cn(
+                "size-3 transition-transform",
+                showFilters && "rotate-180",
+              )}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Field filters */}
       {showFilters && (
         <div className="grid gap-2.5 border-t border-border px-4 py-3 sm:grid-cols-2 lg:grid-cols-3">
           <Select
-            label="State"
+            label={t("incidents.district", "State")}
             value={filters.state}
             onChange={(v) => set({ state: v, district: ALL })}
             options={facets.states}
           />
           <Select
-            label="District"
+            label={t("incidents.district", "District")}
             value={filters.district}
             onChange={(v) => set({ district: v })}
             options={districts}
             disabled={filters.state === ALL}
             placeholder={
-              filters.state === ALL ? "Select a state first" : "All districts"
+              filters.state === ALL ? t("common.filter", "Select a state first") : t("map.filter_all", "All districts")
             }
           />
           <Select
-            label="Vehicle status"
+            label={t("vehicles.status", "Vehicle status")}
             value={filters.vehicleStatus}
             onChange={(v) => set({ vehicleStatus: v })}
             options={["active", "idle", "delayed", "emergency", "offline"]}
+            formatOption={(opt) => getTranslatedVehicleStatus(opt, t)}
           />
           <Select
-            label="Incident type"
+            label={t("incidents.incident_type", "Incident type")}
             value={filters.incidentType}
             onChange={(v) => set({ incidentType: v })}
             options={[
@@ -192,18 +361,21 @@ export function MapControls({
               "traffic",
               "other",
             ]}
+            formatOption={(opt) => getTranslatedIncidentType(opt, t)}
           />
           <Select
-            label="Risk level"
+            label={t("risk.level", "Risk level")}
             value={filters.riskLevel}
             onChange={(v) => set({ riskLevel: v })}
             options={["low", "moderate", "high", "critical"]}
+            formatOption={(opt) => getTranslatedRiskLevel(opt, t)}
           />
           <Select
-            label="Road accessibility"
+            label={t("map.legend_roads", "Road accessibility")}
             value={filters.accessibility}
             onChange={(v) => set({ accessibility: v })}
             options={["accessible", "restricted", "blocked"]}
+            formatOption={(opt) => getTranslatedAccessibility(opt, t)}
           />
         </div>
       )}
@@ -217,7 +389,8 @@ function Select({
   onChange,
   options,
   disabled,
-  placeholder = "All",
+  placeholder,
+  formatOption,
 }: {
   label: string;
   value: string;
@@ -225,7 +398,11 @@ function Select({
   options: string[];
   disabled?: boolean;
   placeholder?: string;
+  formatOption?: (opt: string) => string;
 }) {
+  const { t } = useTranslation();
+  const defaultPlaceholder = placeholder ?? t("common.all", "All");
+
   return (
     <label className="flex flex-col gap-1">
       <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
@@ -241,10 +418,10 @@ function Select({
           "disabled:cursor-not-allowed disabled:opacity-50",
         )}
       >
-        <option value={ALL}>{placeholder}</option>
+        <option value={ALL}>{defaultPlaceholder}</option>
         {options.map((option) => (
           <option key={option} value={option}>
-            {option.replace(/_/g, " ")}
+            {formatOption ? formatOption(option) : option.replace(/_/g, " ")}
           </option>
         ))}
       </select>

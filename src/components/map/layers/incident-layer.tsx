@@ -51,21 +51,31 @@ export function IncidentLayer({
         const tone = SEVERITY_TONE[lead.severity as Severity];
         const count = cluster.items.length;
 
+        const isCritical = lead.severity === "critical" || lead.severity === "high";
+
         const icon = L.divIcon({
           className: "",
           iconSize: [22, 22],
           iconAnchor: [11, 11],
           popupAnchor: [0, -12],
           html: `
-            <div style="
-              width:22px;height:22px;border-radius:5px;
-              display:flex;align-items:center;justify-content:center;
-              background:${tone.hex}2e;
-              border:1.5px solid ${tone.hex};
-              color:${tone.hex};
-              font:600 11px/1 ui-monospace,monospace;
-              box-shadow:0 0 0 3px ${tone.hex}1a;
-            ">${count > 1 ? count : (CODE[lead.incidentType] ?? "?")}</div>`,
+            <div style="position:relative;width:22px;height:22px;">
+              ${
+                isCritical
+                  ? `<div class="radar-pulse-ring" style="border:2px solid ${tone.hex};box-shadow:0 0 10px ${tone.hex}80;"></div>`
+                  : ""
+              }
+              <div style="
+                position:relative;z-index:2;
+                width:22px;height:22px;border-radius:5px;
+                display:flex;align-items:center;justify-content:center;
+                background:${tone.hex}2e;
+                border:1.5px solid ${tone.hex};
+                color:${tone.hex};
+                font:600 11px/1 ui-monospace,monospace;
+                box-shadow:0 0 0 3px ${tone.hex}1a;
+              ">${count > 1 ? count : (CODE[lead.incidentType] ?? "?")}</div>
+            </div>`,
         });
 
         return (

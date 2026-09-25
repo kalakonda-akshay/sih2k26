@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { Check, ChevronRight, Loader2, ShieldAlert } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import Link from "next/link";
+import { Check, ChevronRight, Loader2, ShieldAlert, Smartphone } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { ALERT_TYPE_LABEL, SEVERITY_TONE, type Severity } from "@/lib/risk";
-import { timeAgo } from "@/lib/format";
+import { formatLocalizedTimeAgo } from "@/lib/i18n/briefing-translator";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  * every connected client sees the change without a refetch.
  */
 export function AlertPanel({ limit = 6 }: { limit?: number }) {
+  const { t, i18n } = useTranslation();
   const alerts = useQuery(api.alerts.listActiveAlerts, { limit });
   const acknowledge = useMutation(api.alerts.acknowledgeAlert);
   const currentUser = useQuery(api.users.getCurrentUser);
@@ -41,9 +44,9 @@ export function AlertPanel({ limit = 6 }: { limit?: number }) {
     <section className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <ShieldAlert className="size-4 text-[oklch(0.648_0.201_22)]" />
-        <h3 className="text-sm font-semibold">Critical Alert Center</h3>
+        <h3 className="text-sm font-semibold">{t("alerts.title", "Critical Alert Center")}</h3>
         <span className="ml-auto font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-          {alerts ? `${alerts.length} active` : "…"}
+          {alerts ? `${alerts.length} ${t("alerts.active_tab", "active")}` : "…"}
         </span>
       </header>
 
@@ -60,7 +63,7 @@ export function AlertPanel({ limit = 6 }: { limit?: number }) {
         {alerts?.length === 0 && (
           <div className="px-4 py-10 text-center">
             <p className="text-sm text-muted-foreground">
-              No active alerts across the region.
+              {t("header.no_active_alerts", "No active alerts across the region.")}
             </p>
           </div>
         )}
@@ -87,13 +90,13 @@ export function AlertPanel({ limit = 6 }: { limit?: number }) {
                       tone.text,
                     )}
                   >
-                    {tone.label}
+                    {t(`risk.${alert.severity}`, tone.label)}
                   </span>
                   <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                    {ALERT_TYPE_LABEL[alert.alertType] ?? alert.alertType}
+                    {t(`alerts.type_${alert.alertType}`, ALERT_TYPE_LABEL[alert.alertType] ?? alert.alertType)}
                   </span>
                   <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground">
-                    {timeAgo(alert.createdAt)}
+                    {formatLocalizedTimeAgo(alert.createdAt, i18n.language)}
                   </span>
                 </div>
 
@@ -102,7 +105,7 @@ export function AlertPanel({ limit = 6 }: { limit?: number }) {
                 </h4>
 
                 <div className="mt-1 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                  {alert.locationName ?? "Region-wide"}
+                  {alert.locationName ?? t("alerts.region_wide", "Region-wide")}
                   {alert.district ? ` · ${alert.district}` : ""}
                 </div>
 
@@ -114,7 +117,7 @@ export function AlertPanel({ limit = 6 }: { limit?: number }) {
 
                 <div className="mt-2.5 rounded-md border border-border bg-background/60 px-2.5 py-2">
                   <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-                    Recommended action
+                    {t("alerts.recommended_action", "Recommended action")}
                   </div>
                   <p
                     className={cn(
@@ -139,8 +142,20 @@ export function AlertPanel({ limit = 6 }: { limit?: number }) {
                     ) : (
                       <Check className="size-3" />
                     )}
-                    Acknowledge
+                    {t("alerts.acknowledge", "Acknowledge")}
                   </Button>
+
+                  <Link href="/emergency" className="inline-flex">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1.5 px-2.5 text-xs border-red-500/40 text-red-500 hover:bg-red-500/10"
+                    >
+                      <Smartphone className="size-3" />
+                      SMS Broadcast
+                    </Button>
+                  </Link>
+
                   <Button
                     size="sm"
                     variant="ghost"
@@ -148,7 +163,7 @@ export function AlertPanel({ limit = 6 }: { limit?: number }) {
                     onClick={() => setExpanded(isOpen ? null : alert._id)}
                     aria-expanded={isOpen}
                   >
-                    {isOpen ? "Less" : "Details"}
+                    {isOpen ? t("common.close", "Less") : t("common.details", "Details")}
                     <ChevronRight
                       className={cn(
                         "size-3 transition-transform",

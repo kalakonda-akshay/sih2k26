@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "convex/react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../../convex/_generated/api";
 import {
   TimeRangeSelector,
@@ -28,6 +29,7 @@ import { DemoControls } from "@/components/dashboard/demo-controls";
  * action — a new incident, an escalated corridor — moves these numbers live.
  */
 export default function AnalyticsPage() {
+  const { t } = useTranslation();
   const [window, setWindow] = useState<TimeWindow>("7d");
 
   return (
@@ -35,10 +37,10 @@ export default function AnalyticsPage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-semibold tracking-tight">
-            Operational Analytics
+            {t("analytics.title", "Operational Analytics")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Activity, performance and decision intelligence across the region.
+            {t("analytics.subtitle", "Activity, performance and decision intelligence across the region.")}
           </p>
         </div>
         <div className="ml-auto">
@@ -75,14 +77,15 @@ export default function AnalyticsPage() {
 /* --------------------------------------------------------------------- */
 
 function StateBreakdown() {
+  const { t } = useTranslation();
   const states = useQuery(api.dashboard.getStateBreakdown);
 
   return (
     <section className="overflow-hidden rounded-lg border border-border bg-card xl:col-span-2">
       <header className="border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold">Connectivity by State</h3>
+        <h3 className="text-sm font-semibold">{t("analytics.connectivity_state", "Connectivity by State")}</h3>
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-          Share of network accessible · restricted · blocked
+          {t("analytics.connectivity_subtitle", "Share of network accessible · restricted · blocked")}
         </p>
       </header>
 
@@ -105,13 +108,12 @@ function StateBreakdown() {
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <h4 className="text-sm font-medium">{state.state}</h4>
                 <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {state.totalRoads} segments · {state.incidents} active
-                  incidents
+                  {state.totalRoads} {t("routes.road_segments", "segments")} · {state.incidents} {t("dashboard.metrics.active_incidents", "active incidents")}
                 </span>
                 <span
                   className={cn("ml-auto font-mono text-xs tabular", tone.text)}
                 >
-                  avg risk {state.avgRiskScore}
+                  {t("risk.score", "avg risk")} {state.avgRiskScore}
                 </span>
               </div>
 
@@ -140,9 +142,9 @@ function StateBreakdown() {
               </div>
 
               <div className="mt-1.5 flex gap-3 font-mono text-[10px] text-muted-foreground">
-                <span>{state.accessible} accessible</span>
-                <span>{state.restricted} restricted</span>
-                <span>{state.blocked} blocked</span>
+                <span>{state.accessible} {t("routes.status_accessible", "accessible")}</span>
+                <span>{state.restricted} {t("routes.status_restricted", "restricted")}</span>
+                <span>{state.blocked} {t("routes.status_blocked", "blocked")}</span>
               </div>
             </div>
           );
@@ -153,14 +155,15 @@ function StateBreakdown() {
 }
 
 function SevereWeather() {
+  const { t } = useTranslation();
   const weather = useQuery(api.weather.getSevereWeatherLocations);
 
   return (
     <section className="overflow-hidden rounded-lg border border-border bg-card">
       <header className="border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold">Severe Weather Watch</h3>
+        <h3 className="text-sm font-semibold">{t("analytics.weather_watch", "Severe Weather Watch")}</h3>
         <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-          Orange and red warnings
+          {t("analytics.weather_warnings", "Orange and red warnings")}
         </p>
       </header>
 
@@ -174,7 +177,7 @@ function SevereWeather() {
 
         {weather?.length === 0 && (
           <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            No active severe-weather warnings.
+            {t("analytics.no_weather_warnings", "No active severe-weather warnings.")}
           </p>
         )}
 

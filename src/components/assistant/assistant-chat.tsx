@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQuery } from "convex/react";
 import { Bot, CornerDownLeft, RotateCcw, Sparkles, SquareFunction } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import { AssistantAnswer } from "./assistant-answer";
 import { AssistantAiAnswer } from "./assistant-ai-answer";
@@ -27,10 +28,18 @@ interface Exchange {
 }
 
 export function AssistantChat() {
+  const { t } = useTranslation();
   const [history, setHistory] = useState<Exchange[]>([]);
   const [draft, setDraft] = useState("");
   const [mode, setMode] = useState<Mode>("rule");
   const suggestions = useQuery(api.assistant.getSuggestions);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (history.length > 0) {
+      transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [history]);
 
   const submit = (question: string) => {
     const trimmed = question.trim();
@@ -49,9 +58,9 @@ export function AssistantChat() {
       <header className="flex items-center gap-2 border-b border-border px-4 py-3">
         <Bot className="size-4 text-primary" />
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold">Operations Assistant</h3>
+          <h3 className="text-sm font-semibold">{t("assistant.title", "Operations Assistant")}</h3>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-            Deterministic · grounded in live Convex data
+            {t("assistant.subtitle", "Deterministic · grounded in live Convex data")}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-1">
@@ -92,7 +101,7 @@ export function AssistantChat() {
               onClick={() => setHistory([])}
             >
               <RotateCcw className="size-3" />
-              Clear
+              {t("common.reset", "Clear")}
             </Button>
           )}
         </div>
@@ -104,13 +113,10 @@ export function AssistantChat() {
           <div className="flex h-full flex-col items-center justify-center px-6 text-center">
             <Bot className="size-8 text-muted-foreground" />
             <h4 className="mt-3 text-sm font-medium">
-              Ask about the current operational picture
+              {t("assistant.suggested_questions", "Ask about the current operational picture")}
             </h4>
             <p className="mt-1.5 max-w-md text-xs leading-relaxed text-muted-foreground">
-              This assistant answers from live database records. It matches a
-              fixed set of operational questions rather than interpreting free
-              language, and it will say so plainly when a question falls
-              outside what it handles.
+              {t("assistant.disclaimer", "This assistant answers from live database records. It matches a fixed set of operational questions rather than interpreting free language, and it will say so plainly when a question falls outside what it handles.")}
             </p>
           </div>
         )}
@@ -128,13 +134,14 @@ export function AssistantChat() {
             />
           ),
         )}
+        <div ref={transcriptEndRef} />
       </div>
 
       {/* Suggestions */}
       {suggestions && suggestions.length > 0 && (
         <div className="border-t border-border px-4 py-2.5">
           <div className="mb-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
-            Supported questions
+            {t("assistant.suggested_questions", "Supported questions")}
           </div>
           <div className="flex flex-wrap gap-1.5">
             {suggestions.map((suggestion) => (
@@ -159,8 +166,8 @@ export function AssistantChat() {
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Ask about incidents, roads, vehicles, deliveries or priorities…"
-          aria-label="Ask the operations assistant"
+          placeholder={t("assistant.input_placeholder", "Ask about incidents, roads, vehicles, deliveries or priorities…")}
+          aria-label={t("assistant.title", "Ask the operations assistant")}
           className="h-9 bg-background text-sm"
         />
         <Button
@@ -169,7 +176,7 @@ export function AssistantChat() {
           className="h-9 gap-1.5 text-xs"
           disabled={draft.trim().length === 0}
         >
-          Ask
+          {t("assistant.send", "Ask")}
           <CornerDownLeft className="size-3" />
         </Button>
       </form>
