@@ -121,9 +121,6 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
       </div>
 
       <div className="ml-auto flex items-center gap-1.5 lg:ml-0">
-        {/* Language Switcher */}
-        <LanguageSwitcher />
-
         {/* Network health */}
         <div className="mr-1 hidden items-center gap-2 rounded-md border border-border bg-card px-2.5 py-1.5 xl:flex">
           <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
