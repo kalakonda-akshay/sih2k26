@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff, LogIn, Loader2 } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Eye, EyeOff, LogIn, Loader2, ShieldCheck, KeyRound, ChevronDown, ChevronUp, UserCheck } from "lucide-react";
 
 /**
  * Email + password login page.
@@ -53,8 +55,17 @@ export default function LoginPage() {
     }
   };
 
+  const credentials = useQuery(api.credentials.listCredentials);
+  const [showCreds, setShowCreds] = useState(false);
+
+  const handleQuickFill = (credEmail: string, credPass: string) => {
+    setEmail(credEmail);
+    setPassword(credPass);
+    setError(null);
+  };
+
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-lg">
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="mb-2 font-mono text-xs uppercase tracking-[0.2em] text-[oklch(0.815_0.145_88)]">
@@ -170,8 +181,76 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {/* Quick Demo Credentials Autofill Accordion */}
+        <div className="mt-6 rounded-lg border border-border/80 bg-background/60 p-3.5">
+          <button
+            type="button"
+            onClick={() => setShowCreds((prev) => !prev)}
+            className="flex w-full items-center justify-between text-xs font-medium text-foreground hover:text-primary transition-colors"
+          >
+            <span className="flex items-center gap-1.5">
+              <KeyRound className="size-3.5 text-primary" />
+              <span>Convex Database Login Credentials ({credentials ? credentials.length : 7})</span>
+            </span>
+            {showCreds ? (
+              <ChevronUp className="size-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="size-4 text-muted-foreground" />
+            )}
+          </button>
+
+          {showCreds && (
+            <div className="mt-3 space-y-2 border-t border-border/60 pt-3">
+              <p className="text-[11px] text-muted-foreground">
+                Click any role to autofill verified credentials stored in Convex:
+              </p>
+              <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-1">
+                {(credentials || []).map((cred) => (
+                  <button
+                    key={cred.email}
+                    type="button"
+                    onClick={() => handleQuickFill(cred.email, cred.password)}
+                    className="flex items-start justify-between rounded-md border border-border/60 bg-card p-2 text-left hover:border-primary/60 hover:bg-primary/5 transition-all group"
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium text-xs text-foreground group-hover:text-primary">
+                          {cred.name}
+                        </span>
+                        <span
+                          className={`text-[9px] font-mono uppercase px-1.5 py-0.2 rounded border ${
+                            cred.role === "admin"
+                              ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                              : cred.role === "logistics_operator"
+                                ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                                : cred.role === "emergency_authority"
+                                  ? "bg-purple-500/10 text-purple-400 border-purple-500/30"
+                                  : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                          }`}
+                        >
+                          {cred.role.replace("_", " ")}
+                        </span>
+                      </div>
+                      <div className="text-[11px] font-mono text-muted-foreground">
+                        {cred.email}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground/80">
+                        Pass: <span className="font-mono text-foreground font-semibold">{cred.password}</span>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-[10px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1">
+                      <UserCheck className="size-3" />
+                      Autofill
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Footer link */}
-        <p className="mt-6 text-center text-sm text-muted-foreground">
+        <p className="mt-5 text-center text-sm text-muted-foreground">
           {t("auth.no_account", "Don't have an account?")}{" "}
           <Link href="/signup" className="font-medium text-primary hover:underline">
             {t("auth.sign_up_link", "Sign up")}

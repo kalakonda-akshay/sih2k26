@@ -89,20 +89,36 @@ JWT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBK
 FAST2SMS_API_KEY=uSNFzrHsLMl0iDdOB1nRm4QKk5yZbwfTCe6qWxA9Ig7hG2VpJo9Ta7ZIp0dxgRVctbjzLEvYG4FUkKQ2
 ```
 
-### Verified User Accounts
-| Email | Password | Role | Permissions |
-| :--- | :--- | :--- | :--- |
-| `akshaykalakonda9@gmail.com` | `Ram@6002` | `admin` | Full System Access (MDoNER Regional Commander) |
-| `admin@nervision.gov.in` | Seeded Demo | `admin` | Master Administrative Access |
-| `operator@nervision.gov.in` | Seeded Demo | `logistics_operator` | Fleet Dispatch & Route Planning |
-| `field.eastkameng@nervision.gov.in` | Seeded Demo | `field_officer` | Incident Logging & Drone Inspection |
-| `emergency@nervision.gov.in` | Seeded Demo | `emergency_authority` | Disaster Alerts & SitRep Exports |
+### Verified User Accounts (Synchronized in Convex Database)
+All credentials below are stored in the `loginCredentials` table in Convex and wired into Convex Auth (`authAccounts` with Lucia Scrypt hashing). Any of these accounts can be used to log in at `https://sih2k26-one.vercel.app/login` or via the one-click quick-fill drawer:
+
+| Email | Password | Role | Organization | Permissions / Tiers |
+| :--- | :--- | :--- | :--- | :--- |
+| `akshaykalakonda9@gmail.com` | `Ram@6002` | `admin` | MDoNER — Regional Command | Full System Access (MDoNER Regional Commander) |
+| `admin@nervision.gov.in` | `Admin@123` | `admin` | MDoNER — Regional Command | Master Administrative Access |
+| `operator@nervision.gov.in` | `Operator@123` | `logistics_operator` | NE Logistics Corporation | Fleet Dispatch & Convoy Route Planning |
+| `field.eastkameng@nervision.gov.in` | `Field@123` | `field_officer` | Arunachal PWD — East Kameng | Incident Logging & Drone Inspection |
+| `field.ribhoi@nervision.gov.in` | `Field@123` | `field_officer` | Meghalaya PWD — Ri-Bhoi | Rapid Landslide Reporting & Offline Mesh Sync |
+| `emergency@nervision.gov.in` | `Emergency@123` | `emergency_authority` | State Disaster Management Authority | Fast2SMS Alerts, Sirens & SitRep Exports |
+| `operator.mizoram@nervision.gov.in` | `Operator@123` | `logistics_operator` | Mizoram State Transport | Southern NER Hill Corridors Dispatch |
 
 ---
 
 ## 4. Database Schema Specification (`convex/schema.ts`)
 
-The backend schema spread includes Convex Auth default tables (`authTables`) along with 10 custom domain models:
+The backend schema spread includes Convex Auth default tables (`authTables`) along with 11 custom domain models:
+
+### 4.0 `loginCredentials` (Active Credentials Catalog)
+- `email`: `v.string()` (Indexed: `by_email`)
+- `password`: `v.string()` (Plaintext reference for demo & automated test agents)
+- `name`: `v.string()`
+- `role`: `userRole` (`admin`, `logistics_operator`, `field_officer`, `emergency_authority`) (Indexed: `by_role`)
+- `organization`: `v.string()`
+- `phone`: `v.string()`
+- `district`, `state`: `v.optional(v.string())`
+- `description`: `v.string()`
+- `isDefaultAdmin`: `v.boolean()`
+- `createdAt`, `updatedAt`: `v.number()`
 
 ### 4.1 `users`
 - `email`: `v.optional(v.string())` (Indexed: `email`, `by_email`)

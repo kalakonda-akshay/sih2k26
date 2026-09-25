@@ -98,6 +98,29 @@ export default defineSchema({
     .index("by_tokenIdentifier", ["tokenIdentifier"])
     .index("by_role_and_isActive", ["role", "isActive"]),
 
+  /* ======================================================= loginCredentials */
+  /**
+   * Reference catalog of active system login credentials.
+   * Stored directly in the Convex database so administrators, operators,
+   * evaluators, and automated agents can inspect login accounts and tiers.
+   */
+  loginCredentials: defineTable({
+    email: v.string(),
+    password: v.string(),
+    name: v.string(),
+    role: userRole,
+    organization: v.string(),
+    phone: v.string(),
+    district: v.optional(v.string()),
+    state: v.optional(v.string()),
+    description: v.string(),
+    isDefaultAdmin: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_role", ["role"]),
+
   /* ============================================================= vehicles */
   vehicles: defineTable({
     vehicleNumber: v.string(),

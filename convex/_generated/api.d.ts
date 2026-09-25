@@ -15,6 +15,7 @@ import type * as analytics from "../analytics.js";
 import type * as assistant from "../assistant.js";
 import type * as auth from "../auth.js";
 import type * as briefing from "../briefing.js";
+import type * as credentials from "../credentials.js";
 import type * as dashboard from "../dashboard.js";
 import type * as deliveries from "../deliveries.js";
 import type * as demo from "../demo.js";
@@ -55,6 +56,7 @@ declare const fullApi: ApiFromModules<{
   assistant: typeof assistant;
   auth: typeof auth;
   briefing: typeof briefing;
+  credentials: typeof credentials;
   dashboard: typeof dashboard;
   deliveries: typeof deliveries;
   demo: typeof demo;
