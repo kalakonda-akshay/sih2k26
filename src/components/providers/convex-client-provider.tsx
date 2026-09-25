@@ -1,10 +1,13 @@
 "use client";
 
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
+import { ConvexReactClient } from "convex/react";
 import { type ReactNode, useMemo } from "react";
 
 /**
- * Convex client provider.
+ * Convex client provider — now wraps with ConvexAuthNextjsProvider from
+ * @convex-dev/auth so that auth tokens are managed via Next.js cookies and
+ * all child components can call useAuthActions() / useConvexAuth().
  *
  * `NEXT_PUBLIC_CONVEX_URL` is written by `npx convex dev` into `.env.local`.
  * It is a public deployment URL, not a secret — no key is ever exposed here.
@@ -23,7 +26,11 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
 
   if (!client) return <ConvexSetupNotice />;
 
-  return <ConvexProvider client={client}>{children}</ConvexProvider>;
+  return (
+    <ConvexAuthNextjsProvider client={client}>
+      {children}
+    </ConvexAuthNextjsProvider>
+  );
 }
 
 function ConvexSetupNotice() {

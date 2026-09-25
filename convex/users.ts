@@ -1,23 +1,30 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { userRole } from "./lib/validators";
+import { getAuthUserId } from "@convex-dev/auth/server";
+
 
 /**
  * Returns the signed-in user.
  *
- * No auth provider is wired up in this phase. The lookup path for a real
- * provider is already here — when Convex Auth / Clerk is added, identities
- * resolve through `tokenIdentifier` and nothing else has to change.
+ * Primary lookup: getAuthUserId from @convex-dev/auth reads the JWT and
+ * returns the user's Convex document ID directly. This is the authoritative
+ * path when the user has signed in via email+password.
  *
- * Until then this falls back to the seeded administrator so the shell has a
- * user context to render. That fallback reads a real row from the database;
- * it is not a hardcoded object.
+ * Fallback: returns the seeded demo administrator so the dashboard renders
+ * during development / demo before any real sign-in has happened.
  */
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
+    // Primary: convex-dev/auth session
+    const userId = await getAuthUserId(ctx);
+    if (userId) {
+      return await ctx.db.get(userId);
+    }
 
+    // Secondary: legacy tokenIdentifier path (kept for future Clerk/Auth0 wiring)
+    const identity = await ctx.auth.getUserIdentity();
     if (identity) {
       const user = await ctx.db
         .query("users")
@@ -28,7 +35,7 @@ export const getCurrentUser = query({
       if (user) return user;
     }
 
-    // Phase-2 development fallback: the seeded admin.
+    // Development fallback: the seeded admin.
     return await ctx.db
       .query("users")
       .withIndex("by_role_and_isActive", (q) =>
@@ -77,7 +84,7 @@ export const createUser = mutation({
     // Email is the natural key — never create a second row for the same one.
     const existing = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .withIndex("email", (q) => q.eq("email", args.email))
       .unique();
     if (existing) return existing._id;
 
@@ -126,6 +133,43 @@ export const updateUserRole = mutation({
     if (!user) throw new Error(`User ${userId} not found`);
 
     await ctx.db.patch(userId, { role, updatedAt: Date.now() });
+    return userId;
+  },
+});
+
+/**
+ * Save extra profile fields for the currently signed-in user.
+ *
+ * Called on the client after a successful signup so that name, role,
+ * organization, etc. are stored on the user document that convex-dev/auth
+ * creates. Only writes to the caller's own record — no userId arg needed.
+ */
+export const saveUserProfile = mutation({
+  args: {
+    name: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    organization: v.optional(v.string()),
+    district: v.optional(v.string()),
+    state: v.optional(v.string()),
+    preferredLanguage: v.optional(v.string()),
+    role: v.optional(userRole),
+    isActive: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    const now = Date.now();
+    // Drop undefined values so we never overwrite existing fields with undefined.
+    const defined = Object.fromEntries(
+      Object.entries(args).filter(([, val]) => val !== undefined),
+    );
+
+    await ctx.db.patch(userId, {
+      ...defined,
+      updatedAt: now,
+      // Only set createdAt on first write (i.e. if not already set).
+    });
     return userId;
   },
 });

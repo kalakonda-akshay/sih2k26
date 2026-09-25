@@ -248,7 +248,7 @@ export const seedDemoData = mutation({
     for (const u of USERS) {
       const found = await ctx.db
         .query("users")
-        .withIndex("by_email", (q) => q.eq("email", u.email))
+        .withIndex("email", (q) => q.eq("email", u.email))
         .unique();
       if (found) {
         // Email is the natural key, so a returning user is matched by email

@@ -1,4 +1,4 @@
-{
+﻿{
   "_metadata": {
     "language": "Manipuri (Meitei)",
     "nativeName": "মৈতৈলোন্ (মণিপুরী)",
@@ -364,5 +364,37 @@
     "step_6": "খোংথাং ৬",
     "reset_scenario": "অমুক হন্না শেম্বা",
     "convex_note": "থবক পুম্নমক Convex দা ইশিনগনি। অনিমক চপ মান্ননা হোংবা য়েংনবা অনিশুবা উইন্দোদা হাংদোকউ।"
+  }  ,
+  "auth": {
+    "login_title": "Sign In",
+    "login_subtitle": "Sign in to your NER-Vision AI account",
+    "signup_title": "Create Account",
+    "signup_subtitle": "Join the NER-Vision AI platform",
+    "full_name": "Full Name",
+    "email": "Email Address",
+    "password": "Password",
+    "confirm_password": "Confirm Password",
+    "show_password": "Show password",
+    "hide_password": "Hide password",
+    "sign_in": "Sign In",
+    "sign_up": "Create Account",
+    "signing_in": "Signing in\u2026",
+    "signing_up": "Creating account\u2026",
+    "forgot_password": "Forgot password?",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "sign_up_link": "Sign up",
+    "sign_in_link": "Sign in",
+    "invalid_credentials": "Invalid email or password.",
+    "email_taken": "An account with this email already exists.",
+    "password_weak": "Password must be at least 8 characters with at least one number.",
+    "passwords_mismatch": "Passwords do not match.",
+    "invalid_email": "Please enter a valid email address.",
+    "name_required": "Full name is required.",
+    "network_error": "Connection error. Please try again.",
+    "logout": "Sign Out",
+    "forgot_password_title": "Reset Password",
+    "forgot_password_coming_soon": "Password reset will be available soon. Please contact your administrator.",
+    "back_to_login": "Back to Sign In"
   }
 }

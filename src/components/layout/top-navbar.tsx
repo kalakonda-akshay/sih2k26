@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { useTranslation } from "react-i18next";
-import { Bell, Menu, Search } from "lucide-react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { Bell, Menu, Search, LogOut } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { NAV_ITEMS } from "./app-sidebar";
 import { DocumentsMenu } from "./documents-menu";
@@ -44,6 +45,7 @@ const NAV_TITLE_KEY: Record<string, string> = {
 export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const { signOut } = useAuthActions();
   const metrics = useQuery(api.dashboard.getMetrics);
   const alerts = useQuery(api.alerts.listActiveAlerts, { limit: 6 });
   const currentUser = useQuery(api.users.getCurrentUser);
@@ -256,6 +258,18 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem render={<Link href="/settings" />}>
               {t("nav.settings", "Settings")}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() =>
+                void signOut().then(() => {
+                  window.location.href = "/login";
+                })
+              }
+            >
+              <LogOut className="mr-2 size-4" />
+              {t("auth.logout", "Sign Out")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

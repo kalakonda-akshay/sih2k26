@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
 import {
   accessibilityStatus,
   activityCategory,
@@ -42,28 +43,57 @@ import {
  *   dashboard query ever performs a full table scan.
  */
 export default defineSchema({
+  // Spread auth tables first (authSessions, authAccounts, authRefreshTokens,
+  // authVerificationCodes, authVerifiers, authRateLimits).
+  // We intentionally override "users" below to merge auth fields with app fields.
+  ...authTables,
+
   /* ================================================================ users */
+  /**
+   * The users table merges the fields required by @convex-dev/auth with the
+   * app-specific profile fields. All fields are optional to allow both the
+   * auth library (which creates minimal user rows) and our seeded demo users
+   * (which have full profiles) to coexist without migration.
+   */
   users: defineTable({
-    name: v.string(),
-    email: v.string(),
-    role: userRole,
-    organization: v.optional(v.string()),
+    // ── @convex-dev/auth required fields ────────────────────────────────────
+    /** Display name (set by auth provider or profile update). */
+    name: v.optional(v.string()),
+    /** Email address used for sign-in. */
+    email: v.optional(v.string()),
+    /** Phone number (for phone-based auth). */
     phone: v.optional(v.string()),
+    /** Profile image URL from OAuth provider. */
+    image: v.optional(v.string()),
+    /** Unix ms when email was verified. */
+    emailVerificationTime: v.optional(v.number()),
+    /** Unix ms when phone was verified. */
+    phoneVerificationTime: v.optional(v.number()),
+    /** Whether this is a guest / anonymous session user. */
+    isAnonymous: v.optional(v.boolean()),
+
+    // ── NER-Vision AI profile fields ─────────────────────────────────────────
+    role: v.optional(userRole),
+    organization: v.optional(v.string()),
+    /** Legacy URL field kept for seeded demo rows. New rows use `image`. */
     profileImage: v.optional(v.string()),
-    isActive: v.boolean(),
+    isActive: v.optional(v.boolean()),
     /**
-     * Reserved for future role-based auth (Convex Auth / Clerk / Auth0).
-     * Left optional and unused in this phase so that wiring a provider later
-     * is a pure addition — no migration, no backfill.
+     * Reserved for future identity-provider token identifiers (Clerk, etc.).
+     * Kept optional so wiring a second provider is a pure addition.
      */
     tokenIdentifier: v.optional(v.string()),
-    /** District the officer is assigned to; scopes field-officer queries. */
     district: v.optional(v.string()),
     state: v.optional(v.string()),
-    createdAt: v.number(),
-    updatedAt: v.number(),
+    preferredLanguage: v.optional(v.string()),
+    /** Backdated for seed; auth-created rows default to Date.now(). */
+    createdAt: v.optional(v.number()),
+    updatedAt: v.optional(v.number()),
   })
-    .index("by_email", ["email"])
+    // Required by @convex-dev/auth — DO NOT rename or remove.
+    .index("email", ["email"])
+    .index("phone", ["phone"])
+    // App indexes
     .index("by_role", ["role"])
     .index("by_tokenIdentifier", ["tokenIdentifier"])
     .index("by_role_and_isActive", ["role", "isActive"]),
