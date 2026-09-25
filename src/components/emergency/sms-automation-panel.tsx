@@ -19,6 +19,8 @@ import {
   Trash2,
   Users,
   Zap,
+  X,
+  ExternalLink,
 } from "lucide-react";
 import {
   EmergencyContact,
@@ -79,6 +81,7 @@ export function SmsAutomationPanel({ currentAlert }: SmsAutomationPanelProps) {
   const [textbeeDeviceId, setTextbeeDeviceId] = useState("");
   const [walletBalance, setWalletBalance] = useState<{ wallet: string; smsCount: number } | null>(null);
   const [isSimulationMode, setIsSimulationMode] = useState<boolean>(true); // default safe for testing!
+  const [fast2smsNotice, setFast2smsNotice] = useState<string | null>(null);
 
   // New Contact form
   const [showAddForm, setShowAddForm] = useState(false);
@@ -292,9 +295,17 @@ export function SmsAutomationPanel({ currentAlert }: SmsAutomationPanelProps) {
           .catch(() => {});
       }
 
-      if (!data.success && data.error === "NO_GATEWAY_CONFIGURED") {
+      if (!data.success) {
         setIsBroadcasting(false);
-        setGatewayModalOpen(true);
+        if (data.hasStatus999 || data.error === "FAST2SMS_API_LOCKED") {
+          setFast2smsNotice(
+            "Fast2SMS API Requirement (Code 999): Fast2SMS requires an initial one-time ₹100 transaction on fast2sms.com before automated API calls can be processed. (Your account has ₹50 balance for the website dashboard). To send real SMS immediately at ₹0 cost, use Direct Phone Dispatch or WhatsApp below!",
+          );
+        } else if (data.error === "NO_GATEWAY_CONFIGURED") {
+          setGatewayModalOpen(true);
+        } else {
+          setFast2smsNotice(data.message || "Failed to dispatch via gateway.");
+        }
         return;
       }
     } catch (err) {
@@ -547,6 +558,67 @@ export function SmsAutomationPanel({ currentAlert }: SmsAutomationPanelProps) {
       {/* TAB 1: BROADCAST CONSOLE */}
       {activeTab === "broadcast" && (
         <div className="p-4 sm:p-5 space-y-5">
+          {/* Fast2SMS API Requirement Banner */}
+          {fast2smsNotice && (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 p-4 space-y-3 animate-in fade-in-50">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2.5">
+                  <AlertTriangle className="size-5 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h5 className="font-semibold text-sm text-amber-300">
+                      Fast2SMS Gateway Notice (Code 999)
+                    </h5>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {fast2smsNotice}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setFast2smsNotice(null)}
+                  className="size-6 p-0 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-amber-500/20 text-xs">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const first = contacts.find((c) => c.enabled);
+                    if (first) handleSendSingleSms(first);
+                  }}
+                  className="h-8 text-xs gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-medium"
+                >
+                  <Smartphone className="size-3.5" /> Send Free via Phone SIM (sms:)
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const first = contacts.find((c) => c.enabled);
+                    if (first) handleSendSingleWhatsApp(first);
+                  }}
+                  className="h-8 text-xs gap-1.5 border-emerald-500/40 text-emerald-400 bg-emerald-950/30 hover:bg-emerald-900/50"
+                >
+                  <Send className="size-3.5" /> Send Free via WhatsApp
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => window.open("https://www.fast2sms.com/dashboard/recharge", "_blank")}
+                  className="h-8 text-xs gap-1 text-muted-foreground hover:text-foreground ml-auto"
+                >
+                  <ExternalLink className="size-3.5" /> Recharge ₹100 on Fast2SMS
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Active Alert Header */}
           <div className="rounded-lg border border-border bg-accent/20 p-4">
             <div className="flex items-start justify-between gap-3">

@@ -82,10 +82,13 @@ export async function POST(req: NextRequest) {
             }),
           });
           const data = await resp.json();
+          const isSuccess = data.return === true;
           results.push({
             phone: r.phone,
-            success: data.return === true,
+            success: isSuccess,
             provider: "fast2sms",
+            statusCode: data.status_code,
+            message: data.message,
             data,
           });
         } catch (err: any) {
@@ -98,8 +101,25 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      const hasStatus999 = results.some((r) => r.statusCode === 999);
+      const anySuccess = results.some((r) => r.success);
+
+      if (!anySuccess) {
+        return NextResponse.json({
+          success: false,
+          provider: "fast2sms",
+          error: hasStatus999 ? "FAST2SMS_API_LOCKED" : "FAST2SMS_FAILED",
+          hasStatus999,
+          statusCode: hasStatus999 ? 999 : results[0]?.statusCode || 400,
+          message: hasStatus999
+            ? "Fast2SMS requires a one-time transaction of 100 INR or more on fast2sms.com before unlocking automated HTTP API dispatch. Use native device SMS or WhatsApp for ₹0 free delivery."
+            : results[0]?.message || "Fast2SMS gateway rejected message.",
+          results,
+        });
+      }
+
       return NextResponse.json({
-        success: results.some((r) => r.success),
+        success: true,
         provider: "fast2sms",
         results,
       });
