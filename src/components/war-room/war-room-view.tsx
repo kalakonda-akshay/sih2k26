@@ -82,39 +82,39 @@ function playSynthesizedSiren(level: number = 1) {
     const gain = ctx.createGain();
     const now = ctx.currentTime;
 
-    if (level === 1) {
-      // DEFCON 1: Urgent 450Hz - 950Hz defense wail
+    if (level === 3) {
+      // Level 3 Critical Emergency: Urgent 450Hz - 950Hz defense wail
       osc.type = "sawtooth";
       osc.frequency.setValueAtTime(450, now);
       osc.frequency.linearRampToValueAtTime(950, now + 0.35);
       osc.frequency.linearRampToValueAtTime(450, now + 0.7);
       osc.frequency.linearRampToValueAtTime(950, now + 1.05);
       osc.frequency.linearRampToValueAtTime(450, now + 1.4);
-      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.setValueAtTime(0.2, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 1.48);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(now + 1.5);
     } else if (level === 2) {
-      // DEFCON 2: Elevated 520Hz - 780Hz warning pulses
+      // Level 2 High Alert: Elevated 520Hz - 780Hz warning pulses
       osc.type = "square";
       osc.frequency.setValueAtTime(520, now);
       osc.frequency.setValueAtTime(780, now + 0.3);
       osc.frequency.setValueAtTime(520, now + 0.6);
       osc.frequency.setValueAtTime(780, now + 0.9);
-      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.setValueAtTime(0.14, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(now + 1.25);
     } else {
-      // DEFCON 3: Advisory 440Hz / 880Hz chime
+      // Level 1 Advisory: 440Hz / 880Hz chime
       osc.type = "sine";
       osc.frequency.setValueAtTime(440, now);
       osc.frequency.exponentialRampToValueAtTime(880, now + 0.35);
-      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.setValueAtTime(0.12, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -126,32 +126,57 @@ function playSynthesizedSiren(level: number = 1) {
   }
 }
 
-/** Plays the audio siren for the specific DEFCON level (prioritizing uploaded audio files) */
-function playSirenForDefcon(level: number = 1, customSirens?: Record<number, string>) {
+export const LEVEL_SIREN_MAP: Record<
+  number,
+  { path: string; name: string; altPath: string; fileLabel: string }
+> = {
+  1: {
+    path: "/audio/level_1_advisory.wav",
+    name: "Level 1 Advisory",
+    altPath: "/audio/siren-defcon1.wav",
+    fileLabel: "level_1_advisory.wav",
+  },
+  2: {
+    path: "/audio/level_2_high_alert.wav",
+    name: "Level 2 High Alert",
+    altPath: "/audio/siren-defcon2.wav",
+    fileLabel: "level_2_high_alert.wav",
+  },
+  3: {
+    path: "/audio/level_3_critical_emergency.wav",
+    name: "Level 3 Critical Emergency",
+    altPath: "/audio/siren-defcon3.wav",
+    fileLabel: "level_3_critical_emergency.wav",
+  },
+};
+
+/** Plays the audio siren for the specific Level (prioritizing uploaded audio files) */
+function playSirenForDefcon(level: number = 2, customSirens?: Record<number, string>) {
   if (typeof window === "undefined") return;
   try {
     // 1. Check in-memory uploaded siren if operator uploaded custom audio via UI
     if (customSirens && customSirens[level]) {
       const audio = new Audio(customSirens[level]);
-      audio.volume = 0.9;
+      audio.volume = 0.95;
       audio.play().catch(() => playSynthesizedSiren(level));
       return;
     }
-    // 2. Play from uploaded static audio files /audio/siren-defcon{1,2,3}.wav or .mp3
-    const audioWav = new Audio(`/audio/siren-defcon${level}.wav`);
-    audioWav.volume = 0.9;
+    // 2. Play from uploaded static audio files: level_1_advisory.wav, level_2_high_alert.wav, level_3_critical_emergency.wav
+    const config = LEVEL_SIREN_MAP[level] || LEVEL_SIREN_MAP[2];
+    const audioWav = new Audio(config.path);
+    audioWav.volume = 0.95;
     audioWav.play().catch(() => {
-      const audioMp3 = new Audio(`/audio/siren-defcon${level}.mp3`);
-      audioMp3.volume = 0.9;
-      audioMp3.play().catch(() => playSynthesizedSiren(level));
+      const audioAlt = new Audio(config.altPath);
+      audioAlt.volume = 0.95;
+      audioAlt.play().catch(() => playSynthesizedSiren(level));
     });
   } catch {
     playSynthesizedSiren(level);
   }
 }
 
-/** Legacy alias pointing to DEFCON 1 siren */
-function playEmergencySirenBurst(level: number = 1) {
+/** Legacy alias pointing to Level 3 critical siren */
+function playEmergencySirenBurst(level: number = 3) {
   playSirenForDefcon(level);
 }
 
@@ -526,10 +551,14 @@ export function WarRoomView({
 
         {/* Right: DEFCON, Clock & Controls */}
         <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
-          {/* DEFCON Selector for all 3 levels */}
+          {/* Alert Level Selector */}
           <div className="flex items-center gap-1 rounded-md border border-border/70 bg-black/50 p-0.5 font-mono text-[10px]">
-            <span className="px-1 text-[9px] text-muted-foreground uppercase font-semibold hidden md:inline">LEVEL:</span>
-            {[1, 2, 3].map((lvl) => (
+            <span className="px-1 text-[9px] text-muted-foreground uppercase font-semibold hidden md:inline">ALERT:</span>
+            {[
+              { lvl: 1, label: "L1 ADVISORY", activeClass: "bg-emerald-600 text-white shadow-md shadow-emerald-600/40" },
+              { lvl: 2, label: "L2 HIGH ALERT", activeClass: "bg-amber-600 text-white shadow-md shadow-amber-600/40" },
+              { lvl: 3, label: "L3 CRITICAL", activeClass: "bg-red-600 text-white shadow-lg shadow-red-600/50 animate-pulse" },
+            ].map(({ lvl, label, activeClass }) => (
               <button
                 key={lvl}
                 type="button"
@@ -539,16 +568,12 @@ export function WarRoomView({
                 }}
                 className={`px-2 py-0.5 rounded font-bold transition-all whitespace-nowrap ${
                   activeDefcon === lvl
-                    ? lvl === 1
-                      ? "bg-red-600 text-white shadow-lg shadow-red-600/50 animate-pulse"
-                      : lvl === 2
-                        ? "bg-amber-600 text-white shadow-md shadow-amber-600/40"
-                        : "bg-emerald-600 text-white"
+                    ? activeClass
                     : "text-muted-foreground hover:text-foreground"
                 }`}
-                title={`Switch to DEFCON ${lvl} and play siren`}
+                title={`Switch to ${label} and trigger siren audio`}
               >
-                DEFCON {lvl}
+                {label}
               </button>
             ))}
           </div>
@@ -581,17 +606,23 @@ export function WarRoomView({
               variant="ghost"
               onClick={() => playSirenForDefcon(activeDefcon, customSirens)}
               className="h-8 gap-1.5 px-2.5 text-red-300 hover:bg-red-900/40 hover:text-red-200 font-mono text-xs rounded-none border-0"
-              title={`Play Siren for Active DEFCON ${activeDefcon}`}
+              title={`Play ${LEVEL_SIREN_MAP[activeDefcon]?.name || 'Siren'}`}
             >
               <Siren className="size-3.5 text-red-400 animate-pulse" />
-              <span>Siren (L{activeDefcon})</span>
+              <span>
+                {activeDefcon === 1
+                  ? "Siren (L1 Advisory)"
+                  : activeDefcon === 2
+                    ? "Siren (L2 High Alert)"
+                    : "Siren (L3 Critical)"}
+              </span>
             </Button>
             <Button
               size="sm"
               variant="ghost"
               onClick={() => setSirenUploadModalOpen(true)}
               className="h-8 px-2 text-red-400 hover:bg-red-900/40 hover:text-red-200 rounded-none border-l border-red-500/30"
-              title="Manage & Upload 3-Level Sirens"
+              title="Manage & Inspect 3 Siren Levels"
             >
               <SlidersHorizontal className="size-3" />
             </Button>
@@ -1310,27 +1341,27 @@ export function WarRoomView({
               {[
                 {
                   level: 1,
-                  title: "DEFCON 1 · Maximum Threat / Road Blocked",
-                  color: "border-red-500/50 bg-red-950/20 text-red-400",
-                  badge: "bg-red-500 text-white",
-                  path: "/audio/siren-defcon1.wav",
-                  desc: "High-urgency wailing defense sweep for full NH blockages & active landslide crisis.",
+                  title: "Level 1 · Advisory (level_1_advisory.wav)",
+                  color: "border-emerald-500/50 bg-emerald-950/20 text-emerald-400",
+                  badge: "bg-emerald-600 text-white",
+                  path: "/audio/level_1_advisory.wav",
+                  desc: "Precautionary advisory chime for route maintenance, light weather advisories & readiness.",
                 },
                 {
                   level: 2,
-                  title: "DEFCON 2 · Elevated Risk / Convoy Diverting",
+                  title: "Level 2 · High Alert (level_2_high_alert.wav)",
                   color: "border-amber-500/50 bg-amber-950/20 text-amber-400",
-                  badge: "bg-amber-500 text-white",
-                  path: "/audio/siren-defcon2.wav",
-                  desc: "Rapid alternating warning tone for high hazard, flash flood risks & critical bridge alerts.",
+                  badge: "bg-amber-600 text-white",
+                  path: "/audio/level_2_high_alert.wav",
+                  desc: "Elevated hazard siren for severe weather, bridge vulnerabilities & active convoy diversion.",
                 },
                 {
                   level: 3,
-                  title: "DEFCON 3 · Precautionary Advisory / Readiness",
-                  color: "border-emerald-500/50 bg-emerald-950/20 text-emerald-400",
-                  badge: "bg-emerald-500 text-white",
-                  path: "/audio/siren-defcon3.wav",
-                  desc: "Advisory chime & pulse for IMD monsoon warnings, heavy fog & route maintenance.",
+                  title: "Level 3 · Critical Emergency (level_3_critical_emergency.wav)",
+                  color: "border-red-500/50 bg-red-950/20 text-red-400",
+                  badge: "bg-red-600 text-white animate-pulse",
+                  path: "/audio/level_3_critical_emergency.wav",
+                  desc: "Maximum urgent defense wail for active landslides, NH blockage & emergency crisis broadcast.",
                 },
               ].map((s) => (
                 <div
