@@ -1172,7 +1172,7 @@ export function WarRoomView({
         </div>
       )}
 
-      {/* Fast2SMS Dispatch Overlay */}
+      {/* Multi-Sector Emergency SMS Dispatch Overlay */}
       {smsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
           <div className="relative w-full max-w-2xl rounded-xl border border-amber-500/60 bg-[#080e18] p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">

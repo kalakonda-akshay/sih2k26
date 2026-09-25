@@ -92,7 +92,7 @@ export const SYSTEM_CREDENTIALS: Array<{
     phone: "+91 98640 11205",
     state: "Sikkim",
     district: "Gangtok",
-    description: "SDMA Disaster Authority & Fast2SMS Emergency Broadcast Controller",
+    description: "SDMA Disaster Authority & National Emergency Broadcast Controller",
     isDefaultAdmin: false,
   },
   {
