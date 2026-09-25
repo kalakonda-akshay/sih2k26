@@ -23,8 +23,9 @@ import { cn } from "@/lib/utils";
 import {
   SIMULATED_CONVOYS,
   type ConvoyDefinition,
-} from "./layers/convoy-simulation-layer";
+} from "./convoy-types";
 import { ConvoySimulatorHud } from "./convoy-simulator-hud";
+
 
 
 /**

@@ -24,12 +24,16 @@ import {
   SIMULATED_CONVOYS,
   type ConvoyDefinition,
   interpolateConvoyPosition,
-} from "./layers/convoy-simulation-layer";
+} from "./convoy-types";
 
 /** Synthesize a subtle tactical audio beep using browser Web Audio API at ₹0 cost */
 function playTacticalBeep() {
+  if (typeof window === "undefined") return;
   try {
-    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = "sine";
