@@ -10,7 +10,9 @@ import { api } from "../../../convex/_generated/api";
 import { NAV_ITEMS } from "./app-sidebar";
 import { DocumentsMenu } from "./documents-menu";
 import { InstallApp } from "@/components/pwa/install-app";
+import { OfflineSyncIndicator } from "@/components/offline/offline-sync-indicator";
 import { LanguageSwitcher } from "./language-switcher";
+
 import { RoleSwitcher } from "./role-switcher";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -136,7 +138,10 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
 
         <InstallApp variant="compact" className="mr-1 hidden sm:flex" />
 
+        <OfflineSyncIndicator />
+
         <DocumentsMenu />
+
 
         {/* Regional Language Switcher */}
         <LanguageSwitcher />

@@ -20,6 +20,12 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import {
+  SIMULATED_CONVOYS,
+  type ConvoyDefinition,
+} from "./layers/convoy-simulation-layer";
+import { ConvoySimulatorHud } from "./convoy-simulator-hud";
+
 
 /**
  * Leaflet reads `window` at import time, so the canvas is client-only. This
@@ -83,6 +89,33 @@ export function IntelligenceMap({
   const [resetViewTrigger, setResetViewTrigger] = useState<number | undefined>();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  // Convoy simulation state
+  const [selectedConvoy, setSelectedConvoy] = useState<ConvoyDefinition>(SIMULATED_CONVOYS[0]);
+  const [convoyProgress, setConvoyProgress] = useState(0.12);
+  const [isConvoyPlaying, setIsConvoyPlaying] = useState(false);
+  const [convoySpeed, setConvoySpeed] = useState(1);
+  const [isConvoyDiverted, setIsConvoyDiverted] = useState(false);
+  const [followConvoy, setFollowConvoy] = useState(false);
+  const [geoFenceBreached, setGeoFenceBreached] = useState(false);
+  const [distToHazardKm, setDistToHazardKm] = useState(48);
+
+  // Smooth transit animation loop
+  useEffect(() => {
+    if (!isConvoyPlaying) return;
+    const interval = setInterval(() => {
+      setConvoyProgress((prev) => {
+        const next = prev + 0.0012 * convoySpeed;
+        if (next >= 1) {
+          setIsConvoyPlaying(false);
+          return 1;
+        }
+        return next;
+      });
+    }, 40);
+    return () => clearInterval(interval);
+  }, [isConvoyPlaying, convoySpeed]);
+
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -186,10 +219,36 @@ export function IntelligenceMap({
         onCloseMeasure={() => setMeasureMode(false)}
         fitBoundsTrigger={fitBoundsTrigger}
         resetViewTrigger={resetViewTrigger}
+        simulatingConvoy={true}
+        convoy={selectedConvoy}
+        convoyProgress={convoyProgress}
+        convoyDiverted={isConvoyDiverted}
+        onGeoFenceBreach={(breached, dist) => {
+          setGeoFenceBreached(breached);
+          setDistToHazardKm(dist);
+        }}
+        followConvoy={followConvoy}
+      />
+      <ConvoySimulatorHud
+        selectedConvoy={selectedConvoy}
+        onSelectConvoy={(c) => setSelectedConvoy(c)}
+        progress={convoyProgress}
+        onChangeProgress={setConvoyProgress}
+        isPlaying={isConvoyPlaying}
+        onTogglePlay={() => setIsConvoyPlaying((p) => !p)}
+        speed={convoySpeed}
+        onChangeSpeed={setConvoySpeed}
+        isDiverted={isConvoyDiverted}
+        onToggleDivert={() => setIsConvoyDiverted((d) => !d)}
+        followVehicle={followConvoy}
+        onToggleFollow={() => setFollowConvoy((f) => !f)}
+        geoFenceBreached={geoFenceBreached}
+        distToHazardKm={distToHazardKm}
       />
       <MapLegend />
     </div>
   );
+
 
   /* ------------------------------------------------ compact (dashboard) */
   if (compact) {
@@ -323,9 +382,35 @@ export function IntelligenceMap({
             onCloseMeasure={() => setMeasureMode(false)}
             fitBoundsTrigger={fitBoundsTrigger}
             resetViewTrigger={resetViewTrigger}
+            simulatingConvoy={true}
+            convoy={selectedConvoy}
+            convoyProgress={convoyProgress}
+            convoyDiverted={isConvoyDiverted}
+            onGeoFenceBreach={(breached, dist) => {
+              setGeoFenceBreached(breached);
+              setDistToHazardKm(dist);
+            }}
+            followConvoy={followConvoy}
+          />
+          <ConvoySimulatorHud
+            selectedConvoy={selectedConvoy}
+            onSelectConvoy={(c) => setSelectedConvoy(c)}
+            progress={convoyProgress}
+            onChangeProgress={setConvoyProgress}
+            isPlaying={isConvoyPlaying}
+            onTogglePlay={() => setIsConvoyPlaying((p) => !p)}
+            speed={convoySpeed}
+            onChangeSpeed={setConvoySpeed}
+            isDiverted={isConvoyDiverted}
+            onToggleDivert={() => setIsConvoyDiverted((d) => !d)}
+            followVehicle={followConvoy}
+            onToggleFollow={() => setFollowConvoy((f) => !f)}
+            geoFenceBreached={geoFenceBreached}
+            distToHazardKm={distToHazardKm}
           />
           <MapLegend />
         </div>
+
       </div>
 
       <IntelligencePanel

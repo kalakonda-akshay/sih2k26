@@ -10,7 +10,9 @@ import { RiskLayer } from "./layers/risk-layer";
 import { WeatherLayer } from "./layers/weather-layer";
 import { RadarLayer } from "./layers/radar-layer";
 import { MeasureLayer } from "./layers/measure-layer";
+import { ConvoySimulationLayer, type ConvoyDefinition } from "./layers/convoy-simulation-layer";
 import type { BasemapStyle, FocusTarget, LayerToggles, MapIntelligence } from "./types";
+
 
 const NER_CENTER: [number, number] = [25.9, 92.6];
 const DEFAULT_ZOOM = 6;
@@ -141,6 +143,12 @@ export function MapCanvas({
   onCloseMeasure,
   fitBoundsTrigger,
   resetViewTrigger,
+  simulatingConvoy = true,
+  convoy,
+  convoyProgress = 0,
+  convoyDiverted = false,
+  onGeoFenceBreach,
+  followConvoy = false,
 }: {
   data: MapIntelligence;
   layers: LayerToggles;
@@ -151,7 +159,14 @@ export function MapCanvas({
   onCloseMeasure?: () => void;
   fitBoundsTrigger?: number;
   resetViewTrigger?: number;
+  simulatingConvoy?: boolean;
+  convoy?: ConvoyDefinition;
+  convoyProgress?: number;
+  convoyDiverted?: boolean;
+  onGeoFenceBreach?: (breached: boolean, distKm: number) => void;
+  followConvoy?: boolean;
 }) {
+
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
 
   return (
@@ -233,8 +248,20 @@ export function MapCanvas({
       )}
       {layers.vehicles && <VehicleLayer vehicles={data.vehicles} />}
 
+      {/* Live Tactical Convoy Simulation Layer */}
+      {simulatingConvoy && convoy && (
+        <ConvoySimulationLayer
+          convoy={convoy}
+          progress={convoyProgress}
+          isDiverted={convoyDiverted}
+          onGeoFenceBreach={onGeoFenceBreach}
+          followVehicle={followConvoy}
+        />
+      )}
+
       {/* Interactive Measure Tool */}
       <MeasureLayer active={measureMode} onClose={onCloseMeasure ?? (() => {})} />
+
     </MapContainer>
   );
 }

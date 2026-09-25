@@ -105,6 +105,12 @@ export async function removePending(clientUuid: string): Promise<void> {
   await refreshPendingCount();
 }
 
+export async function clearAllPending(): Promise<void> {
+  await tx("readwrite", (store) => store.clear());
+  await refreshPendingCount();
+}
+
+
 export async function markAttempt(
   clientUuid: string,
   error: string,
