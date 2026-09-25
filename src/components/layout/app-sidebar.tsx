@@ -12,6 +12,7 @@ import {
   Map as MapIcon,
   Route as RouteIcon,
   PackageCheck,
+  Radio,
   Settings,
   Siren,
   Smartphone,
@@ -29,10 +30,18 @@ export interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   /** Which live counter, if any, appears as a badge. */
   badge?: "alerts" | "incidents";
+  badgeText?: string;
 }
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", i18nKey: "nav.dashboard", icon: LayoutDashboard },
+  {
+    href: "/war-room",
+    label: "War-Room Command",
+    i18nKey: "nav.war_room",
+    icon: Radio,
+    badgeText: "DEFCON",
+  },
   { href: "/map", label: "Live Intelligence Map", i18nKey: "nav.map", icon: MapIcon },
   { href: "/routes", label: "Route Intelligence", i18nKey: "nav.routes", icon: RouteIcon },
   { href: "/risk-intelligence", label: "AI Risk Intelligence", i18nKey: "nav.risk", icon: Sparkles },
@@ -132,6 +141,11 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                       )}
                     >
                       {badge}
+                    </span>
+                  )}
+                  {item.badgeText && (
+                    <span className="ml-auto rounded px-1.5 py-0.2 font-mono text-[9px] font-bold bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse">
+                      {item.badgeText}
                     </span>
                   )}
                 </Link>

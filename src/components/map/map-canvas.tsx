@@ -43,6 +43,20 @@ function FlyToController({ target }: { target: FocusTarget | null }) {
   return null;
 }
 
+/** Automatically invalidates map size after mount or resize to prevent blank tiles */
+function InvalidateSizeController() {
+  const map = useMap();
+  useEffect(() => {
+    const t1 = setTimeout(() => map.invalidateSize(), 100);
+    const t2 = setTimeout(() => map.invalidateSize(), 500);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [map]);
+  return null;
+}
+
 /**
  * Fits bounds to all currently active vehicles, incidents, and road networks.
  */
@@ -237,6 +251,7 @@ export function MapCanvas({
       <FitBoundsController trigger={fitBoundsTrigger} data={data} />
       <ResetViewController trigger={resetViewTrigger} />
       <CoordinatesHud />
+      <InvalidateSizeController />
 
       {/* Dynamic Data Layers (order: radar & zones -> roads -> points) */}
       {layers.radar && <RadarLayer opacity={0.68} />}

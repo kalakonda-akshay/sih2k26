@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { useTranslation } from "react-i18next";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -32,6 +32,7 @@ import { SEVERITY_TONE, type Severity } from "@/lib/risk";
 
 const NAV_TITLE_KEY: Record<string, string> = {
   "/dashboard": "nav.dashboard",
+  "/war-room": "nav.war_room",
   "/map": "nav.map",
   "/routes": "nav.routes",
   "/risk-intelligence": "nav.risk",
@@ -49,6 +50,7 @@ const NAV_TITLE_KEY: Record<string, string> = {
 export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
   const { t } = useTranslation();
   const pathname = usePathname();
+  const router = useRouter();
   const { signOut } = useAuthActions();
   const metrics = useQuery(api.dashboard.getMetrics);
   const alerts = useQuery(api.alerts.listActiveAlerts, { limit: 6 });
@@ -59,12 +61,12 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "F11" || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "w")) {
         e.preventDefault();
-        setWarRoomOpen((prev) => !prev);
+        router.push("/war-room");
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [router]);
 
   const active = NAV_ITEMS.find(
     (i) => pathname === i.href || pathname.startsWith(`${i.href}/`),
@@ -156,16 +158,17 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
         <DocumentsMenu />
 
         {/* Full-Screen Defense War-Room Mode */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setWarRoomOpen(true)}
-          className="h-8 gap-1.5 border-red-500/40 bg-red-950/20 text-red-400 hover:bg-red-900/40 text-xs font-mono font-semibold"
-          title="Open Full-Screen Defense War-Room (Ctrl+Shift+W / F11)"
-        >
-          <span className="size-2 rounded-full bg-red-500 animate-pulse" />
-          <span className="hidden sm:inline">WAR-ROOM</span>
-        </Button>
+        <Link href="/war-room">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 border-red-500/40 bg-red-950/20 text-red-400 hover:bg-red-900/40 text-xs font-mono font-semibold"
+            title="Open Full-Screen Defense War-Room (Ctrl+Shift+W / F11)"
+          >
+            <span className="size-2 rounded-full bg-red-500 animate-pulse" />
+            <span className="hidden sm:inline">WAR-ROOM</span>
+          </Button>
+        </Link>
 
         {/* Regional Language Switcher */}
         <LanguageSwitcher />
