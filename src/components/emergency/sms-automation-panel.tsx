@@ -27,6 +27,7 @@ import {
   EmergencyAlertPayload,
   DEFAULT_SENDER_NUMBER,
   DEFAULT_DAILY_LIMIT,
+  INITIAL_EMERGENCY_CONTACTS,
   loadSmsContacts,
   saveSmsContacts,
   loadSmsQuota,
@@ -58,7 +59,7 @@ export function SmsAutomationPanel({ currentAlert }: SmsAutomationPanelProps) {
   const { t } = useTranslation();
 
   // State
-  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
+  const [contacts, setContacts] = useState<EmergencyContact[]>(INITIAL_EMERGENCY_CONTACTS);
   const [quota, setQuota] = useState<SmsQuotaSettings>({
     senderPhone: DEFAULT_SENDER_NUMBER,
     dailyLimit: DEFAULT_DAILY_LIMIT,
