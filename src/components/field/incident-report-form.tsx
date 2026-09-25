@@ -23,6 +23,10 @@ import type { Id } from "../../../convex/_generated/dataModel";
 import { useFieldDraft, useLocationCapture } from "./use-field-draft";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  DamageVisionAnalyzer,
+  type VisionAnalysisResult,
+} from "@/components/ai/damage-vision-analyzer";
 
 const INCIDENT_TYPES = [
   ["landslide", "Landslide"],
@@ -102,6 +106,15 @@ export function IncidentReportForm() {
       return;
     }
     setPhoto(file);
+  };
+
+  const handleApplyDiagnosis = (diagnosis: VisionAnalysisResult) => {
+    setDraft({
+      incidentType:
+        diagnosis.hazardType === "rockfall" ? "landslide" : diagnosis.hazardType,
+      severity: diagnosis.severity,
+      description: `[AI Vision: ${diagnosis.blockagePercent}% Blockage]: ${diagnosis.debrisDescription} ${diagnosis.recommendedAction}`,
+    });
   };
 
   const onSubmit = async (event: FormEvent) => {
@@ -419,6 +432,14 @@ export function IncidentReportForm() {
           </p>
         )}
       </Field>
+
+      {/* AI Damage Vision Scanner */}
+      {photo && (
+        <DamageVisionAnalyzer
+          imageFile={photo}
+          onApplyDiagnosis={handleApplyDiagnosis}
+        />
+      )}
 
       {!online && (
         <p className="flex items-start gap-2 rounded-md border border-[oklch(0.815_0.145_88)]/35 bg-[oklch(0.815_0.145_88)]/10 px-3 py-2 text-xs text-[oklch(0.815_0.145_88)]">

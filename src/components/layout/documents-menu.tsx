@@ -1,6 +1,7 @@
 "use client";
 
-import { Download, FileText, Map as MapIcon } from "lucide-react";
+import { useState } from "react";
+import { Download, FileText, Map as MapIcon, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,14 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SitRepModal } from "@/components/reports/sitrep-modal";
 
 /**
- * Project documents, downloadable from the running application.
- *
- * Both files are static assets under `public/docs`, so the browser saves them
- * directly — no server round trip and no generation step. They are plain HTML
- * rather than PDF because HTML opens anywhere, stays searchable, and prints
- * to PDF from the browser when someone actually needs one.
+ * Project documents & situation reports, downloadable from the running application.
  */
 const DOCUMENTS = [
   {
@@ -40,25 +37,55 @@ const DOCUMENTS = [
 ];
 
 export function DocumentsMenu() {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Download project documents"
-          />
-        }
-      >
-        <Download className="size-5" />
-      </DropdownMenuTrigger>
+  const [sitRepOpen, setSitRepOpen] = useState(false);
 
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Project documents</DropdownMenuLabel>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+  return (
+    <>
+      <SitRepModal isOpen={sitRepOpen} onClose={() => setSitRepOpen(false)} />
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Download project documents"
+            />
+          }
+        >
+          <Download className="size-5" />
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" className="w-80">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Official Reports & Briefings</DropdownMenuLabel>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+
+          {/* MDoNER SitRep Live Generator */}
+          <DropdownMenuItem
+            onClick={() => setSitRepOpen(true)}
+            className="flex-col items-start gap-1 py-2.5 bg-primary/5 hover:bg-primary/10 cursor-pointer"
+          >
+            <span className="flex w-full items-center gap-2">
+              <ShieldCheck className="size-4 shrink-0 text-primary" />
+              <span className="text-xs font-semibold text-primary">
+                Live Situation Report (SitRep)
+              </span>
+              <span className="ml-auto rounded bg-primary/20 px-1.5 py-0.2 font-mono text-[9px] font-bold text-primary">
+                PDF
+              </span>
+            </span>
+            <span className="pl-6 text-[11px] leading-snug text-muted-foreground">
+              Official MDoNER disaster & logistics status with print-to-PDF
+            </span>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="text-[10px] text-muted-foreground font-mono uppercase">
+              Project Architecture
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
 
         {DOCUMENTS.map((doc) => {
           const Icon = doc.icon;
@@ -98,5 +125,6 @@ export function DocumentsMenu() {
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }

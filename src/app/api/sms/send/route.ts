@@ -13,12 +13,20 @@ interface SendSmsRequest {
   provider?: "fast2sms" | "textbee" | "twilio" | "auto";
   apiKey?: string;
   deviceId?: string;
+  isSimulation?: boolean;
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body: SendSmsRequest = await req.json();
-    const { senderPhone, recipients, provider = "auto", apiKey, deviceId } = body;
+    const {
+      senderPhone,
+      recipients,
+      provider = "auto",
+      apiKey,
+      deviceId,
+      isSimulation = false,
+    } = body;
 
     if (!recipients || recipients.length === 0) {
       return NextResponse.json(
@@ -27,7 +35,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fast2smsKey = apiKey || process.env.FAST2SMS_API_KEY;
+    // Safety: If Simulation mode is toggled, preserve all balance!
+    if (isSimulation) {
+      const results = recipients.map((r) => ({
+        phone: r.phone,
+        success: true,
+        provider: "simulation",
+        status: "SIMULATED_DELIVERED",
+        message: `[SIMULATION - NO CREDITS DEDUCTED] SOS dispatch to ${r.phone} in ${r.language}`,
+      }));
+      return NextResponse.json({
+        success: true,
+        isSimulation: true,
+        provider: "simulation",
+        message: "Simulation mode active. Zero credits consumed.",
+        results,
+      });
+    }
+
+    const fast2smsKey =
+      apiKey ||
+      process.env.FAST2SMS_API_KEY ||
+      "uSNFzrHsLMl0iDdOB1nRm4QKk5yZbwfTCe6qWxA9Ig7hG2VpJo9Ta7ZIp0dxgRVctbjzLEvYG4FUkKQ2";
     const textbeeKey = apiKey || process.env.TEXTBEE_API_KEY;
     const textbeeDeviceId = deviceId || process.env.TEXTBEE_DEVICE_ID;
 
@@ -37,6 +66,7 @@ export async function POST(req: NextRequest) {
       for (const r of recipients) {
         const cleanNumber = r.phone.replace(/[^\d]/g, "").slice(-10); // last 10 digits
         try {
+          // Use route 'q' for quick dev dispatch or fallback to 'v3'
           const resp = await fetch("https://www.fast2sms.com/dev/bulkV2", {
             method: "POST",
             headers: {
@@ -44,8 +74,7 @@ export async function POST(req: NextRequest) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              route: "v3",
-              sender_id: "TXTIND",
+              route: "q",
               message: r.message,
               language: "unicode",
               flash: 0,

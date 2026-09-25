@@ -11,6 +11,7 @@ import { NAV_ITEMS } from "./app-sidebar";
 import { DocumentsMenu } from "./documents-menu";
 import { InstallApp } from "@/components/pwa/install-app";
 import { LanguageSwitcher } from "./language-switcher";
+import { RoleSwitcher } from "./role-switcher";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -221,6 +222,9 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* RBAC Role Switcher */}
+        <RoleSwitcher />
 
         {/* Profile */}
         <DropdownMenu>

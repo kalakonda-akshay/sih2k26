@@ -2,7 +2,16 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQuery } from "convex/react";
-import { Bot, CornerDownLeft, RotateCcw, Sparkles, SquareFunction } from "lucide-react";
+import {
+  Bot,
+  CornerDownLeft,
+  Mic,
+  MicOff,
+  RotateCcw,
+  Sparkles,
+  SquareFunction,
+  Volume2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../convex/_generated/api";
 import { AssistantAnswer } from "./assistant-answer";
@@ -32,8 +41,55 @@ export function AssistantChat() {
   const [history, setHistory] = useState<Exchange[]>([]);
   const [draft, setDraft] = useState("");
   const [mode, setMode] = useState<Mode>("rule");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const suggestions = useQuery(api.assistant.getSuggestions);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
+
+  const startVoiceInput = () => {
+    if (typeof window === "undefined") return;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert(
+        "Voice input is supported in Google Chrome, Edge, and Safari on Android/iOS/Desktop.",
+      );
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-IN"; // Natural Indian English / regional recognition
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => setIsListening(false);
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setDraft(transcript);
+          submit(transcript);
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
 
   useEffect(() => {
     if (history.length > 0) {
@@ -166,10 +222,32 @@ export function AssistantChat() {
         <Input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder={t("assistant.input_placeholder", "Ask about incidents, roads, vehicles, deliveries or priorities…")}
+          placeholder={
+            isListening
+              ? "Listening to voice… (Speak in Hindi or English)"
+              : t("assistant.input_placeholder", "Ask about incidents, roads, vehicles, deliveries or priorities…")
+          }
           aria-label={t("assistant.title", "Ask the operations assistant")}
-          className="h-9 bg-background text-sm"
+          className={cn(
+            "h-9 bg-background text-sm transition-all",
+            isListening && "border-red-500 ring-2 ring-red-500/20 placeholder:text-red-400",
+          )}
         />
+        <Button
+          type="button"
+          size="sm"
+          variant={isListening ? "destructive" : "outline"}
+          onClick={startVoiceInput}
+          className={cn("h-9 px-2.5", isListening && "animate-pulse")}
+          title="Voice Command (Speak in Hindi or English)"
+          aria-label="Voice input"
+        >
+          {isListening ? (
+            <MicOff className="size-4 text-white" />
+          ) : (
+            <Mic className="size-4 text-primary" />
+          )}
+        </Button>
         <Button
           type="submit"
           size="sm"

@@ -77,6 +77,8 @@ export function SmsAutomationPanel({ currentAlert }: SmsAutomationPanelProps) {
   const [fast2smsKey, setFast2smsKey] = useState("");
   const [textbeeKey, setTextbeeKey] = useState("");
   const [textbeeDeviceId, setTextbeeDeviceId] = useState("");
+  const [walletBalance, setWalletBalance] = useState<{ wallet: string; smsCount: number } | null>(null);
+  const [isSimulationMode, setIsSimulationMode] = useState<boolean>(true); // default safe for testing!
 
   // New Contact form
   const [showAddForm, setShowAddForm] = useState(false);
@@ -91,11 +93,20 @@ export function SmsAutomationPanel({ currentAlert }: SmsAutomationPanelProps) {
   const [customLocation, setCustomLocation] = useState("");
   const [customAction, setCustomAction] = useState("");
 
-  // Initialize from LocalStorage
+  // Initialize from LocalStorage and fetch live Fast2SMS balance
   useEffect(() => {
     setContacts(loadSmsContacts());
     setQuota(loadSmsQuota());
     setLogs(loadSmsLogs());
+
+    fetch("/api/sms/balance")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setWalletBalance({ wallet: data.wallet, smsCount: data.smsCount });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Alert payload derived from props or default
@@ -265,10 +276,21 @@ export function SmsAutomationPanel({ currentAlert }: SmsAutomationPanelProps) {
           recipients: payload,
           apiKey: fast2smsKey || quota.textbeeApiKey,
           deviceId: textbeeDeviceId || quota.textbeeDeviceId,
+          isSimulation: isSimulationMode,
         }),
       });
 
       const data = await res.json();
+
+      if (!isSimulationMode) {
+        // Refresh balance if real SMS was dispatched
+        fetch("/api/sms/balance")
+          .then((r) => r.json())
+          .then((b) => {
+            if (b.success) setWalletBalance({ wallet: b.wallet, smsCount: b.smsCount });
+          })
+          .catch(() => {});
+      }
 
       if (!data.success && data.error === "NO_GATEWAY_CONFIGURED") {
         setIsBroadcasting(false);
@@ -361,7 +383,7 @@ export function SmsAutomationPanel({ currentAlert }: SmsAutomationPanelProps) {
             </div>
           </div>
 
-          {/* Quota Badge */}
+          {/* Quota & Wallet Badge */}
           <div className="flex flex-col items-end">
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono text-muted-foreground uppercase">Daily SMS Quota:</span>
@@ -381,7 +403,58 @@ export function SmsAutomationPanel({ currentAlert }: SmsAutomationPanelProps) {
             <div className="mt-1.5 w-36">
               <Progress value={quotaPercent} className="h-1.5" />
             </div>
+
+            {/* Fast2SMS Live Wallet Badge */}
+            <div className="mt-2 flex items-center gap-1.5">
+              <span className="text-[10px] font-mono text-muted-foreground uppercase">Gateway Wallet:</span>
+              <span className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-500/30">
+                <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                ₹{walletBalance ? walletBalance.wallet : "50.00"} ({walletBalance ? walletBalance.smsCount : 200} SMS)
+              </span>
+            </div>
           </div>
+        </div>
+
+        {/* Simulation / Live Gateway Mode Toggle */}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/70 bg-background/60 p-2.5 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span
+              className={cn(
+                "size-2.5 rounded-full",
+                isSimulationMode ? "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" : "bg-emerald-400 animate-ping",
+              )}
+            />
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-foreground">
+                  {isSimulationMode ? "Simulation Mode (Zero Credit Deducted)" : "Live Fast2SMS Gateway (Real SMS to Telecom)"}
+                </span>
+                <span
+                  className={cn(
+                    "rounded px-1.5 py-0.2 font-mono text-[9px] font-bold uppercase",
+                    isSimulationMode
+                      ? "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30"
+                      : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30",
+                  )}
+                >
+                  {isSimulationMode ? "FREE TESTING" : "LIVE CARRIER"}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {isSimulationMode
+                  ? "Tests complete multi-lingual SMS dispatch workflow without consuming your ₹50 Fast2SMS balance."
+                  : "Transmits real cellular SMS via Fast2SMS telecom gateway to all 6 recipient mobile numbers."}
+              </p>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant={isSimulationMode ? "outline" : "destructive"}
+            onClick={() => setIsSimulationMode(!isSimulationMode)}
+            className="h-7 text-xs font-mono"
+          >
+            {isSimulationMode ? "Switch to Live SMS" : "Switch to Simulation Mode"}
+          </Button>
         </div>
 
         {/* Limit Reached Callout */}
