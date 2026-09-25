@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
+import { Plus, Minus, Maximize2 } from "lucide-react";
 import { RoadLayer } from "./layers/road-layer";
 import { IncidentLayer } from "./layers/incident-layer";
 import { VehicleLayer } from "./layers/vehicle-layer";
@@ -143,6 +144,72 @@ function CoordinatesHud() {
 }
 
 /**
+ * Modern Tactical Zoom In & Zoom Out HUD.
+ * Positioned cleanly below top-left telemetry overlays with smooth zoom controls,
+ * real-time zoom multiplier indicator, re-center view button, and sleek glassmorphism styling.
+ */
+function TacticalZoomControl() {
+  const map = useMap();
+  const [currentZoom, setCurrentZoom] = useState(DEFAULT_ZOOM);
+
+  useMapEvents({
+    zoomend: (e) => {
+      setCurrentZoom(Math.round(e.target.getZoom()));
+    },
+  });
+
+  return (
+    <div
+      className="leaflet-top leaflet-left pointer-events-auto select-none"
+      style={{ top: "86px", left: "16px", zIndex: 850 }}
+    >
+      <div className="flex flex-col items-center rounded-lg border border-cyan-500/50 bg-[#080d16]/95 shadow-2xl backdrop-blur-md overflow-hidden font-mono text-xs">
+        {/* Zoom In Button */}
+        <button
+          type="button"
+          onClick={() => map.zoomIn()}
+          aria-label="Zoom In"
+          title="Zoom In (+)"
+          className="flex size-8 items-center justify-center text-cyan-400 hover:bg-cyan-500/20 hover:text-white active:bg-cyan-500/40 transition-colors border-b border-border/70"
+        >
+          <Plus className="size-4" />
+        </button>
+
+        {/* Current Zoom Level Badge */}
+        <div
+          title={`Current Zoom Level: ${currentZoom}x`}
+          className="flex h-5 w-8 items-center justify-center bg-black/70 text-[9px] font-bold text-cyan-300 border-b border-border/70 cursor-default"
+        >
+          Z{currentZoom}
+        </div>
+
+        {/* Zoom Out Button */}
+        <button
+          type="button"
+          onClick={() => map.zoomOut()}
+          aria-label="Zoom Out"
+          title="Zoom Out (-)"
+          className="flex size-8 items-center justify-center text-cyan-400 hover:bg-cyan-500/20 hover:text-white active:bg-cyan-500/40 transition-colors border-b border-border/70"
+        >
+          <Minus className="size-4" />
+        </button>
+
+        {/* Re-center / Reset NER Overview */}
+        <button
+          type="button"
+          onClick={() => map.flyTo(NER_CENTER, DEFAULT_ZOOM, { duration: 0.8 })}
+          aria-label="Reset View"
+          title="Reset View to Northeast India Overview"
+          className="flex size-8 items-center justify-center text-muted-foreground hover:bg-white/10 hover:text-foreground transition-colors"
+        >
+          <Maximize2 className="size-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Upgraded Leaflet Map Canvas.
  * Supports multiple basemaps (Dark Tactical, High-Res Satellite, Topographic Relief, Streets),
  * live Doppler weather radar, tactical measure tool, fit-all bounds, and coordinate HUD.
@@ -190,7 +257,7 @@ export function MapCanvas({
       minZoom={5}
       maxZoom={16}
       scrollWheelZoom
-      zoomControl
+      zoomControl={false}
       className="h-full w-full"
       style={{ background: "oklch(0.135 0.011 245)" }}
     >
@@ -243,6 +310,7 @@ export function MapCanvas({
       )}
 
       {/* Controllers and HUD */}
+      <TacticalZoomControl />
       <ZoomWatcher onZoom={setZoom} />
       <FlyToController target={focus} />
       <FitBoundsController trigger={fitBoundsTrigger} data={data} />

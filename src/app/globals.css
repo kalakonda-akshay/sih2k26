@@ -286,18 +286,28 @@
   }
 }
 
-/* Rounder, better-separated zoom controls. */
+/* Sleek Tactical Leaflet Zoom Controls */
+.leaflet-top.leaflet-left {
+  top: 86px !important;
+  left: 16px !important;
+}
+
 .leaflet-control-zoom {
-  border: none !important;
-  box-shadow: 0 4px 16px -6px rgb(0 0 0 / 0.6) !important;
+  border: 1px solid rgba(6, 182, 212, 0.45) !important;
+  background: rgba(8, 13, 22, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.8) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
 }
 
 .leaflet-control-zoom a:first-child {
-  border-radius: var(--radius) var(--radius) 0 0 !important;
+  border-radius: 8px 8px 0 0 !important;
 }
 
 .leaflet-control-zoom a:last-child {
-  border-radius: 0 0 var(--radius) var(--radius) !important;
+  border-radius: 0 0 8px 8px !important;
+  border-bottom: none !important;
 }
 
 /* Ensure Leaflet stays strictly within its container stacking context and never bleeds over modals/dropdowns */
@@ -354,13 +364,24 @@
 }
 
 .leaflet-control-zoom a {
-  background: var(--card) !important;
-  color: var(--foreground) !important;
-  border-color: var(--border) !important;
+  background: transparent !important;
+  color: #22d3ee !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 30px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  font-family: ui-monospace, monospace !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .leaflet-control-zoom a:hover {
-  background: var(--accent) !important;
+  background: rgba(6, 182, 212, 0.25) !important;
+  color: #ffffff !important;
 }
 
 .leaflet-control-attribution {
