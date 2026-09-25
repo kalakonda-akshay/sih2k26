@@ -196,19 +196,13 @@ export function MapCanvas({
     >
       {/* -------------------- DYNAMIC BASEMAP LAYERS -------------------- */}
       {basemap === "dark" && (
-        <>
-          <TileLayer
-            key="dark-base"
-            url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-            attribution='&copy; <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, OpenStreetMap'
-            maxZoom={16}
-          />
-          <TileLayer
-            key="dark-ref"
-            url="https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={16}
-          />
-        </>
+        <TileLayer
+          key="dark-carto"
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          subdomains="abcd"
+          attribution='&copy; <a href="https://carto.com/">CARTO</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          maxZoom={19}
+        />
       )}
 
       {basemap === "satellite" && (
@@ -217,12 +211,14 @@ export function MapCanvas({
             key="sat-base"
             url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             attribution='&copy; <a href="https://www.esri.com/">Esri</a>, Maxar, Earthstar Geographics'
-            maxZoom={17}
+            maxNativeZoom={15}
+            maxZoom={18}
           />
           <TileLayer
-            key="sat-ref"
-            url="https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={17}
+            key="sat-labels"
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+            subdomains="abcd"
+            maxZoom={19}
           />
         </>
       )}
@@ -232,16 +228,17 @@ export function MapCanvas({
           key="topo-base"
           url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}"
           attribution='&copy; <a href="https://www.esri.com/">Esri</a>, USGS, Intermap, Garmin'
-          maxZoom={16}
+          maxNativeZoom={15}
+          maxZoom={18}
         />
       )}
 
       {basemap === "streets" && (
         <TileLayer
           key="streets-base"
-          url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}"
-          attribution='&copy; <a href="https://www.esri.com/">Esri</a>, USGS, NGA'
-          maxZoom={16}
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          maxZoom={19}
         />
       )}
 

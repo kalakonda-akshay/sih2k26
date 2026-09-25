@@ -35,6 +35,9 @@ import {
   ShieldCheck,
   RefreshCw,
   Zap,
+  Upload,
+  Music,
+  SlidersHorizontal,
 } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
@@ -65,8 +68,8 @@ const MapCanvas = dynamic(
   },
 );
 
-/** Synthesizes an emergency defense siren using browser Web Audio API at ₹0 cost */
-function playEmergencySirenBurst() {
+/** Synthesizes audio backup if custom or static audio files fail to load */
+function playSynthesizedSiren(level: number = 1) {
   if (typeof window === "undefined") return;
   try {
     const AudioCtx =
@@ -75,28 +78,81 @@ function playEmergencySirenBurst() {
         .webkitAudioContext;
     if (!AudioCtx) return;
     const ctx = new AudioCtx();
-
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = "sawtooth";
-
     const now = ctx.currentTime;
-    osc.frequency.setValueAtTime(450, now);
-    osc.frequency.linearRampToValueAtTime(950, now + 0.35);
-    osc.frequency.linearRampToValueAtTime(450, now + 0.7);
-    osc.frequency.linearRampToValueAtTime(950, now + 1.05);
-    osc.frequency.linearRampToValueAtTime(450, now + 1.4);
 
-    gain.gain.setValueAtTime(0.15, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.45);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(now + 1.5);
+    if (level === 1) {
+      // DEFCON 1: Urgent 450Hz - 950Hz defense wail
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.linearRampToValueAtTime(950, now + 0.35);
+      osc.frequency.linearRampToValueAtTime(450, now + 0.7);
+      osc.frequency.linearRampToValueAtTime(950, now + 1.05);
+      osc.frequency.linearRampToValueAtTime(450, now + 1.4);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.48);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(now + 1.5);
+    } else if (level === 2) {
+      // DEFCON 2: Elevated 520Hz - 780Hz warning pulses
+      osc.type = "square";
+      osc.frequency.setValueAtTime(520, now);
+      osc.frequency.setValueAtTime(780, now + 0.3);
+      osc.frequency.setValueAtTime(520, now + 0.6);
+      osc.frequency.setValueAtTime(780, now + 0.9);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(now + 1.25);
+    } else {
+      // DEFCON 3: Advisory 440Hz / 880Hz chime
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.35);
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(now + 0.8);
+    }
   } catch {
     // Ignore audio permission errors
   }
+}
+
+/** Plays the audio siren for the specific DEFCON level (prioritizing uploaded audio files) */
+function playSirenForDefcon(level: number = 1, customSirens?: Record<number, string>) {
+  if (typeof window === "undefined") return;
+  try {
+    // 1. Check in-memory uploaded siren if operator uploaded custom audio via UI
+    if (customSirens && customSirens[level]) {
+      const audio = new Audio(customSirens[level]);
+      audio.volume = 0.9;
+      audio.play().catch(() => playSynthesizedSiren(level));
+      return;
+    }
+    // 2. Play from uploaded static audio files /audio/siren-defcon{1,2,3}.wav or .mp3
+    const audioWav = new Audio(`/audio/siren-defcon${level}.wav`);
+    audioWav.volume = 0.9;
+    audioWav.play().catch(() => {
+      const audioMp3 = new Audio(`/audio/siren-defcon${level}.mp3`);
+      audioMp3.volume = 0.9;
+      audioMp3.play().catch(() => playSynthesizedSiren(level));
+    });
+  } catch {
+    playSynthesizedSiren(level);
+  }
+}
+
+/** Legacy alias pointing to DEFCON 1 siren */
+function playEmergencySirenBurst(level: number = 1) {
+  playSirenForDefcon(level);
 }
 
 /** Subtle tactical radar ping */
@@ -276,6 +332,8 @@ export function WarRoomView({
   >("alert");
   const [emergencyCardModalOpen, setEmergencyCardModalOpen] = useState(false);
   const [smsModalOpen, setSmsModalOpen] = useState(false);
+  const [sirenUploadModalOpen, setSirenUploadModalOpen] = useState(false);
+  const [customSirens, setCustomSirens] = useState<Record<number, string>>({});
 
   // Database Queries
   const liveIncidents = useQuery(api.incidents.listIncidents, {});
@@ -410,28 +468,28 @@ export function WarRoomView({
       ══════════════════════════════════════════════════════════════════════ */}
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-red-500/30 bg-[#080d16] px-3 md:px-5 z-20">
         {/* Left: Identity & Operational Status */}
-        <div className="flex items-center gap-3">
-          <div className="flex size-8 items-center justify-center rounded-md border border-red-500/60 bg-red-950/40 text-red-400">
+        <div className="flex items-center gap-2.5 shrink-0 min-w-0">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-red-500/60 bg-red-950/40 text-red-400">
             <Radio className="size-4 animate-pulse" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs md:text-sm font-black tracking-widest text-red-400 uppercase">
+              <span className="font-mono text-xs md:text-sm font-black tracking-wider text-red-400 uppercase whitespace-nowrap">
                 NER-VISION AI | WAR-ROOM
               </span>
-              <span className="inline-flex items-center gap-1 rounded bg-emerald-950/80 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-300 border border-emerald-500/40">
+              <span className="hidden sm:inline-flex items-center gap-1 rounded bg-emerald-950/80 px-1.5 py-0.5 font-mono text-[9px] font-bold text-emerald-300 border border-emerald-500/40 whitespace-nowrap">
                 <span className="size-1.5 rounded-full bg-emerald-400 animate-ping" />
                 SYSTEM OPERATIONAL
               </span>
             </div>
-            <div className="text-[10px] font-mono text-muted-foreground hidden sm:block">
+            <div className="text-[10px] font-mono text-muted-foreground truncate hidden 2xl:block">
               MDoNER Joint Emergency Operations Center (JEOC) · 8 North East States Active
             </div>
           </div>
         </div>
 
         {/* Center: Live Telemetry Badges (Active Incidents: 27, Active Convoys: 42, Critical Alerts: 04, Field Teams: 12) */}
-        <div className="hidden xl:flex items-center gap-2 font-mono text-xs">
+        <div className="hidden xl:flex items-center gap-2 font-mono text-xs shrink-0 whitespace-nowrap">
           <div className="flex items-center gap-1.5 rounded border border-red-500/40 bg-red-950/30 px-2.5 py-1 text-red-300">
             <span className="size-2 rounded-full bg-red-500 animate-pulse" />
             <span>Active Incidents:</span>
@@ -467,18 +525,19 @@ export function WarRoomView({
         </div>
 
         {/* Right: DEFCON, Clock & Controls */}
-        <div className="flex items-center gap-2 md:gap-3">
-          {/* DEFCON Selector */}
+        <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+          {/* DEFCON Selector for all 3 levels */}
           <div className="flex items-center gap-1 rounded-md border border-border/70 bg-black/50 p-0.5 font-mono text-[10px]">
+            <span className="px-1 text-[9px] text-muted-foreground uppercase font-semibold hidden md:inline">LEVEL:</span>
             {[1, 2, 3].map((lvl) => (
               <button
                 key={lvl}
                 type="button"
                 onClick={() => {
                   setActiveDefcon(lvl);
-                  if (lvl === 1 && soundEnabled) playEmergencySirenBurst();
+                  if (soundEnabled) playSirenForDefcon(lvl, customSirens);
                 }}
-                className={`px-2 py-0.5 rounded font-bold transition-all ${
+                className={`px-2 py-0.5 rounded font-bold transition-all whitespace-nowrap ${
                   activeDefcon === lvl
                     ? lvl === 1
                       ? "bg-red-600 text-white shadow-lg shadow-red-600/50 animate-pulse"
@@ -487,6 +546,7 @@ export function WarRoomView({
                         : "bg-emerald-600 text-white"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
+                title={`Switch to DEFCON ${lvl} and play siren`}
               >
                 DEFCON {lvl}
               </button>
@@ -496,7 +556,7 @@ export function WarRoomView({
           {/* Real-time UTC/IST Clock */}
           <div className="hidden lg:flex items-center gap-1.5 font-mono text-xs text-muted-foreground border-l border-border/60 pl-3">
             <Clock className="size-3.5 text-primary" />
-            <span className="text-foreground font-semibold">{timeString || "00:00:00 IST"}</span>
+            <span className="text-foreground font-semibold whitespace-nowrap">{timeString || "00:00:00 IST"}</span>
           </div>
 
           {/* Audio Toggle */}
@@ -505,7 +565,7 @@ export function WarRoomView({
             variant="ghost"
             onClick={() => setSoundEnabled((s) => !s)}
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-            title={soundEnabled ? "Mute Radar Audio" : "Enable Radar Audio"}
+            title={soundEnabled ? "Mute Radar & Sirens" : "Enable Radar & Sirens"}
           >
             {soundEnabled ? (
               <Volume2 className="size-4 text-emerald-400" />
@@ -514,16 +574,28 @@ export function WarRoomView({
             )}
           </Button>
 
-          {/* Siren Test */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => playEmergencySirenBurst()}
-            className="h-8 gap-1 border-red-500/50 bg-red-950/20 text-red-300 hover:bg-red-900/40 font-mono text-xs hidden sm:flex"
-            title="Synthesize 1.5s Tactical Defense Siren"
-          >
-            <Siren className="size-3.5" /> Siren
-          </Button>
+          {/* Siren Trigger & Upload Manager */}
+          <div className="flex items-center rounded-md border border-red-500/50 bg-red-950/20 overflow-hidden hidden sm:flex">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => playSirenForDefcon(activeDefcon, customSirens)}
+              className="h-8 gap-1.5 px-2.5 text-red-300 hover:bg-red-900/40 hover:text-red-200 font-mono text-xs rounded-none border-0"
+              title={`Play Siren for Active DEFCON ${activeDefcon}`}
+            >
+              <Siren className="size-3.5 text-red-400 animate-pulse" />
+              <span>Siren (L{activeDefcon})</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setSirenUploadModalOpen(true)}
+              className="h-8 px-2 text-red-400 hover:bg-red-900/40 hover:text-red-200 rounded-none border-l border-red-500/30"
+              title="Manage & Upload 3-Level Sirens"
+            >
+              <SlidersHorizontal className="size-3" />
+            </Button>
+          </div>
 
           {/* Fullscreen Button */}
           <Button
@@ -544,7 +616,7 @@ export function WarRoomView({
               if (onExit) onExit();
               else router.push("/dashboard");
             }}
-            className="h-8 gap-1 font-mono text-xs font-semibold"
+            className="h-8 gap-1 font-mono text-xs font-semibold whitespace-nowrap"
           >
             <X className="size-4" /> Exit (ESC)
           </Button>
@@ -560,7 +632,7 @@ export function WarRoomView({
         ────────────────────────────────────────────────────────────────── */}
         <div className="relative flex-1 min-w-0 bg-[#070b12] flex flex-col">
           {/* Tactical Map Ribbon */}
-          <div className="flex items-center justify-between border-b border-border/60 bg-[#090f19] px-3 py-1.5 text-xs font-mono z-10">
+          <div className="flex h-9 shrink-0 items-center justify-between border-b border-border/70 bg-[#090f19] px-3 text-xs font-mono z-10 overflow-x-auto no-scrollbar">
             {/* Left: Road State Legend + Convoy Selector */}
             <div className="flex items-center gap-3">
               {/* Road Status Indicators (🟢 Safe, 🟡 Restricted, 🔴 Blocked) */}
@@ -1201,6 +1273,139 @@ export function WarRoomView({
                   selectedIncident?.aiRecommendation || "Engage Route B Sangti Valley bypass.",
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* 3-Level Tactical Siren Manager & Audio Uploader Overlay */}
+      {sirenUploadModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="relative w-full max-w-2xl rounded-xl border border-red-500/60 bg-[#080e18] p-5 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto font-mono">
+            <div className="flex items-center justify-between border-b border-border/80 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="flex size-7 items-center justify-center rounded bg-red-950/60 border border-red-500/50 text-red-400">
+                  <Siren className="size-4 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold uppercase text-foreground">
+                    DEFCON 3-LEVEL SIREN AUDIO INTELLIGENCE
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground">
+                    Official siren audio tracks for DEFCON 1 (Critical), DEFCON 2 (Elevated), DEFCON 3 (Advisory)
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setSirenUploadModalOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
+
+            {/* Siren Levels Grid */}
+            <div className="space-y-3">
+              {[
+                {
+                  level: 1,
+                  title: "DEFCON 1 · Maximum Threat / Road Blocked",
+                  color: "border-red-500/50 bg-red-950/20 text-red-400",
+                  badge: "bg-red-500 text-white",
+                  path: "/audio/siren-defcon1.wav",
+                  desc: "High-urgency wailing defense sweep for full NH blockages & active landslide crisis.",
+                },
+                {
+                  level: 2,
+                  title: "DEFCON 2 · Elevated Risk / Convoy Diverting",
+                  color: "border-amber-500/50 bg-amber-950/20 text-amber-400",
+                  badge: "bg-amber-500 text-white",
+                  path: "/audio/siren-defcon2.wav",
+                  desc: "Rapid alternating warning tone for high hazard, flash flood risks & critical bridge alerts.",
+                },
+                {
+                  level: 3,
+                  title: "DEFCON 3 · Precautionary Advisory / Readiness",
+                  color: "border-emerald-500/50 bg-emerald-950/20 text-emerald-400",
+                  badge: "bg-emerald-500 text-white",
+                  path: "/audio/siren-defcon3.wav",
+                  desc: "Advisory chime & pulse for IMD monsoon warnings, heavy fog & route maintenance.",
+                },
+              ].map((s) => (
+                <div
+                  key={s.level}
+                  className={`rounded-lg border p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${s.color}`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${s.badge}`}>
+                        LEVEL {s.level}
+                      </span>
+                      <span className="text-xs font-bold text-foreground">{s.title}</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">{s.desc}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <Music className="size-3" />
+                      <span>Source: {customSirens[s.level] ? "Custom Uploaded Audio (Active)" : s.path}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {/* Test Play Button */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => playSirenForDefcon(s.level, customSirens)}
+                      className="h-8 gap-1.5 text-xs font-mono border-current hover:bg-white/10"
+                    >
+                      <Volume2 className="size-3.5" />
+                      <span>Test Audio</span>
+                    </Button>
+
+                    {/* Replace / Upload Audio */}
+                    <label className="cursor-pointer">
+                      <span className="inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed border-border/80 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:border-foreground transition-colors">
+                        <Upload className="size-3" />
+                        <span>Upload Custom</span>
+                      </span>
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const url = URL.createObjectURL(file);
+                            setCustomSirens((prev) => ({ ...prev, [s.level]: url }));
+                            const audio = new Audio(url);
+                            audio.play().catch(() => {});
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer with Reset & Info */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 border-t border-border/70 pt-3 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="size-3.5 text-emerald-400" />
+                All 3 sirens are loaded in <code className="text-emerald-300">public/audio/</code> with automatic Web Audio backup.
+              </span>
+              {Object.keys(customSirens).length > 0 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setCustomSirens({})}
+                  className="h-7 text-xs text-red-400 hover:text-red-300"
+                >
+                  Reset to System Sirens
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       )}
