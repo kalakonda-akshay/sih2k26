@@ -1,19 +1,20 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { useTranslation } from "react-i18next";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Bell, LogOut, Menu, Search } from "lucide-react";
+import { Bell, LogOut, Menu, Search, Radio } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { NAV_ITEMS } from "./app-sidebar";
 import { DocumentsMenu } from "./documents-menu";
 import { InstallApp } from "@/components/pwa/install-app";
 import { OfflineSyncIndicator } from "@/components/offline/offline-sync-indicator";
 import { LanguageSwitcher } from "./language-switcher";
-
 import { RoleSwitcher } from "./role-switcher";
+import { WarRoomModal } from "@/components/war-room/war-room-modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,6 +53,18 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
   const metrics = useQuery(api.dashboard.getMetrics);
   const alerts = useQuery(api.alerts.listActiveAlerts, { limit: 6 });
   const currentUser = useQuery(api.users.getCurrentUser);
+  const [warRoomOpen, setWarRoomOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "F11" || (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "w")) {
+        e.preventDefault();
+        setWarRoomOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const active = NAV_ITEMS.find(
     (i) => pathname === i.href || pathname.startsWith(`${i.href}/`),
@@ -142,6 +155,17 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
 
         <DocumentsMenu />
 
+        {/* Full-Screen Defense War-Room Mode */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setWarRoomOpen(true)}
+          className="h-8 gap-1.5 border-red-500/40 bg-red-950/20 text-red-400 hover:bg-red-900/40 text-xs font-mono font-semibold"
+          title="Open Full-Screen Defense War-Room (Ctrl+Shift+W / F11)"
+        >
+          <span className="size-2 rounded-full bg-red-500 animate-pulse" />
+          <span className="hidden sm:inline">WAR-ROOM</span>
+        </Button>
 
         {/* Regional Language Switcher */}
         <LanguageSwitcher />
@@ -283,6 +307,8 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <WarRoomModal isOpen={warRoomOpen} onClose={() => setWarRoomOpen(false)} />
     </header>
   );
 }

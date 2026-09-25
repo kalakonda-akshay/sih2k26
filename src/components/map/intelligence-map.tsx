@@ -25,6 +25,7 @@ import {
   type ConvoyDefinition,
 } from "./convoy-types";
 import { ConvoySimulatorHud } from "./convoy-simulator-hud";
+import { ConvoyElevationProfile } from "./convoy-elevation-profile";
 
 
 
@@ -100,6 +101,7 @@ export function IntelligenceMap({
   const [followConvoy, setFollowConvoy] = useState(false);
   const [geoFenceBreached, setGeoFenceBreached] = useState(false);
   const [distToHazardKm, setDistToHazardKm] = useState(48);
+  const [showElevationProfile, setShowElevationProfile] = useState(false);
 
   // Smooth transit animation loop
   useEffect(() => {
@@ -408,7 +410,22 @@ export function IntelligenceMap({
             onToggleFollow={() => setFollowConvoy((f) => !f)}
             geoFenceBreached={geoFenceBreached}
             distToHazardKm={distToHazardKm}
+            showElevationProfile={showElevationProfile}
+            onToggleElevationProfile={() => setShowElevationProfile((p) => !p)}
           />
+
+          {/* 3D Mountain Elevation & Hairpin Slope Profile Drawer */}
+          {showElevationProfile && (
+            <div className="absolute bottom-4 left-4 right-4 z-20 max-w-3xl mx-auto pointer-events-auto">
+              <ConvoyElevationProfile
+                selectedConvoy={selectedConvoy}
+                progress={convoyProgress}
+                isDiverted={isConvoyDiverted}
+                onToggleDivert={() => setIsConvoyDiverted((d) => !d)}
+              />
+            </div>
+          )}
+
           <MapLegend />
         </div>
 

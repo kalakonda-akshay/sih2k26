@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DemoControls } from "@/components/dashboard/demo-controls";
 import { SmsAutomationPanel } from "@/components/emergency/sms-automation-panel";
+import { DisasterAlertCardGenerator } from "@/components/emergency/disaster-alert-card-generator";
 
 const SEVERITY_TONE: Record<string, { text: string; hex: string; label: string }> =
   {
@@ -173,6 +174,21 @@ export default function EmergencyPage() {
             briefing?.recommendedActions?.[0] ||
             "Divert vehicles to designated safe bypass immediately.",
           roadNumber: briefing?.blockedRoads?.[0]?.roadNumber || "NH-6",
+        }}
+      />
+
+      {/* WhatsApp & Social Media Disaster Alert Card Generator */}
+      <DisasterAlertCardGenerator
+        initialData={{
+          roadNumber: briefing?.blockedRoads?.[0]?.roadNumber || "NH-6",
+          locationName:
+            briefing?.criticalIncidents?.[0]?.locationName ||
+            briefing?.blockedRoads?.[0]?.roadName ||
+            "Sonapur Mountain Defile",
+          district:
+            briefing?.criticalIncidents?.[0]?.district ||
+            briefing?.blockedRoads?.[0]?.district ||
+            "East Jaintia Hills",
         }}
       />
 

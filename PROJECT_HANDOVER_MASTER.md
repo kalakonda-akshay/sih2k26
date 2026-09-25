@@ -257,6 +257,35 @@ The backend schema spread includes Convex Auth default tables (`authTables`) alo
   - Audio siren chime synthesized via Web Audio API when breaching hazard radius.
   - Dynamic **"Engage Emergency Diversion By-Pass"** button dynamically re-routing the convoy along safe valley bypasses.
 
+### 5.8 Upgrade H: 3D Mountain Elevation & Hairpin Slope Profile HUD
+- **Files**:
+  - `src/components/map/convoy-elevation-profile.tsx`: Mountain elevation & hairpin slope profile HUD.
+  - `src/components/map/convoy-simulator-hud.tsx`: Mountain icon toggle button and state wiring.
+  - `src/components/map/intelligence-map.tsx`: Docked elevation overlay container.
+- **Capabilities**:
+  - Renders smooth Catmull-Rom cubic spline SVG alpine terrain elevation cross-section (meters vs. km).
+  - Highlights critical high-altitude passes (e.g. Sela Pass at 4,170m, Bomdila at 2,415m, Shillong at 1,520m).
+  - Real-time vehicle pin tracking on the curve showing live altitude, gradient % (+/- slope), and all-terrain gear/torque advisories.
+  - Dynamically swaps between primary mountain corridor and lower valley bypass elevation profiles when detour is engaged.
+
+### 5.9 Upgrade I: WhatsApp & Social Media Disaster Alert Card Generator
+- **Files**:
+  - `src/components/emergency/disaster-alert-card-generator.tsx`: High-resolution HTML5 Canvas 1200×630 emergency notice generator.
+  - `src/app/(app)/emergency/page.tsx`: Full operational integration under `/emergency`.
+- **Capabilities**:
+  - Renders official MDoNER Disaster Notice graphics in 1200×630px Open Graph format with Indian Tricolor ribbon, caution stripes, and verified SDMA seal.
+  - Embeds on-canvas dynamic QR code pointing to `https://sih2k26-one.vercel.app/map` for instant smartphone route bypass retrieval.
+  - Provides 1-click **Download Official PNG (1200×630)** and **Share to WhatsApp / Telegram** via `navigator.share` and WhatsApp deep-links.
+
+### 5.10 Upgrade J: Full-Screen Tactical "War-Room" Operations Mode
+- **Files**:
+  - `src/components/war-room/war-room-modal.tsx`: Immersive full-screen tactical command center.
+  - `src/components/layout/top-navbar.tsx`: Header button (`⚡ WAR-ROOM`) and keyboard shortcuts (`F11` / `Ctrl+Shift+W` / `ESC`).
+- **Capabilities**:
+  - 100vw × 100vh zero-scrollbar tactical operations layout with live UTC & IST ticking clocks.
+  - Integrated Defense Condition (DEFCON 1/2/3) threat selector with Web Audio emergency siren blasts.
+  - Side-by-side view: Full GIS tactical satellite radar (68%) + Live disruption ticker, fleet resource counters, and quick-action broadcast console (32%).
+
 ---
 
 ## 6. Routing, Middleware & Next.js 16 File Conventions

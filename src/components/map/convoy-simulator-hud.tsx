@@ -65,6 +65,8 @@ export function ConvoySimulatorHud({
   onToggleFollow,
   geoFenceBreached,
   distToHazardKm,
+  showElevationProfile,
+  onToggleElevationProfile,
 }: {
   selectedConvoy: ConvoyDefinition;
   onSelectConvoy: (convoy: ConvoyDefinition) => void;
@@ -80,6 +82,8 @@ export function ConvoySimulatorHud({
   onToggleFollow: () => void;
   geoFenceBreached: boolean;
   distToHazardKm: number;
+  showElevationProfile?: boolean;
+  onToggleElevationProfile?: () => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -359,6 +363,19 @@ export function ConvoySimulatorHud({
           >
             <Eye className="size-3.5" />
           </Button>
+
+          {/* Elevation Profile Toggle */}
+          {onToggleElevationProfile && (
+            <Button
+              size="icon"
+              variant={showElevationProfile ? "default" : "outline"}
+              className={`size-8 ${showElevationProfile ? "bg-primary text-primary-foreground" : ""}`}
+              onClick={onToggleElevationProfile}
+              title={showElevationProfile ? "Hide 3D Elevation Profile" : "Show 3D Elevation Profile"}
+            >
+              <Mountain className="size-3.5" />
+            </Button>
+          )}
         </div>
       </div>
     </div>
