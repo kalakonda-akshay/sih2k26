@@ -111,7 +111,7 @@ export default function SignupPage() {
         setError(
           t(
             "auth.email_taken",
-            "An account with this email already exists.",
+            "An account with this email already exists. Please Sign In.",
           ),
         );
       } else if (
@@ -121,11 +121,13 @@ export default function SignupPage() {
         setError(
           t("auth.network_error", "Connection error. Please try again."),
         );
+      } else if (message) {
+        setError(message);
       } else {
         setError(
           t(
-            "auth.invalid_credentials",
-            "Invalid email or password.",
+            "auth.signup_failed",
+            "Unable to create account. Please check your details and try again.",
           ),
         );
       }
