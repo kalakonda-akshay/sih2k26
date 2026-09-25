@@ -96,7 +96,7 @@ export function UserManagement() {
           <div key={user._id} className="p-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-[11px] font-semibold text-primary">
-                {user.name
+                {(user.name ?? "?")
                   .split(" ")
                   .slice(0, 2)
                   .map((p) => p[0])
@@ -104,7 +104,7 @@ export function UserManagement() {
                   .toUpperCase()}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium">{user.name}</div>
+                <div className="truncate text-sm font-medium">{user.name ?? "Unknown"}</div>
                 <div className="truncate text-xs text-muted-foreground">
                   {user.email}
                   {user.district ? ` · ${user.district}` : ""}

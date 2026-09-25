@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Devanagari, Noto_Sans_Bengali } from "next/font/google";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { ConvexClientProvider } from "@/components/providers/convex-client-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ServiceWorker } from "@/components/pwa/service-worker";
@@ -37,19 +38,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable} ${notoSansDevanagari.variable} ${notoSansBengali.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
-      <body className="min-h-full bg-background text-foreground">
-        <ServiceWorker />
-        <I18nProvider>
-          <ConvexClientProvider>
-            <TooltipProvider delay={200}>{children}</TooltipProvider>
-          </ConvexClientProvider>
-        </I18nProvider>
-      </body>
-    </html>
+    <ConvexAuthNextjsServerProvider>
+      <html
+        lang="en"
+        className={`dark ${geistSans.variable} ${geistMono.variable} ${notoSansDevanagari.variable} ${notoSansBengali.variable} h-full antialiased`}
+        suppressHydrationWarning
+      >
+        <body className="min-h-full bg-background text-foreground">
+          <ServiceWorker />
+          <I18nProvider>
+            <ConvexClientProvider>
+              <TooltipProvider delay={200}>{children}</TooltipProvider>
+            </ConvexClientProvider>
+          </I18nProvider>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
   );
 }

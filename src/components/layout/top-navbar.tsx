@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import { useTranslation } from "react-i18next";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Bell, Menu, Search, LogOut } from "lucide-react";
+import { Bell, LogOut, Menu, Search } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
 import { NAV_ITEMS } from "./app-sidebar";
 import { DocumentsMenu } from "./documents-menu";
