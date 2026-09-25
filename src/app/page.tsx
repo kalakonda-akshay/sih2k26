@@ -5,5 +5,6 @@ import { redirect } from "next/navigation";
  * landing page is a later-phase deliverable.
  */
 export default function RootPage() {
-  redirect("/login");
+  redirect("/dashboard");
 }
+

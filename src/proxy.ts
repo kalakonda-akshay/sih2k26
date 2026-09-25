@@ -24,26 +24,36 @@ const isAuthRoute = createRouteMatcher([
   "/forgot-password",
 ]);
 
-export default convexAuthNextjsMiddleware(
-  async (
-    request: NextRequest,
-    { convexAuth }: { convexAuth: { isAuthenticated: () => Promise<boolean> } },
-  ) => {
-    const isAuthed = await convexAuth.isAuthenticated();
+export default convexAuthNextjsMiddleware(async (request: NextRequest) => {
+  // Check both HTTPS production cookie (__Host- prefix) and localhost cookie
+  const token =
+    request.cookies.get("__Host-__convexAuthJWT")?.value ||
+    request.cookies.get("__convexAuthJWT")?.value;
+  const isAuthed = Boolean(token && token.trim().length > 20);
 
-    // Redirect unauthenticated users away from protected pages.
-    if (!isPublicRoute(request) && !isAuthed) {
-      return nextjsMiddlewareRedirect(request, "/login");
-    }
+  const pathname = request.nextUrl.pathname;
 
-    // Redirect already-authenticated users away from auth pages.
-    if (isAuthRoute(request) && isAuthed) {
-      return nextjsMiddlewareRedirect(request, "/dashboard");
-    }
-  },
-);
+  // Root path: redirect to dashboard if logged in, otherwise to login
+  if (pathname === "/") {
+    return nextjsMiddlewareRedirect(
+      request,
+      isAuthed ? "/dashboard" : "/login",
+    );
+  }
+
+  // Redirect unauthenticated users away from protected pages.
+  if (!isPublicRoute(request) && !isAuthed) {
+    return nextjsMiddlewareRedirect(request, "/login");
+  }
+
+  // Redirect already-authenticated users away from auth pages.
+  if (isAuthRoute(request) && isAuthed) {
+    return nextjsMiddlewareRedirect(request, "/dashboard");
+  }
+});
 
 export const config = {
   // Run on every route except static files, _next internals, and favicon.
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
 };
+
