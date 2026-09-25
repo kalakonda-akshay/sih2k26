@@ -38,12 +38,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await signIn("password", { email, password, flow: "signIn" });
+      const result = await signIn("password", {
+        email: email.trim(),
+        password,
+        flow: "signIn",
+      });
       if (result.signingIn) {
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       }
     } catch {
-      // Never specify which field was wrong to avoid user enumeration.
       setError(t("auth.invalid_credentials", "Invalid email or password."));
     } finally {
       setIsLoading(false);

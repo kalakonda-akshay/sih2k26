@@ -85,52 +85,43 @@ export default function SignupPage() {
 
     try {
       const result = await signIn("password", {
-        email,
+        email: email.trim(),
         password,
-        name,
+        name: name.trim(),
         flow: "signUp",
       });
 
       if (result.signingIn) {
-        // Save extra profile fields onto the freshly created user row.
-        await saveUserProfile({
-          name: name.trim(),
-          role: "field_officer",
-          isActive: true,
+        try {
+          await saveUserProfile({
+            name: name.trim(),
+            role: "field_officer",
+            isActive: true,
+          });
+        } catch {
+          // ignore profile update error
+        }
+        window.location.href = "/dashboard";
+      }
+    } catch {
+      // If account already exists or server error, attempt direct sign-in with provided credentials
+      try {
+        const fallback = await signIn("password", {
+          email: email.trim(),
+          password,
+          flow: "signIn",
         });
-        router.push("/dashboard");
+        if (fallback.signingIn) {
+          window.location.href = "/dashboard";
+          return;
+        }
+      } catch {
+        // Both signUp and signIn failed
       }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "";
 
-      if (
-        message.toLowerCase().includes("already") ||
-        message.toLowerCase().includes("exists") ||
-        message.toLowerCase().includes("duplicate")
-      ) {
-        setError(
-          t(
-            "auth.email_taken",
-            "An account with this email already exists. Please Sign In.",
-          ),
-        );
-      } else if (
-        message.toLowerCase().includes("network") ||
-        message.toLowerCase().includes("fetch")
-      ) {
-        setError(
-          t("auth.network_error", "Connection error. Please try again."),
-        );
-      } else if (message) {
-        setError(message);
-      } else {
-        setError(
-          t(
-            "auth.signup_failed",
-            "Unable to create account. Please check your details and try again.",
-          ),
-        );
-      }
+      setError(
+        "An account with this email already exists. Please click 'Sign in' below to log in.",
+      );
     } finally {
       setIsLoading(false);
     }
