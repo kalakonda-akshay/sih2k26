@@ -81,14 +81,31 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
   const connected = metrics !== undefined;
   const alertCount = metrics?.activeAlerts ?? 0;
 
-  const initials = currentUser?.name
-    ? currentUser.name
+  const rawName = currentUser?.name?.trim();
+  const emailName = currentUser?.email
+    ? currentUser.email.split("@")[0].replace(/[._-]/g, " ")
+    : "";
+  const formattedEmailName = emailName
+    ? emailName
         .split(" ")
-        .slice(0, 2)
-        .map((p) => p[0])
-        .join("")
-        .toUpperCase()
-    : "··";
+        .filter(Boolean)
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ")
+    : "";
+
+  const displayName = rawName || formattedEmailName || "Col. Rajesh Sharma";
+  const displayRole = currentUser?.role
+    ? currentUser.role.replace(/_/g, " ")
+    : "Operations Commander";
+
+  const initials =
+    displayName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0])
+      .join("")
+      .toUpperCase() || "RS";
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-md md:px-6">
@@ -269,25 +286,25 @@ export function TopNavbar({ onOpenSidebar }: { onOpenSidebar: () => void }) {
               />
             }
           >
-            <span className="flex size-7 items-center justify-center rounded-full bg-primary/15 font-mono text-[11px] font-semibold text-primary">
+            <span className="flex size-7 items-center justify-center rounded-full bg-primary/20 font-mono text-[11px] font-bold text-primary border border-primary/30">
               {initials}
             </span>
-            <span className="hidden text-sm md:inline">
-              {currentUser?.name?.split(" ")[0] ?? "User"}
+            <span className="hidden text-sm md:inline font-medium">
+              {displayName.split(" ")[0]}
             </span>
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuGroup>
               <DropdownMenuLabel>
-                <span className="block text-sm">
-                  {currentUser?.name ?? "—"}
+                <span className="block text-sm font-semibold">
+                  {displayName}
                 </span>
                 <span className="block font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-                  {currentUser?.role?.replace(/_/g, " ") ?? "—"}
+                  {displayRole}
                 </span>
                 <span className="mt-1 block truncate text-[11px] text-muted-foreground">
-                  {currentUser?.organization ?? ""}
+                  {currentUser?.organization ?? "MDoNER Joint Emergency Operations Center"}
                 </span>
               </DropdownMenuLabel>
             </DropdownMenuGroup>

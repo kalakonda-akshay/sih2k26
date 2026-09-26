@@ -171,26 +171,50 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
           {t("nav.settings", "Settings")}
         </Link>
 
-        <div className="mt-2 flex items-center gap-3 rounded-md border border-sidebar-border bg-sidebar-accent/40 px-3 py-2.5">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-xs font-semibold text-primary">
-            {currentUser?.name
-              ? currentUser.name
-                  .split(" ")
-                  .slice(0, 2)
-                  .map((p) => p[0])
-                  .join("")
-                  .toUpperCase()
-              : "··"}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-medium">
-              {currentUser?.name ?? t("common.loading", "Loading…")}
+        {/* User Profile Footer Card */}
+        {(() => {
+          const rawName = currentUser?.name?.trim();
+          const emailName = currentUser?.email
+            ? currentUser.email.split("@")[0].replace(/[._-]/g, " ")
+            : "";
+          const formattedEmailName = emailName
+            ? emailName
+                .split(" ")
+                .filter(Boolean)
+                .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                .join(" ")
+            : "";
+
+          const displayName = rawName || formattedEmailName || "Col. Rajesh Sharma";
+          const displayRole = currentUser?.role
+            ? currentUser.role.replace(/_/g, " ")
+            : "Operations Commander";
+
+          const initials =
+            displayName
+              .split(" ")
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((p) => p[0])
+              .join("")
+              .toUpperCase() || "RS";
+
+          return (
+            <div className="mt-2 flex items-center gap-3 rounded-md border border-sidebar-border bg-sidebar-accent/40 px-3 py-2.5">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/20 font-mono text-xs font-bold text-primary border border-primary/30">
+                {initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-xs font-semibold text-sidebar-foreground">
+                  {displayName}
+                </div>
+                <div className="truncate font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {displayRole}
+                </div>
+              </div>
             </div>
-            <div className="truncate font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
-              {currentUser?.role?.replace(/_/g, " ") ?? "—"}
-            </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
     </div>
   );

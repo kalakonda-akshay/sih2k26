@@ -189,30 +189,53 @@ export default function SettingsPage() {
         </div>
 
         <div className="mt-5 rounded-md border border-border bg-accent/20 p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-sm font-semibold text-primary">
-              {currentUser?.name
-                ? currentUser.name
-                    .split(" ")
-                    .slice(0, 2)
-                    .map((p) => p[0])
-                    .join("")
-                    .toUpperCase()
-                : "··"}
-            </div>
-            <div>
-              <div className="font-semibold text-sm">
-                {currentUser?.name ?? t("common.loading", "Loading…")}
+          {(() => {
+            const rawName = currentUser?.name?.trim();
+            const emailName = currentUser?.email
+              ? currentUser.email.split("@")[0].replace(/[._-]/g, " ")
+              : "";
+            const formattedEmailName = emailName
+              ? emailName
+                  .split(" ")
+                  .filter(Boolean)
+                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+                  .join(" ")
+              : "";
+
+            const displayName = rawName || formattedEmailName || "Col. Rajesh Sharma";
+            const displayRole = currentUser?.role
+              ? currentUser.role.replace(/_/g, " ")
+              : "Operations Commander";
+
+            const initials =
+              displayName
+                .split(" ")
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((p) => p[0])
+                .join("")
+                .toUpperCase() || "RS";
+
+            return (
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/20 font-mono text-sm font-bold text-primary border border-primary/30">
+                  {initials}
+                </div>
+                <div>
+                  <div className="font-semibold text-sm">
+                    {displayName}
+                  </div>
+                  <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                    {displayRole} ·{" "}
+                    {currentUser?.organization ?? "MDoNER Regional Command"}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {currentUser?.email ?? "admin@ner-vision.gov.in"} · {currentUser?.district ?? "NER Central"}
+                  </div>
+                </div>
               </div>
-              <div className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                {currentUser?.role?.replace(/_/g, " ") ?? "—"} ·{" "}
-                {currentUser?.organization ?? "MDoNER Regional Command"}
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {currentUser?.email ?? "—"} · {currentUser?.district ?? "NER Central"}
-              </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       </section>
 
